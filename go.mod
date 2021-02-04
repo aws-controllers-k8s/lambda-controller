@@ -1,4 +1,4 @@
-module github.com/aws-controllers-k8s/amq-controller
+module github.com/aws-controllers-k8s/mq-controller
 
 go 1.14
 
