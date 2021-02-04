@@ -1,25 +1,26 @@
-# Controllers Template Project
+# ACK service controller for AmazonMQ
 
-The ACK Template Project is a template for starting new projects in the `aws-controller-k8s` Github organization. All controller projects, at minimum, must have the following files:
+This repository contains source code for the AWS Controllers for Kubernetes
+(ACK) service controller for AmazonMQ.
 
-- a `README.md` outlining the project goals, sponsoring sig, and community contact information
-- an `OWNERS` with the project leads listed as approvers ([docs on `OWNERS` files](./OWNERS))
-- a `CONTRIBUTING.md` outlining how to contribute to the project
-- an unmodified copy of `CODE_OF_CONDUCT.md` from this repo, which outlines community behavior and the consequences of breaking the code
-- a `LICENSE` which must be Apache 2.0 for code projects, without any custom content.
-- a `SECURITY.md` which contains steps to take if you discover a potential security issue in this project.
+Please [log issues][ack-issues] and feedback on the main AWS Controllers for
+Kubernetes Github project.
 
-## Community, discussion, contribution, and support
+[ack-issues]: https://github.com/aws/aws-controllers-k8s/issues
+
+## Contributing
 
 We welcome community contributions and pull requests.
 
 See our [contribution guide](/CONTRIBUTING.md) for more information on how to
 report issues, set up a development environment, and submit code.
 
-You can reach the maintainers of this project at:
+We adhere to the [Amazon Open Source Code of Conduct][coc].
 
-- [Slack](http://slack.k8s.io/) via `#provider-aws` channel
+You can also learn more about our [Governance](/GOVERNANCE.md) structure.
 
-### Code of conduct
+[coc]: https://aws.github.io/code-of-conduct
 
-Participation in the AWS community is governed by the [Amazon Open Source Code of Conduct](CODE_OF_CONDUCT.md).
+## License
+
+This project is [licensed](/LICENSE) under the Apache-2.0 License.
