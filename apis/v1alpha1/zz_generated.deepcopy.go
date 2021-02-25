@@ -20,7 +20,7 @@
 package v1alpha1
 
 import (
-	corev1alpha1 "github.com/aws/aws-controllers-k8s/apis/core/v1alpha1"
+	corev1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -403,6 +403,11 @@ func (in *BrokerSummary) DeepCopyInto(out *BrokerSummary) {
 	}
 	if in.DeploymentMode != nil {
 		in, out := &in.DeploymentMode, &out.DeploymentMode
+		*out = new(string)
+		**out = **in
+	}
+	if in.EngineType != nil {
+		in, out := &in.EngineType, &out.EngineType
 		*out = new(string)
 		**out = **in
 	}

@@ -6,7 +6,7 @@ This repository contains source code for the AWS Controllers for Kubernetes
 Please [log issues][ack-issues] and feedback on the main AWS Controllers for
 Kubernetes Github project.
 
-[ack-issues]: https://github.com/aws/aws-controllers-k8s/issues
+[ack-issues]: https://github.com/aws-controllers-k8s/community/issues
 
 ## Contributing
 

@@ -64,12 +64,14 @@ type DeploymentMode string
 const (
 	DeploymentMode_SINGLE_INSTANCE         DeploymentMode = "SINGLE_INSTANCE"
 	DeploymentMode_ACTIVE_STANDBY_MULTI_AZ DeploymentMode = "ACTIVE_STANDBY_MULTI_AZ"
+	DeploymentMode_CLUSTER_MULTI_AZ        DeploymentMode = "CLUSTER_MULTI_AZ"
 )
 
 type EngineType string
 
 const (
 	EngineType_ACTIVEMQ EngineType = "ACTIVEMQ"
+	EngineType_RABBITMQ EngineType = "RABBITMQ"
 )
 
 type SanitizationWarningReason string
