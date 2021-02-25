@@ -47,6 +47,7 @@ type BrokerSummary struct {
 	BrokerState      *string      `json:"brokerState,omitempty"`
 	Created          *metav1.Time `json:"created,omitempty"`
 	DeploymentMode   *string      `json:"deploymentMode,omitempty"`
+	EngineType       *string      `json:"engineType,omitempty"`
 	HostInstanceType *string      `json:"hostInstanceType,omitempty"`
 }
 
