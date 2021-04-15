@@ -87,6 +87,29 @@ func (rm *resourceManager) sdkFind(
 	if resp.BrokerId != nil {
 		ko.Status.BrokerID = resp.BrokerId
 	}
+	if resp.BrokerInstances != nil {
+		f4 := []*svcapitypes.BrokerInstance{}
+		for _, f4iter := range resp.BrokerInstances {
+			f4elem := &svcapitypes.BrokerInstance{}
+			if f4iter.ConsoleURL != nil {
+				f4elem.ConsoleURL = f4iter.ConsoleURL
+			}
+			if f4iter.Endpoints != nil {
+				f4elemf1 := []*string{}
+				for _, f4elemf1iter := range f4iter.Endpoints {
+					var f4elemf1elem string
+					f4elemf1elem = *f4elemf1iter
+					f4elemf1 = append(f4elemf1, &f4elemf1elem)
+				}
+				f4elem.Endpoints = f4elemf1
+			}
+			if f4iter.IpAddress != nil {
+				f4elem.IPAddress = f4iter.IpAddress
+			}
+			f4 = append(f4, f4elem)
+		}
+		ko.Status.BrokerInstances = f4
+	}
 	if resp.BrokerName != nil {
 		ko.Spec.BrokerName = resp.BrokerName
 	}
@@ -221,6 +244,7 @@ func (rm *resourceManager) sdkFind(
 	}
 
 	rm.setStatusDefaults(ko)
+
 	return &resource{ko}, nil
 }
 
@@ -254,7 +278,7 @@ func (rm *resourceManager) sdkCreate(
 	ctx context.Context,
 	r *resource,
 ) (*resource, error) {
-	input, err := rm.newCreateRequestPayload(r)
+	input, err := rm.newCreateRequestPayload(ctx, r)
 	if err != nil {
 		return nil, err
 	}
@@ -287,6 +311,7 @@ func (rm *resourceManager) sdkCreate(
 // newCreateRequestPayload returns an SDK-specific struct for the HTTP request
 // payload of the Create API call for the resource
 func (rm *resourceManager) newCreateRequestPayload(
+	ctx context.Context,
 	r *resource,
 ) (*svcsdk.CreateBrokerRequest, error) {
 	res := &svcsdk.CreateBrokerRequest{}
@@ -470,10 +495,10 @@ func (rm *resourceManager) sdkUpdate(
 	ctx context.Context,
 	desired *resource,
 	latest *resource,
-	diffReporter *ackcompare.Reporter,
+	delta *ackcompare.Delta,
 ) (*resource, error) {
 
-	input, err := rm.newUpdateRequestPayload(desired)
+	input, err := rm.newUpdateRequestPayload(ctx, desired)
 	if err != nil {
 		return nil, err
 	}
@@ -499,6 +524,7 @@ func (rm *resourceManager) sdkUpdate(
 // newUpdateRequestPayload returns an SDK-specific struct for the HTTP request
 // payload of the Update API call for the resource
 func (rm *resourceManager) newUpdateRequestPayload(
+	ctx context.Context,
 	r *resource,
 ) (*svcsdk.UpdateBrokerRequest, error) {
 	res := &svcsdk.UpdateBrokerRequest{}
@@ -599,6 +625,7 @@ func (rm *resourceManager) sdkDelete(
 	ctx context.Context,
 	r *resource,
 ) error {
+
 	input, err := rm.newDeleteRequestPayload(r)
 	if err != nil {
 		return err
@@ -648,10 +675,13 @@ func (rm *resourceManager) updateConditions(
 
 	// Terminal condition
 	var terminalCondition *ackv1alpha1.Condition = nil
+	var recoverableCondition *ackv1alpha1.Condition = nil
 	for _, condition := range ko.Status.Conditions {
 		if condition.Type == ackv1alpha1.ConditionTypeTerminal {
 			terminalCondition = condition
-			break
+		}
+		if condition.Type == ackv1alpha1.ConditionTypeRecoverable {
+			recoverableCondition = condition
 		}
 	}
 
@@ -666,11 +696,34 @@ func (rm *resourceManager) updateConditions(
 		awsErr, _ := ackerr.AWSError(err)
 		errorMessage := awsErr.Message()
 		terminalCondition.Message = &errorMessage
-	} else if terminalCondition != nil {
-		terminalCondition.Status = corev1.ConditionFalse
-		terminalCondition.Message = nil
+	} else {
+		// Clear the terminal condition if no longer present
+		if terminalCondition != nil {
+			terminalCondition.Status = corev1.ConditionFalse
+			terminalCondition.Message = nil
+		}
+		// Handling Recoverable Conditions
+		if err != nil {
+			if recoverableCondition == nil {
+				// Add a new Condition containing a non-terminal error
+				recoverableCondition = &ackv1alpha1.Condition{
+					Type: ackv1alpha1.ConditionTypeRecoverable,
+				}
+				ko.Status.Conditions = append(ko.Status.Conditions, recoverableCondition)
+			}
+			recoverableCondition.Status = corev1.ConditionTrue
+			awsErr, _ := ackerr.AWSError(err)
+			errorMessage := err.Error()
+			if awsErr != nil {
+				errorMessage = awsErr.Message()
+			}
+			recoverableCondition.Message = &errorMessage
+		} else if recoverableCondition != nil {
+			recoverableCondition.Status = corev1.ConditionFalse
+			recoverableCondition.Message = nil
+		}
 	}
-	if terminalCondition != nil {
+	if terminalCondition != nil || recoverableCondition != nil {
 		return &resource{ko}, true // updated
 	}
 	return nil, false // not updated

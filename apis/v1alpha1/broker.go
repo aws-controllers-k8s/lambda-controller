@@ -22,25 +22,43 @@ import (
 
 // BrokerSpec defines the desired state of Broker
 type BrokerSpec struct {
-	AuthenticationStrategy     *string                  `json:"authenticationStrategy,omitempty"`
-	AutoMinorVersionUpgrade    *bool                    `json:"autoMinorVersionUpgrade,omitempty"`
-	BrokerName                 *string                  `json:"brokerName,omitempty"`
-	Configuration              *ConfigurationID         `json:"configuration,omitempty"`
-	CreatorRequestID           *string                  `json:"creatorRequestID,omitempty"`
-	DeploymentMode             *string                  `json:"deploymentMode,omitempty"`
-	EncryptionOptions          *EncryptionOptions       `json:"encryptionOptions,omitempty"`
-	EngineType                 *string                  `json:"engineType,omitempty"`
-	EngineVersion              *string                  `json:"engineVersion,omitempty"`
-	HostInstanceType           *string                  `json:"hostInstanceType,omitempty"`
-	LdapServerMetadata         *LdapServerMetadataInput `json:"ldapServerMetadata,omitempty"`
-	Logs                       *Logs                    `json:"logs,omitempty"`
-	MaintenanceWindowStartTime *WeeklyStartTime         `json:"maintenanceWindowStartTime,omitempty"`
-	PubliclyAccessible         *bool                    `json:"publiclyAccessible,omitempty"`
-	SecurityGroups             []*string                `json:"securityGroups,omitempty"`
-	StorageType                *string                  `json:"storageType,omitempty"`
-	SubnetIDs                  []*string                `json:"subnetIDs,omitempty"`
-	Tags                       map[string]*string       `json:"tags,omitempty"`
-	Users                      []*User                  `json:"users,omitempty"`
+	AuthenticationStrategy *string `json:"authenticationStrategy,omitempty"`
+
+	AutoMinorVersionUpgrade *bool `json:"autoMinorVersionUpgrade,omitempty"`
+
+	BrokerName *string `json:"brokerName,omitempty"`
+
+	Configuration *ConfigurationID `json:"configuration,omitempty"`
+
+	CreatorRequestID *string `json:"creatorRequestID,omitempty"`
+
+	DeploymentMode *string `json:"deploymentMode,omitempty"`
+
+	EncryptionOptions *EncryptionOptions `json:"encryptionOptions,omitempty"`
+
+	EngineType *string `json:"engineType,omitempty"`
+
+	EngineVersion *string `json:"engineVersion,omitempty"`
+
+	HostInstanceType *string `json:"hostInstanceType,omitempty"`
+
+	LdapServerMetadata *LdapServerMetadataInput `json:"ldapServerMetadata,omitempty"`
+
+	Logs *Logs `json:"logs,omitempty"`
+
+	MaintenanceWindowStartTime *WeeklyStartTime `json:"maintenanceWindowStartTime,omitempty"`
+
+	PubliclyAccessible *bool `json:"publiclyAccessible,omitempty"`
+
+	SecurityGroups []*string `json:"securityGroups,omitempty"`
+
+	StorageType *string `json:"storageType,omitempty"`
+
+	SubnetIDs []*string `json:"subnetIDs,omitempty"`
+
+	Tags map[string]*string `json:"tags,omitempty"`
+
+	Users []*User `json:"users,omitempty"`
 }
 
 // BrokerStatus defines the observed state of Broker
@@ -54,7 +72,10 @@ type BrokerStatus struct {
 	// the various terminal states of the CR and its backend AWS service API
 	// resource
 	Conditions []*ackv1alpha1.Condition `json:"conditions"`
-	BrokerID   *string                  `json:"brokerID,omitempty"`
+
+	BrokerID *string `json:"brokerID,omitempty"`
+
+	BrokerInstances []*BrokerInstance `json:"brokerInstances,omitempty"`
 }
 
 // Broker is the Schema for the Brokers API
