@@ -2,3 +2,11 @@ ignore:
   resource_names:
     - Configuration
     - User
+resources:
+  Broker:
+    fields:
+      BrokerInstances:
+        from:
+          operation: DescribeBroker
+          path: BrokerInstances
+        is_read_only: true

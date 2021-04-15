@@ -170,6 +170,19 @@ spec:
                 type: object
               brokerID:
                 type: string
+              brokerInstances:
+                items:
+                  properties:
+                    consoleURL:
+                      type: string
+                    endpoints:
+                      items:
+                        type: string
+                      type: array
+                    ipAddress:
+                      type: string
+                  type: object
+                type: array
               conditions:
                 description: All CRS managed by ACK have a common `Status.Conditions`
                   member that contains a collection of `ackv1alpha1.Condition` objects

@@ -91,6 +91,14 @@ class TestRabbitMQBroker:
             aws_res = amq_client.describe_broker(BrokerId=broker_id)
             assert aws_res is not None
 
+        # At this point, there should be at least one BrokerInstance record in
+        # the Broker.Status.BrokerInstances collection which we can grab an
+        # endpoint from.
+        latest_res = k8s.get_resource(ref)
+        assert latest_res['status']['brokerInstances'] is not None
+        assert len(latest_res['status']['brokerInstances']) == 1
+        assert len(latest_res['status']['brokerInstances'][0]['endpoints']) > 0
+
         # Delete the k8s resource on teardown of the module
         k8s.delete_custom_resource(ref)
 
