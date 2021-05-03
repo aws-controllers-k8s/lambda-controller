@@ -9,7 +9,10 @@ spec:
   engineVersion: $MQ_RABBITMQ_ENGINE_VERSION
   hostInstanceType: $MQ_HOST_INSTANCE_TYPE
   users:
-    - password: adminpassneeds12chars
+    - password:
+        namespace: $ADMIN_USER_PASS_SECRET_NAMESPACE
+        name: $ADMIN_USER_PASS_SECRET_NAME
+        key: $ADMIN_USER_PASS_SECRET_KEY
       groups: []
       consoleAccess: true
       username: admin

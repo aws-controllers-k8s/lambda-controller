@@ -516,7 +516,13 @@ func (rm *resourceManager) newCreateRequestPayload(
 				f18elem.SetGroups(f18elemf1)
 			}
 			if f18iter.Password != nil {
-				f18elem.SetPassword(*f18iter.Password)
+				tmpSecret, err := rm.rr.SecretValueFromReference(ctx, f18iter.Password)
+				if err != nil {
+					return nil, err
+				}
+				if tmpSecret != "" {
+					f18elem.SetPassword(tmpSecret)
+				}
 			}
 			if f18iter.Username != nil {
 				f18elem.SetUsername(*f18iter.Username)
@@ -557,22 +563,6 @@ func (rm *resourceManager) sdkUpdate(
 	input, err := rm.newUpdateRequestPayload(ctx, desired)
 	if err != nil {
 		return nil, err
-	}
-	if brokerCreateFailed(latest) {
-		msg := "Broker state is CREATION_FAILED"
-		setTerminalCondition(desired, corev1.ConditionTrue, &msg, nil)
-		setSyncedCondition(desired, corev1.ConditionTrue, nil, nil)
-		return desired, nil
-	}
-	if brokerCreateInProgress(latest) {
-		msg := "Broker state is CREATION_IN_PROGRESS"
-		setSyncedCondition(desired, corev1.ConditionFalse, &msg, nil)
-		return desired, requeueWaitWhileCreating
-	}
-	if brokerDeleteInProgress(latest) {
-		msg := "Broker state is DELETION_IN_PROGRESS"
-		setSyncedCondition(desired, corev1.ConditionFalse, &msg, nil)
-		return desired, requeueWaitWhileDeleting
 	}
 
 	resp, respErr := rm.sdkapi.UpdateBrokerWithContext(ctx, input)
