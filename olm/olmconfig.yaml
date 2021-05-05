@@ -1,0 +1,35 @@
+---
+annotations:
+  capabilityLevel: Basic Install
+  shortDescription: AWS MQ controller is a service controller for managing MQ resources
+    in Kubernetes
+displayName: AWS Controllers for Kubernetes - Amazon MQ
+description: |-
+  Manage Amazon MQ resources in AWS from within your Kubernetes cluster.
+
+
+  **About Amazon MQ**
+
+
+  Amazon MQ is a managed message broker service for Apache ActiveMQ and RabbitMQ
+  that makes it easy to set up and operate message brokers on AWS. Amazon MQ
+  reduces your operational responsibilities by managing the provisioning, setup,
+  and maintenance of message brokers for you. Because Amazon MQ connects to your
+  current applications with industry-standard APIs and protocols, you can easily
+  migrate to AWS without having to rewrite code.
+
+
+  **About the AWS Controllers for Kubernetes**
+
+
+  This controller is a component of the [AWS Controller for Kubernetes](https://github.com/aws/aws-controllers-k8s)
+  project. This project is currently in **developer preview**. 
+samples:
+- kind: Broker
+  spec: '{}'
+maintainers:
+- name: "Your Team Name"
+  email: "your-team@example.com"
+links:
+- name: Amazon MQ Developer Resources
+  url: "https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/"
