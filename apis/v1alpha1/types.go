@@ -129,7 +129,7 @@ type EngineVersion struct {
 
 // The metadata of the LDAP server used to authenticate and authorize connections
 // to the broker. Currently not supported for RabbitMQ engine type.
-type LdapServerMetadataInput struct {
+type LDAPServerMetadataInput struct {
 	Hosts                  []*string `json:"hosts,omitempty"`
 	RoleBase               *string   `json:"roleBase,omitempty"`
 	RoleName               *string   `json:"roleName,omitempty"`
@@ -145,7 +145,7 @@ type LdapServerMetadataInput struct {
 
 // The metadata of the LDAP server used to authenticate and authorize connections
 // to the broker.
-type LdapServerMetadataOutput struct {
+type LDAPServerMetadataOutput struct {
 	Hosts                  []*string `json:"hosts,omitempty"`
 	RoleBase               *string   `json:"roleBase,omitempty"`
 	RoleName               *string   `json:"roleName,omitempty"`

@@ -26,8 +26,6 @@ type BrokerSpec struct {
 
 	AutoMinorVersionUpgrade *bool `json:"autoMinorVersionUpgrade,omitempty"`
 
-	BrokerName *string `json:"brokerName,omitempty"`
-
 	Configuration *ConfigurationID `json:"configuration,omitempty"`
 
 	CreatorRequestID *string `json:"creatorRequestID,omitempty"`
@@ -42,11 +40,13 @@ type BrokerSpec struct {
 
 	HostInstanceType *string `json:"hostInstanceType,omitempty"`
 
-	LdapServerMetadata *LdapServerMetadataInput `json:"ldapServerMetadata,omitempty"`
+	LDAPServerMetadata *LDAPServerMetadataInput `json:"ldapServerMetadata,omitempty"`
 
 	Logs *Logs `json:"logs,omitempty"`
 
 	MaintenanceWindowStartTime *WeeklyStartTime `json:"maintenanceWindowStartTime,omitempty"`
+
+	Name *string `json:"name,omitempty"`
 
 	PubliclyAccessible *bool `json:"publiclyAccessible,omitempty"`
 

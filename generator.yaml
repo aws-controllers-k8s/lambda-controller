@@ -4,6 +4,11 @@ ignore:
     - User
 resources:
   Broker:
+    renames:
+      operations:
+        CreateBroker:
+          input_fields:
+            BrokerName: Name
     fields:
       BrokerInstances:
         from:

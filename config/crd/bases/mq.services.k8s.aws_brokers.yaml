@@ -40,8 +40,6 @@ spec:
                 type: string
               autoMinorVersionUpgrade:
                 type: boolean
-              brokerName:
-                type: string
               configuration:
                 description: A list of information about the configuration. Does not
                   apply to RabbitMQ brokers.
@@ -120,6 +118,8 @@ spec:
                   timeZone:
                     type: string
                 type: object
+              name:
+                type: string
               publiclyAccessible:
                 type: boolean
               securityGroups:

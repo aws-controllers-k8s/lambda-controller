@@ -80,6 +80,6 @@ func (r *resource) SetIdentifiers(identifier *ackv1alpha1.AWSIdentifiers) error 
 	if identifier.NameOrID == nil {
 		return ackerrors.MissingNameIdentifier
 	}
-	r.ko.Spec.BrokerName = identifier.NameOrID
+	r.ko.Spec.Name = identifier.NameOrID
 	return nil
 }

@@ -46,13 +46,6 @@ func newResourceDelta(
 			delta.Add("Spec.AutoMinorVersionUpgrade", a.ko.Spec.AutoMinorVersionUpgrade, b.ko.Spec.AutoMinorVersionUpgrade)
 		}
 	}
-	if ackcompare.HasNilDifference(a.ko.Spec.BrokerName, b.ko.Spec.BrokerName) {
-		delta.Add("Spec.BrokerName", a.ko.Spec.BrokerName, b.ko.Spec.BrokerName)
-	} else if a.ko.Spec.BrokerName != nil && b.ko.Spec.BrokerName != nil {
-		if *a.ko.Spec.BrokerName != *b.ko.Spec.BrokerName {
-			delta.Add("Spec.BrokerName", a.ko.Spec.BrokerName, b.ko.Spec.BrokerName)
-		}
-	}
 	if ackcompare.HasNilDifference(a.ko.Spec.Configuration, b.ko.Spec.Configuration) {
 		delta.Add("Spec.Configuration", a.ko.Spec.Configuration, b.ko.Spec.Configuration)
 	} else if a.ko.Spec.Configuration != nil && b.ko.Spec.Configuration != nil {
@@ -124,81 +117,81 @@ func newResourceDelta(
 			delta.Add("Spec.HostInstanceType", a.ko.Spec.HostInstanceType, b.ko.Spec.HostInstanceType)
 		}
 	}
-	if ackcompare.HasNilDifference(a.ko.Spec.LdapServerMetadata, b.ko.Spec.LdapServerMetadata) {
-		delta.Add("Spec.LdapServerMetadata", a.ko.Spec.LdapServerMetadata, b.ko.Spec.LdapServerMetadata)
-	} else if a.ko.Spec.LdapServerMetadata != nil && b.ko.Spec.LdapServerMetadata != nil {
+	if ackcompare.HasNilDifference(a.ko.Spec.LDAPServerMetadata, b.ko.Spec.LDAPServerMetadata) {
+		delta.Add("Spec.LDAPServerMetadata", a.ko.Spec.LDAPServerMetadata, b.ko.Spec.LDAPServerMetadata)
+	} else if a.ko.Spec.LDAPServerMetadata != nil && b.ko.Spec.LDAPServerMetadata != nil {
 
-		if !ackcompare.SliceStringPEqual(a.ko.Spec.LdapServerMetadata.Hosts, b.ko.Spec.LdapServerMetadata.Hosts) {
-			delta.Add("Spec.LdapServerMetadata.Hosts", a.ko.Spec.LdapServerMetadata.Hosts, b.ko.Spec.LdapServerMetadata.Hosts)
+		if !ackcompare.SliceStringPEqual(a.ko.Spec.LDAPServerMetadata.Hosts, b.ko.Spec.LDAPServerMetadata.Hosts) {
+			delta.Add("Spec.LDAPServerMetadata.Hosts", a.ko.Spec.LDAPServerMetadata.Hosts, b.ko.Spec.LDAPServerMetadata.Hosts)
 		}
-		if ackcompare.HasNilDifference(a.ko.Spec.LdapServerMetadata.RoleBase, b.ko.Spec.LdapServerMetadata.RoleBase) {
-			delta.Add("Spec.LdapServerMetadata.RoleBase", a.ko.Spec.LdapServerMetadata.RoleBase, b.ko.Spec.LdapServerMetadata.RoleBase)
-		} else if a.ko.Spec.LdapServerMetadata.RoleBase != nil && b.ko.Spec.LdapServerMetadata.RoleBase != nil {
-			if *a.ko.Spec.LdapServerMetadata.RoleBase != *b.ko.Spec.LdapServerMetadata.RoleBase {
-				delta.Add("Spec.LdapServerMetadata.RoleBase", a.ko.Spec.LdapServerMetadata.RoleBase, b.ko.Spec.LdapServerMetadata.RoleBase)
+		if ackcompare.HasNilDifference(a.ko.Spec.LDAPServerMetadata.RoleBase, b.ko.Spec.LDAPServerMetadata.RoleBase) {
+			delta.Add("Spec.LDAPServerMetadata.RoleBase", a.ko.Spec.LDAPServerMetadata.RoleBase, b.ko.Spec.LDAPServerMetadata.RoleBase)
+		} else if a.ko.Spec.LDAPServerMetadata.RoleBase != nil && b.ko.Spec.LDAPServerMetadata.RoleBase != nil {
+			if *a.ko.Spec.LDAPServerMetadata.RoleBase != *b.ko.Spec.LDAPServerMetadata.RoleBase {
+				delta.Add("Spec.LDAPServerMetadata.RoleBase", a.ko.Spec.LDAPServerMetadata.RoleBase, b.ko.Spec.LDAPServerMetadata.RoleBase)
 			}
 		}
-		if ackcompare.HasNilDifference(a.ko.Spec.LdapServerMetadata.RoleName, b.ko.Spec.LdapServerMetadata.RoleName) {
-			delta.Add("Spec.LdapServerMetadata.RoleName", a.ko.Spec.LdapServerMetadata.RoleName, b.ko.Spec.LdapServerMetadata.RoleName)
-		} else if a.ko.Spec.LdapServerMetadata.RoleName != nil && b.ko.Spec.LdapServerMetadata.RoleName != nil {
-			if *a.ko.Spec.LdapServerMetadata.RoleName != *b.ko.Spec.LdapServerMetadata.RoleName {
-				delta.Add("Spec.LdapServerMetadata.RoleName", a.ko.Spec.LdapServerMetadata.RoleName, b.ko.Spec.LdapServerMetadata.RoleName)
+		if ackcompare.HasNilDifference(a.ko.Spec.LDAPServerMetadata.RoleName, b.ko.Spec.LDAPServerMetadata.RoleName) {
+			delta.Add("Spec.LDAPServerMetadata.RoleName", a.ko.Spec.LDAPServerMetadata.RoleName, b.ko.Spec.LDAPServerMetadata.RoleName)
+		} else if a.ko.Spec.LDAPServerMetadata.RoleName != nil && b.ko.Spec.LDAPServerMetadata.RoleName != nil {
+			if *a.ko.Spec.LDAPServerMetadata.RoleName != *b.ko.Spec.LDAPServerMetadata.RoleName {
+				delta.Add("Spec.LDAPServerMetadata.RoleName", a.ko.Spec.LDAPServerMetadata.RoleName, b.ko.Spec.LDAPServerMetadata.RoleName)
 			}
 		}
-		if ackcompare.HasNilDifference(a.ko.Spec.LdapServerMetadata.RoleSearchMatching, b.ko.Spec.LdapServerMetadata.RoleSearchMatching) {
-			delta.Add("Spec.LdapServerMetadata.RoleSearchMatching", a.ko.Spec.LdapServerMetadata.RoleSearchMatching, b.ko.Spec.LdapServerMetadata.RoleSearchMatching)
-		} else if a.ko.Spec.LdapServerMetadata.RoleSearchMatching != nil && b.ko.Spec.LdapServerMetadata.RoleSearchMatching != nil {
-			if *a.ko.Spec.LdapServerMetadata.RoleSearchMatching != *b.ko.Spec.LdapServerMetadata.RoleSearchMatching {
-				delta.Add("Spec.LdapServerMetadata.RoleSearchMatching", a.ko.Spec.LdapServerMetadata.RoleSearchMatching, b.ko.Spec.LdapServerMetadata.RoleSearchMatching)
+		if ackcompare.HasNilDifference(a.ko.Spec.LDAPServerMetadata.RoleSearchMatching, b.ko.Spec.LDAPServerMetadata.RoleSearchMatching) {
+			delta.Add("Spec.LDAPServerMetadata.RoleSearchMatching", a.ko.Spec.LDAPServerMetadata.RoleSearchMatching, b.ko.Spec.LDAPServerMetadata.RoleSearchMatching)
+		} else if a.ko.Spec.LDAPServerMetadata.RoleSearchMatching != nil && b.ko.Spec.LDAPServerMetadata.RoleSearchMatching != nil {
+			if *a.ko.Spec.LDAPServerMetadata.RoleSearchMatching != *b.ko.Spec.LDAPServerMetadata.RoleSearchMatching {
+				delta.Add("Spec.LDAPServerMetadata.RoleSearchMatching", a.ko.Spec.LDAPServerMetadata.RoleSearchMatching, b.ko.Spec.LDAPServerMetadata.RoleSearchMatching)
 			}
 		}
-		if ackcompare.HasNilDifference(a.ko.Spec.LdapServerMetadata.RoleSearchSubtree, b.ko.Spec.LdapServerMetadata.RoleSearchSubtree) {
-			delta.Add("Spec.LdapServerMetadata.RoleSearchSubtree", a.ko.Spec.LdapServerMetadata.RoleSearchSubtree, b.ko.Spec.LdapServerMetadata.RoleSearchSubtree)
-		} else if a.ko.Spec.LdapServerMetadata.RoleSearchSubtree != nil && b.ko.Spec.LdapServerMetadata.RoleSearchSubtree != nil {
-			if *a.ko.Spec.LdapServerMetadata.RoleSearchSubtree != *b.ko.Spec.LdapServerMetadata.RoleSearchSubtree {
-				delta.Add("Spec.LdapServerMetadata.RoleSearchSubtree", a.ko.Spec.LdapServerMetadata.RoleSearchSubtree, b.ko.Spec.LdapServerMetadata.RoleSearchSubtree)
+		if ackcompare.HasNilDifference(a.ko.Spec.LDAPServerMetadata.RoleSearchSubtree, b.ko.Spec.LDAPServerMetadata.RoleSearchSubtree) {
+			delta.Add("Spec.LDAPServerMetadata.RoleSearchSubtree", a.ko.Spec.LDAPServerMetadata.RoleSearchSubtree, b.ko.Spec.LDAPServerMetadata.RoleSearchSubtree)
+		} else if a.ko.Spec.LDAPServerMetadata.RoleSearchSubtree != nil && b.ko.Spec.LDAPServerMetadata.RoleSearchSubtree != nil {
+			if *a.ko.Spec.LDAPServerMetadata.RoleSearchSubtree != *b.ko.Spec.LDAPServerMetadata.RoleSearchSubtree {
+				delta.Add("Spec.LDAPServerMetadata.RoleSearchSubtree", a.ko.Spec.LDAPServerMetadata.RoleSearchSubtree, b.ko.Spec.LDAPServerMetadata.RoleSearchSubtree)
 			}
 		}
-		if ackcompare.HasNilDifference(a.ko.Spec.LdapServerMetadata.ServiceAccountPassword, b.ko.Spec.LdapServerMetadata.ServiceAccountPassword) {
-			delta.Add("Spec.LdapServerMetadata.ServiceAccountPassword", a.ko.Spec.LdapServerMetadata.ServiceAccountPassword, b.ko.Spec.LdapServerMetadata.ServiceAccountPassword)
-		} else if a.ko.Spec.LdapServerMetadata.ServiceAccountPassword != nil && b.ko.Spec.LdapServerMetadata.ServiceAccountPassword != nil {
-			if *a.ko.Spec.LdapServerMetadata.ServiceAccountPassword != *b.ko.Spec.LdapServerMetadata.ServiceAccountPassword {
-				delta.Add("Spec.LdapServerMetadata.ServiceAccountPassword", a.ko.Spec.LdapServerMetadata.ServiceAccountPassword, b.ko.Spec.LdapServerMetadata.ServiceAccountPassword)
+		if ackcompare.HasNilDifference(a.ko.Spec.LDAPServerMetadata.ServiceAccountPassword, b.ko.Spec.LDAPServerMetadata.ServiceAccountPassword) {
+			delta.Add("Spec.LDAPServerMetadata.ServiceAccountPassword", a.ko.Spec.LDAPServerMetadata.ServiceAccountPassword, b.ko.Spec.LDAPServerMetadata.ServiceAccountPassword)
+		} else if a.ko.Spec.LDAPServerMetadata.ServiceAccountPassword != nil && b.ko.Spec.LDAPServerMetadata.ServiceAccountPassword != nil {
+			if *a.ko.Spec.LDAPServerMetadata.ServiceAccountPassword != *b.ko.Spec.LDAPServerMetadata.ServiceAccountPassword {
+				delta.Add("Spec.LDAPServerMetadata.ServiceAccountPassword", a.ko.Spec.LDAPServerMetadata.ServiceAccountPassword, b.ko.Spec.LDAPServerMetadata.ServiceAccountPassword)
 			}
 		}
-		if ackcompare.HasNilDifference(a.ko.Spec.LdapServerMetadata.ServiceAccountUsername, b.ko.Spec.LdapServerMetadata.ServiceAccountUsername) {
-			delta.Add("Spec.LdapServerMetadata.ServiceAccountUsername", a.ko.Spec.LdapServerMetadata.ServiceAccountUsername, b.ko.Spec.LdapServerMetadata.ServiceAccountUsername)
-		} else if a.ko.Spec.LdapServerMetadata.ServiceAccountUsername != nil && b.ko.Spec.LdapServerMetadata.ServiceAccountUsername != nil {
-			if *a.ko.Spec.LdapServerMetadata.ServiceAccountUsername != *b.ko.Spec.LdapServerMetadata.ServiceAccountUsername {
-				delta.Add("Spec.LdapServerMetadata.ServiceAccountUsername", a.ko.Spec.LdapServerMetadata.ServiceAccountUsername, b.ko.Spec.LdapServerMetadata.ServiceAccountUsername)
+		if ackcompare.HasNilDifference(a.ko.Spec.LDAPServerMetadata.ServiceAccountUsername, b.ko.Spec.LDAPServerMetadata.ServiceAccountUsername) {
+			delta.Add("Spec.LDAPServerMetadata.ServiceAccountUsername", a.ko.Spec.LDAPServerMetadata.ServiceAccountUsername, b.ko.Spec.LDAPServerMetadata.ServiceAccountUsername)
+		} else if a.ko.Spec.LDAPServerMetadata.ServiceAccountUsername != nil && b.ko.Spec.LDAPServerMetadata.ServiceAccountUsername != nil {
+			if *a.ko.Spec.LDAPServerMetadata.ServiceAccountUsername != *b.ko.Spec.LDAPServerMetadata.ServiceAccountUsername {
+				delta.Add("Spec.LDAPServerMetadata.ServiceAccountUsername", a.ko.Spec.LDAPServerMetadata.ServiceAccountUsername, b.ko.Spec.LDAPServerMetadata.ServiceAccountUsername)
 			}
 		}
-		if ackcompare.HasNilDifference(a.ko.Spec.LdapServerMetadata.UserBase, b.ko.Spec.LdapServerMetadata.UserBase) {
-			delta.Add("Spec.LdapServerMetadata.UserBase", a.ko.Spec.LdapServerMetadata.UserBase, b.ko.Spec.LdapServerMetadata.UserBase)
-		} else if a.ko.Spec.LdapServerMetadata.UserBase != nil && b.ko.Spec.LdapServerMetadata.UserBase != nil {
-			if *a.ko.Spec.LdapServerMetadata.UserBase != *b.ko.Spec.LdapServerMetadata.UserBase {
-				delta.Add("Spec.LdapServerMetadata.UserBase", a.ko.Spec.LdapServerMetadata.UserBase, b.ko.Spec.LdapServerMetadata.UserBase)
+		if ackcompare.HasNilDifference(a.ko.Spec.LDAPServerMetadata.UserBase, b.ko.Spec.LDAPServerMetadata.UserBase) {
+			delta.Add("Spec.LDAPServerMetadata.UserBase", a.ko.Spec.LDAPServerMetadata.UserBase, b.ko.Spec.LDAPServerMetadata.UserBase)
+		} else if a.ko.Spec.LDAPServerMetadata.UserBase != nil && b.ko.Spec.LDAPServerMetadata.UserBase != nil {
+			if *a.ko.Spec.LDAPServerMetadata.UserBase != *b.ko.Spec.LDAPServerMetadata.UserBase {
+				delta.Add("Spec.LDAPServerMetadata.UserBase", a.ko.Spec.LDAPServerMetadata.UserBase, b.ko.Spec.LDAPServerMetadata.UserBase)
 			}
 		}
-		if ackcompare.HasNilDifference(a.ko.Spec.LdapServerMetadata.UserRoleName, b.ko.Spec.LdapServerMetadata.UserRoleName) {
-			delta.Add("Spec.LdapServerMetadata.UserRoleName", a.ko.Spec.LdapServerMetadata.UserRoleName, b.ko.Spec.LdapServerMetadata.UserRoleName)
-		} else if a.ko.Spec.LdapServerMetadata.UserRoleName != nil && b.ko.Spec.LdapServerMetadata.UserRoleName != nil {
-			if *a.ko.Spec.LdapServerMetadata.UserRoleName != *b.ko.Spec.LdapServerMetadata.UserRoleName {
-				delta.Add("Spec.LdapServerMetadata.UserRoleName", a.ko.Spec.LdapServerMetadata.UserRoleName, b.ko.Spec.LdapServerMetadata.UserRoleName)
+		if ackcompare.HasNilDifference(a.ko.Spec.LDAPServerMetadata.UserRoleName, b.ko.Spec.LDAPServerMetadata.UserRoleName) {
+			delta.Add("Spec.LDAPServerMetadata.UserRoleName", a.ko.Spec.LDAPServerMetadata.UserRoleName, b.ko.Spec.LDAPServerMetadata.UserRoleName)
+		} else if a.ko.Spec.LDAPServerMetadata.UserRoleName != nil && b.ko.Spec.LDAPServerMetadata.UserRoleName != nil {
+			if *a.ko.Spec.LDAPServerMetadata.UserRoleName != *b.ko.Spec.LDAPServerMetadata.UserRoleName {
+				delta.Add("Spec.LDAPServerMetadata.UserRoleName", a.ko.Spec.LDAPServerMetadata.UserRoleName, b.ko.Spec.LDAPServerMetadata.UserRoleName)
 			}
 		}
-		if ackcompare.HasNilDifference(a.ko.Spec.LdapServerMetadata.UserSearchMatching, b.ko.Spec.LdapServerMetadata.UserSearchMatching) {
-			delta.Add("Spec.LdapServerMetadata.UserSearchMatching", a.ko.Spec.LdapServerMetadata.UserSearchMatching, b.ko.Spec.LdapServerMetadata.UserSearchMatching)
-		} else if a.ko.Spec.LdapServerMetadata.UserSearchMatching != nil && b.ko.Spec.LdapServerMetadata.UserSearchMatching != nil {
-			if *a.ko.Spec.LdapServerMetadata.UserSearchMatching != *b.ko.Spec.LdapServerMetadata.UserSearchMatching {
-				delta.Add("Spec.LdapServerMetadata.UserSearchMatching", a.ko.Spec.LdapServerMetadata.UserSearchMatching, b.ko.Spec.LdapServerMetadata.UserSearchMatching)
+		if ackcompare.HasNilDifference(a.ko.Spec.LDAPServerMetadata.UserSearchMatching, b.ko.Spec.LDAPServerMetadata.UserSearchMatching) {
+			delta.Add("Spec.LDAPServerMetadata.UserSearchMatching", a.ko.Spec.LDAPServerMetadata.UserSearchMatching, b.ko.Spec.LDAPServerMetadata.UserSearchMatching)
+		} else if a.ko.Spec.LDAPServerMetadata.UserSearchMatching != nil && b.ko.Spec.LDAPServerMetadata.UserSearchMatching != nil {
+			if *a.ko.Spec.LDAPServerMetadata.UserSearchMatching != *b.ko.Spec.LDAPServerMetadata.UserSearchMatching {
+				delta.Add("Spec.LDAPServerMetadata.UserSearchMatching", a.ko.Spec.LDAPServerMetadata.UserSearchMatching, b.ko.Spec.LDAPServerMetadata.UserSearchMatching)
 			}
 		}
-		if ackcompare.HasNilDifference(a.ko.Spec.LdapServerMetadata.UserSearchSubtree, b.ko.Spec.LdapServerMetadata.UserSearchSubtree) {
-			delta.Add("Spec.LdapServerMetadata.UserSearchSubtree", a.ko.Spec.LdapServerMetadata.UserSearchSubtree, b.ko.Spec.LdapServerMetadata.UserSearchSubtree)
-		} else if a.ko.Spec.LdapServerMetadata.UserSearchSubtree != nil && b.ko.Spec.LdapServerMetadata.UserSearchSubtree != nil {
-			if *a.ko.Spec.LdapServerMetadata.UserSearchSubtree != *b.ko.Spec.LdapServerMetadata.UserSearchSubtree {
-				delta.Add("Spec.LdapServerMetadata.UserSearchSubtree", a.ko.Spec.LdapServerMetadata.UserSearchSubtree, b.ko.Spec.LdapServerMetadata.UserSearchSubtree)
+		if ackcompare.HasNilDifference(a.ko.Spec.LDAPServerMetadata.UserSearchSubtree, b.ko.Spec.LDAPServerMetadata.UserSearchSubtree) {
+			delta.Add("Spec.LDAPServerMetadata.UserSearchSubtree", a.ko.Spec.LDAPServerMetadata.UserSearchSubtree, b.ko.Spec.LDAPServerMetadata.UserSearchSubtree)
+		} else if a.ko.Spec.LDAPServerMetadata.UserSearchSubtree != nil && b.ko.Spec.LDAPServerMetadata.UserSearchSubtree != nil {
+			if *a.ko.Spec.LDAPServerMetadata.UserSearchSubtree != *b.ko.Spec.LDAPServerMetadata.UserSearchSubtree {
+				delta.Add("Spec.LDAPServerMetadata.UserSearchSubtree", a.ko.Spec.LDAPServerMetadata.UserSearchSubtree, b.ko.Spec.LDAPServerMetadata.UserSearchSubtree)
 			}
 		}
 	}
@@ -243,6 +236,13 @@ func newResourceDelta(
 			if *a.ko.Spec.MaintenanceWindowStartTime.TimeZone != *b.ko.Spec.MaintenanceWindowStartTime.TimeZone {
 				delta.Add("Spec.MaintenanceWindowStartTime.TimeZone", a.ko.Spec.MaintenanceWindowStartTime.TimeZone, b.ko.Spec.MaintenanceWindowStartTime.TimeZone)
 			}
+		}
+	}
+	if ackcompare.HasNilDifference(a.ko.Spec.Name, b.ko.Spec.Name) {
+		delta.Add("Spec.Name", a.ko.Spec.Name, b.ko.Spec.Name)
+	} else if a.ko.Spec.Name != nil && b.ko.Spec.Name != nil {
+		if *a.ko.Spec.Name != *b.ko.Spec.Name {
+			delta.Add("Spec.Name", a.ko.Spec.Name, b.ko.Spec.Name)
 		}
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.PubliclyAccessible, b.ko.Spec.PubliclyAccessible) {
