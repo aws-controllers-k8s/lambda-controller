@@ -73,9 +73,13 @@ func (rm *resourceManager) sdkFind(
 
 	if resp.AuthenticationStrategy != nil {
 		ko.Spec.AuthenticationStrategy = resp.AuthenticationStrategy
+	} else {
+		ko.Spec.AuthenticationStrategy = nil
 	}
 	if resp.AutoMinorVersionUpgrade != nil {
 		ko.Spec.AutoMinorVersionUpgrade = resp.AutoMinorVersionUpgrade
+	} else {
+		ko.Spec.AutoMinorVersionUpgrade = nil
 	}
 	if ko.Status.ACKResourceMetadata == nil {
 		ko.Status.ACKResourceMetadata = &ackv1alpha1.ResourceMetadata{}
@@ -86,6 +90,8 @@ func (rm *resourceManager) sdkFind(
 	}
 	if resp.BrokerId != nil {
 		ko.Status.BrokerID = resp.BrokerId
+	} else {
+		ko.Status.BrokerID = nil
 	}
 	if resp.BrokerInstances != nil {
 		f4 := []*svcapitypes.BrokerInstance{}
@@ -109,12 +115,18 @@ func (rm *resourceManager) sdkFind(
 			f4 = append(f4, f4elem)
 		}
 		ko.Status.BrokerInstances = f4
+	} else {
+		ko.Status.BrokerInstances = nil
 	}
 	if resp.BrokerName != nil {
 		ko.Spec.BrokerName = resp.BrokerName
+	} else {
+		ko.Spec.BrokerName = nil
 	}
 	if resp.DeploymentMode != nil {
 		ko.Spec.DeploymentMode = resp.DeploymentMode
+	} else {
+		ko.Spec.DeploymentMode = nil
 	}
 	if resp.EncryptionOptions != nil {
 		f10 := &svcapitypes.EncryptionOptions{}
@@ -125,15 +137,23 @@ func (rm *resourceManager) sdkFind(
 			f10.UseAWSOwnedKey = resp.EncryptionOptions.UseAwsOwnedKey
 		}
 		ko.Spec.EncryptionOptions = f10
+	} else {
+		ko.Spec.EncryptionOptions = nil
 	}
 	if resp.EngineType != nil {
 		ko.Spec.EngineType = resp.EngineType
+	} else {
+		ko.Spec.EngineType = nil
 	}
 	if resp.EngineVersion != nil {
 		ko.Spec.EngineVersion = resp.EngineVersion
+	} else {
+		ko.Spec.EngineVersion = nil
 	}
 	if resp.HostInstanceType != nil {
 		ko.Spec.HostInstanceType = resp.HostInstanceType
+	} else {
+		ko.Spec.HostInstanceType = nil
 	}
 	if resp.LdapServerMetadata != nil {
 		f14 := &svcapitypes.LdapServerMetadataInput{}
@@ -174,6 +194,8 @@ func (rm *resourceManager) sdkFind(
 			f14.UserSearchSubtree = resp.LdapServerMetadata.UserSearchSubtree
 		}
 		ko.Spec.LdapServerMetadata = f14
+	} else {
+		ko.Spec.LdapServerMetadata = nil
 	}
 	if resp.Logs != nil {
 		f15 := &svcapitypes.Logs{}
@@ -184,6 +206,8 @@ func (rm *resourceManager) sdkFind(
 			f15.General = resp.Logs.General
 		}
 		ko.Spec.Logs = f15
+	} else {
+		ko.Spec.Logs = nil
 	}
 	if resp.MaintenanceWindowStartTime != nil {
 		f16 := &svcapitypes.WeeklyStartTime{}
@@ -197,9 +221,13 @@ func (rm *resourceManager) sdkFind(
 			f16.TimeZone = resp.MaintenanceWindowStartTime.TimeZone
 		}
 		ko.Spec.MaintenanceWindowStartTime = f16
+	} else {
+		ko.Spec.MaintenanceWindowStartTime = nil
 	}
 	if resp.PubliclyAccessible != nil {
 		ko.Spec.PubliclyAccessible = resp.PubliclyAccessible
+	} else {
+		ko.Spec.PubliclyAccessible = nil
 	}
 	if resp.SecurityGroups != nil {
 		f23 := []*string{}
@@ -209,9 +237,13 @@ func (rm *resourceManager) sdkFind(
 			f23 = append(f23, &f23elem)
 		}
 		ko.Spec.SecurityGroups = f23
+	} else {
+		ko.Spec.SecurityGroups = nil
 	}
 	if resp.StorageType != nil {
 		ko.Spec.StorageType = resp.StorageType
+	} else {
+		ko.Spec.StorageType = nil
 	}
 	if resp.SubnetIds != nil {
 		f25 := []*string{}
@@ -221,6 +253,8 @@ func (rm *resourceManager) sdkFind(
 			f25 = append(f25, &f25elem)
 		}
 		ko.Spec.SubnetIDs = f25
+	} else {
+		ko.Spec.SubnetIDs = nil
 	}
 	if resp.Tags != nil {
 		f26 := map[string]*string{}
@@ -230,6 +264,8 @@ func (rm *resourceManager) sdkFind(
 			f26[f26key] = &f26val
 		}
 		ko.Spec.Tags = f26
+	} else {
+		ko.Spec.Tags = nil
 	}
 	if resp.Users != nil {
 		f27 := []*svcapitypes.User{}
@@ -241,6 +277,8 @@ func (rm *resourceManager) sdkFind(
 			f27 = append(f27, f27elem)
 		}
 		ko.Spec.Users = f27
+	} else {
+		ko.Spec.Users = nil
 	}
 
 	rm.setStatusDefaults(ko)
@@ -249,7 +287,7 @@ func (rm *resourceManager) sdkFind(
 }
 
 // requiredFieldsMissingFromReadOneInput returns true if there are any fields
-// for the ReadOne Input shape that are required by not present in the
+// for the ReadOne Input shape that are required but not present in the
 // resource's Spec or Status
 func (rm *resourceManager) requiredFieldsMissingFromReadOneInput(
 	r *resource,
@@ -301,6 +339,8 @@ func (rm *resourceManager) sdkCreate(
 	}
 	if resp.BrokerId != nil {
 		ko.Status.BrokerID = resp.BrokerId
+	} else {
+		ko.Status.BrokerID = nil
 	}
 
 	rm.setStatusDefaults(ko)
@@ -514,6 +554,8 @@ func (rm *resourceManager) sdkUpdate(
 
 	if resp.BrokerId != nil {
 		ko.Status.BrokerID = resp.BrokerId
+	} else {
+		ko.Status.BrokerID = nil
 	}
 
 	rm.setStatusDefaults(ko)
