@@ -16,80 +16,120 @@
 package v1alpha1
 
 import (
+	ackv1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
+	"github.com/aws/aws-sdk-go/aws"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// Hack to avoid import errors during build...
+var (
+	_ = &metav1.Time{}
+	_ = &aws.JSONValue{}
+	_ = ackv1alpha1.AWSAccountID("")
+)
+
+// Name of the availability zone.
 type AvailabilityZone struct {
 	Name *string `json:"name,omitempty"`
 }
 
+// Types of broker engines.
 type BrokerEngineType struct {
+	// The type of broker engine. Note: Currently, Amazon MQ supports ActiveMQ and
+	// RabbitMQ.
 	EngineType *string `json:"engineType,omitempty"`
 }
 
+// Returns information about all brokers.
 type BrokerInstance struct {
 	ConsoleURL *string   `json:"consoleURL,omitempty"`
 	Endpoints  []*string `json:"endpoints,omitempty"`
 	IPAddress  *string   `json:"ipAddress,omitempty"`
 }
 
+// Option for host instance type.
 type BrokerInstanceOption struct {
-	EngineType              *string   `json:"engineType,omitempty"`
-	HostInstanceType        *string   `json:"hostInstanceType,omitempty"`
+	// The type of broker engine. Note: Currently, Amazon MQ supports ActiveMQ and
+	// RabbitMQ.
+	EngineType       *string `json:"engineType,omitempty"`
+	HostInstanceType *string `json:"hostInstanceType,omitempty"`
+	// The storage type of the broker. EFS is currently not Supported for RabbitMQ
+	// engine type.
 	StorageType             *string   `json:"storageType,omitempty"`
 	SupportedEngineVersions []*string `json:"supportedEngineVersions,omitempty"`
 }
 
+// The Amazon Resource Name (ARN) of the broker.
 type BrokerSummary struct {
-	BrokerARN        *string      `json:"brokerARN,omitempty"`
-	BrokerID         *string      `json:"brokerID,omitempty"`
-	BrokerName       *string      `json:"brokerName,omitempty"`
-	BrokerState      *string      `json:"brokerState,omitempty"`
-	Created          *metav1.Time `json:"created,omitempty"`
-	DeploymentMode   *string      `json:"deploymentMode,omitempty"`
-	EngineType       *string      `json:"engineType,omitempty"`
-	HostInstanceType *string      `json:"hostInstanceType,omitempty"`
+	BrokerARN  *string `json:"brokerARN,omitempty"`
+	BrokerID   *string `json:"brokerID,omitempty"`
+	BrokerName *string `json:"brokerName,omitempty"`
+	// The status of the broker.
+	BrokerState *string      `json:"brokerState,omitempty"`
+	Created     *metav1.Time `json:"created,omitempty"`
+	// The deployment mode of the broker.
+	DeploymentMode *string `json:"deploymentMode,omitempty"`
+	// The type of broker engine. Note: Currently, Amazon MQ supports ActiveMQ and
+	// RabbitMQ.
+	EngineType       *string `json:"engineType,omitempty"`
+	HostInstanceType *string `json:"hostInstanceType,omitempty"`
 }
 
+// Returns information about all configurations.
 type Configuration struct {
-	ARN                    *string            `json:"arn,omitempty"`
-	AuthenticationStrategy *string            `json:"authenticationStrategy,omitempty"`
-	Created                *metav1.Time       `json:"created,omitempty"`
-	Description            *string            `json:"description,omitempty"`
-	EngineType             *string            `json:"engineType,omitempty"`
-	EngineVersion          *string            `json:"engineVersion,omitempty"`
-	ID                     *string            `json:"id,omitempty"`
-	Name                   *string            `json:"name,omitempty"`
-	Tags                   map[string]*string `json:"tags,omitempty"`
+	ARN *string `json:"arn,omitempty"`
+	// The authentication strategy used to secure the broker.
+	AuthenticationStrategy *string      `json:"authenticationStrategy,omitempty"`
+	Created                *metav1.Time `json:"created,omitempty"`
+	Description            *string      `json:"description,omitempty"`
+	// The type of broker engine. Note: Currently, Amazon MQ supports ActiveMQ and
+	// RabbitMQ.
+	EngineType    *string            `json:"engineType,omitempty"`
+	EngineVersion *string            `json:"engineVersion,omitempty"`
+	ID            *string            `json:"id,omitempty"`
+	Name          *string            `json:"name,omitempty"`
+	Tags          map[string]*string `json:"tags,omitempty"`
 }
 
+// A list of information about the configuration. Does not apply to RabbitMQ
+// brokers.
 type ConfigurationID struct {
 	ID       *string `json:"id,omitempty"`
 	Revision *int64  `json:"revision,omitempty"`
 }
 
+// Returns information about the specified configuration revision.
 type ConfigurationRevision struct {
 	Created     *metav1.Time `json:"created,omitempty"`
 	Description *string      `json:"description,omitempty"`
 	Revision    *int64       `json:"revision,omitempty"`
 }
 
+// Broker configuration information
 type Configurations struct {
+	// A list of information about the configuration. Does not apply to RabbitMQ
+	// brokers.
 	Current *ConfigurationID   `json:"current,omitempty"`
 	History []*ConfigurationID `json:"history,omitempty"`
-	Pending *ConfigurationID   `json:"pending,omitempty"`
+	// A list of information about the configuration. Does not apply to RabbitMQ
+	// brokers.
+	Pending *ConfigurationID `json:"pending,omitempty"`
 }
 
+// Encryption options for the broker.
 type EncryptionOptions struct {
 	KMSKeyID       *string `json:"kmsKeyID,omitempty"`
 	UseAWSOwnedKey *bool   `json:"useAWSOwnedKey,omitempty"`
 }
 
+// Id of the engine version.
 type EngineVersion struct {
 	Name *string `json:"name,omitempty"`
 }
 
-type LdapServerMetadataInput struct {
+// The metadata of the LDAP server used to authenticate and authorize connections
+// to the broker. Currently not supported for RabbitMQ engine type.
+type LDAPServerMetadataInput struct {
 	Hosts                  []*string `json:"hosts,omitempty"`
 	RoleBase               *string   `json:"roleBase,omitempty"`
 	RoleName               *string   `json:"roleName,omitempty"`
@@ -103,7 +143,9 @@ type LdapServerMetadataInput struct {
 	UserSearchSubtree      *bool     `json:"userSearchSubtree,omitempty"`
 }
 
-type LdapServerMetadataOutput struct {
+// The metadata of the LDAP server used to authenticate and authorize connections
+// to the broker.
+type LDAPServerMetadataOutput struct {
 	Hosts                  []*string `json:"hosts,omitempty"`
 	RoleBase               *string   `json:"roleBase,omitempty"`
 	RoleName               *string   `json:"roleName,omitempty"`
@@ -116,29 +158,37 @@ type LdapServerMetadataOutput struct {
 	UserSearchSubtree      *bool     `json:"userSearchSubtree,omitempty"`
 }
 
+// The list of information about logs to be enabled for the specified broker.
 type Logs struct {
 	Audit   *bool `json:"audit,omitempty"`
 	General *bool `json:"general,omitempty"`
 }
 
+// The list of information about logs currently enabled and pending to be deployed
+// for the specified broker.
 type LogsSummary struct {
-	Audit           *bool        `json:"audit,omitempty"`
-	AuditLogGroup   *string      `json:"auditLogGroup,omitempty"`
-	General         *bool        `json:"general,omitempty"`
-	GeneralLogGroup *string      `json:"generalLogGroup,omitempty"`
-	Pending         *PendingLogs `json:"pending,omitempty"`
+	Audit           *bool   `json:"audit,omitempty"`
+	AuditLogGroup   *string `json:"auditLogGroup,omitempty"`
+	General         *bool   `json:"general,omitempty"`
+	GeneralLogGroup *string `json:"generalLogGroup,omitempty"`
+	// The list of information about logs to be enabled for the specified broker.
+	Pending *PendingLogs `json:"pending,omitempty"`
 }
 
+// The list of information about logs to be enabled for the specified broker.
 type PendingLogs struct {
 	Audit   *bool `json:"audit,omitempty"`
 	General *bool `json:"general,omitempty"`
 }
 
+// Returns information about the XML element or attribute that was sanitized
+// in the configuration.
 type SanitizationWarning struct {
 	AttributeName *string `json:"attributeName,omitempty"`
 	ElementName   *string `json:"elementName,omitempty"`
 }
 
+// A user associated with the broker.
 type User struct {
 	ConsoleAccess *bool     `json:"consoleAccess,omitempty"`
 	Groups        []*string `json:"groups,omitempty"`
@@ -146,17 +196,24 @@ type User struct {
 	Username      *string   `json:"username,omitempty"`
 }
 
+// Returns information about the status of the changes pending for the ActiveMQ
+// user.
 type UserPendingChanges struct {
 	ConsoleAccess *bool     `json:"consoleAccess,omitempty"`
 	Groups        []*string `json:"groups,omitempty"`
-	PendingChange *string   `json:"pendingChange,omitempty"`
+	// The type of change pending for the ActiveMQ user.
+	PendingChange *string `json:"pendingChange,omitempty"`
 }
 
+// Returns a list of all broker users.
 type UserSummary struct {
+	// The type of change pending for the ActiveMQ user.
 	PendingChange *string `json:"pendingChange,omitempty"`
 	Username      *string `json:"username,omitempty"`
 }
 
+// The scheduled time period relative to UTC during which Amazon MQ begins to
+// apply pending updates or patches to the broker.
 type WeeklyStartTime struct {
 	DayOfWeek *string `json:"dayOfWeek,omitempty"`
 	TimeOfDay *string `json:"timeOfDay,omitempty"`

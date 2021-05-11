@@ -40,9 +40,9 @@ spec:
                 type: string
               autoMinorVersionUpgrade:
                 type: boolean
-              brokerName:
-                type: string
               configuration:
+                description: A list of information about the configuration. Does not
+                  apply to RabbitMQ brokers.
                 properties:
                   id:
                     type: string
@@ -55,6 +55,7 @@ spec:
               deploymentMode:
                 type: string
               encryptionOptions:
+                description: Encryption options for the broker.
                 properties:
                   kmsKeyID:
                     type: string
@@ -68,6 +69,9 @@ spec:
               hostInstanceType:
                 type: string
               ldapServerMetadata:
+                description: The metadata of the LDAP server used to authenticate
+                  and authorize connections to the broker. Currently not supported
+                  for RabbitMQ engine type.
                 properties:
                   hosts:
                     items:
@@ -95,6 +99,8 @@ spec:
                     type: boolean
                 type: object
               logs:
+                description: The list of information about logs to be enabled for
+                  the specified broker.
                 properties:
                   audit:
                     type: boolean
@@ -102,6 +108,8 @@ spec:
                     type: boolean
                 type: object
               maintenanceWindowStartTime:
+                description: The scheduled time period relative to UTC during which
+                  Amazon MQ begins to apply pending updates or patches to the broker.
                 properties:
                   dayOfWeek:
                     type: string
@@ -110,6 +118,8 @@ spec:
                   timeZone:
                     type: string
                 type: object
+              name:
+                type: string
               publiclyAccessible:
                 type: boolean
               securityGroups:
@@ -128,6 +138,7 @@ spec:
                 type: object
               users:
                 items:
+                  description: A user associated with the broker.
                   properties:
                     consoleAccess:
                       type: boolean
@@ -172,6 +183,7 @@ spec:
                 type: string
               brokerInstances:
                 items:
+                  description: Returns information about all brokers.
                   properties:
                     consoleURL:
                       type: string
