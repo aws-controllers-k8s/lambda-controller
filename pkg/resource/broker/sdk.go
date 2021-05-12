@@ -118,6 +118,11 @@ func (rm *resourceManager) sdkFind(
 	} else {
 		ko.Status.BrokerInstances = nil
 	}
+	if resp.BrokerState != nil {
+		ko.Status.BrokerState = resp.BrokerState
+	} else {
+		ko.Status.BrokerState = nil
+	}
 	if resp.DeploymentMode != nil {
 		ko.Spec.DeploymentMode = resp.DeploymentMode
 	} else {
@@ -532,10 +537,42 @@ func (rm *resourceManager) sdkUpdate(
 	latest *resource,
 	delta *ackcompare.Delta,
 ) (*resource, error) {
+	if brokerCreateFailed(latest) {
+		msg := "Broker state is CREATION_FAILED"
+		setTerminalCondition(desired, corev1.ConditionTrue, &msg, nil)
+		setSyncedCondition(desired, corev1.ConditionTrue, nil, nil)
+		return desired, nil
+	}
+	if brokerCreateInProgress(latest) {
+		msg := "Broker state is CREATION_IN_PROGRESS"
+		setSyncedCondition(desired, corev1.ConditionFalse, &msg, nil)
+		return desired, requeueWaitWhileCreating
+	}
+	if brokerDeleteInProgress(latest) {
+		msg := "Broker state is DELETION_IN_PROGRESS"
+		setSyncedCondition(desired, corev1.ConditionFalse, &msg, nil)
+		return desired, requeueWaitWhileDeleting
+	}
 
 	input, err := rm.newUpdateRequestPayload(ctx, desired)
 	if err != nil {
 		return nil, err
+	}
+	if brokerCreateFailed(latest) {
+		msg := "Broker state is CREATION_FAILED"
+		setTerminalCondition(desired, corev1.ConditionTrue, &msg, nil)
+		setSyncedCondition(desired, corev1.ConditionTrue, nil, nil)
+		return desired, nil
+	}
+	if brokerCreateInProgress(latest) {
+		msg := "Broker state is CREATION_IN_PROGRESS"
+		setSyncedCondition(desired, corev1.ConditionFalse, &msg, nil)
+		return desired, requeueWaitWhileCreating
+	}
+	if brokerDeleteInProgress(latest) {
+		msg := "Broker state is DELETION_IN_PROGRESS"
+		setSyncedCondition(desired, corev1.ConditionFalse, &msg, nil)
+		return desired, requeueWaitWhileDeleting
 	}
 
 	resp, respErr := rm.sdkapi.UpdateBrokerWithContext(ctx, input)
@@ -662,6 +699,9 @@ func (rm *resourceManager) sdkDelete(
 	ctx context.Context,
 	r *resource,
 ) error {
+	if brokerDeleteInProgress(r) {
+		return requeueWaitWhileDeleting
+	}
 
 	input, err := rm.newDeleteRequestPayload(r)
 	if err != nil {
