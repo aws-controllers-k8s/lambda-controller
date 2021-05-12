@@ -3,9 +3,9 @@ kind: Broker
 metadata:
   name: $BROKER_NAME
 spec:
-  brokerName: $BROKER_NAME
+  name: $BROKER_NAME
   deploymentMode: SINGLE_INSTANCE
-  engineType: RABBITMQ
+  engineType: RabbitMQ
   engineVersion: $MQ_RABBITMQ_ENGINE_VERSION
   hostInstanceType: $MQ_HOST_INSTANCE_TYPE
   users:

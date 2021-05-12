@@ -28,12 +28,17 @@ from e2e.replacement_values import REPLACEMENT_VALUES
 
 RESOURCE_PLURAL = 'brokers'
 
-DELETE_WAIT_AFTER_SECONDS = 20
-CREATE_INTERVAL_SLEEP_SECONDS = 15
+DELETE_WAIT_INTERVAL_SLEEP_SECONDS = 15
+DELETE_WAIT_AFTER_SECONDS = 120
+# It often takes >2 minutes from calling DeleteBroker to the broker record no
+# longer appearing in the AMQ API...
+DELETE_TIMEOUT_SECONDS = 300
+
+CREATE_INTERVAL_SLEEP_SECONDS = 30
 # Time to wait before we get to an expected RUNNING state.
 # In my experience, it regularly takes more than 6 minutes to create a
 # single-instance RabbitMQ broker...
-CREATE_TIMEOUT_SECONDS = 600
+CREATE_TIMEOUT_SECONDS = 900
 
 
 @pytest.fixture(scope="module")
@@ -86,7 +91,7 @@ class TestRabbitMQBroker:
         # TODO(jaypipes): Move this into generic AWS-side waiter
         while aws_res['BrokerState'] != "RUNNING":
             if datetime.datetime.now() >= timeout:
-                raise Exception("failed to find running Broker before timeout")
+                pytest.fail("failed to find running Broker before timeout")
             time.sleep(CREATE_INTERVAL_SLEEP_SECONDS)
             aws_res = amq_client.describe_broker(BrokerId=broker_id)
             assert aws_res is not None
@@ -104,12 +109,18 @@ class TestRabbitMQBroker:
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
 
-        # Broker should no longer appear in AmazonMQ
-        res_found = False
-        try:
-            amq_client.describe_broker(BrokerId=broker_id)
-            res_found = True
-        except amq_client.exceptions.NotFoundException:
-            pass
+        now = datetime.datetime.now()
+        timeout = now + datetime.timedelta(seconds=DELETE_TIMEOUT_SECONDS)
 
-        assert res_found is False
+        # Broker should no longer appear in AmazonMQ
+        while True:
+            if datetime.datetime.now() >= timeout:
+                pytest.fail("Timed out waiting for ES Domain to being deleted in AES API")
+            time.sleep(DELETE_WAIT_INTERVAL_SLEEP_SECONDS)
+
+            try:
+                aws_res = amq_client.describe_broker(BrokerId=broker_id)
+                if aws_res['BrokerState'] != "DELETION_IN_PROGRESS":
+                    pytest.fail("BrokerState is not DELETION_IN_PROGRESS for broker that was deleted. BrokerState is "+aws_res['BrokerState'])
+            except amq_client.exceptions.NotFoundException:
+                break

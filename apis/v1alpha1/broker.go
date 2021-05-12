@@ -76,6 +76,8 @@ type BrokerStatus struct {
 	BrokerID *string `json:"brokerID,omitempty"`
 
 	BrokerInstances []*BrokerInstance `json:"brokerInstances,omitempty"`
+
+	BrokerState *string `json:"brokerState,omitempty"`
 }
 
 // Broker is the Schema for the Brokers API
