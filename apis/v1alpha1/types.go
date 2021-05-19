@@ -190,10 +190,10 @@ type SanitizationWarning struct {
 
 // A user associated with the broker.
 type User struct {
-	ConsoleAccess *bool     `json:"consoleAccess,omitempty"`
-	Groups        []*string `json:"groups,omitempty"`
-	Password      *string   `json:"password,omitempty"`
-	Username      *string   `json:"username,omitempty"`
+	ConsoleAccess *bool                           `json:"consoleAccess,omitempty"`
+	Groups        []*string                       `json:"groups,omitempty"`
+	Password      *ackv1alpha1.SecretKeyReference `json:"password,omitempty"`
+	Username      *string                         `json:"username,omitempty"`
 }
 
 // Returns information about the status of the changes pending for the ActiveMQ

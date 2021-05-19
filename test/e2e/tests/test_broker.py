@@ -53,14 +53,33 @@ def get_resource_arn(self, resource: Dict):
     return resource['status']['ackResourceMetadata']['arn']
 
 
+@pytest.fixture(scope="module")
+def admin_user_pass_secret():
+    ns = "default"
+    name = "dbsecrets"
+    key = "admin_user_password"
+    secret_val = "adminpassneeds12chars"
+    k8s.create_opaque_secret(ns, name, key, secret_val)
+    yield ns, name, key
+    k8s.delete_secret(ns, name)
+
+
 @service_marker
 @pytest.mark.canary
 class TestRabbitMQBroker:
-    def test_create_delete_non_public(self, amq_client):
+    def test_create_delete_non_public(
+            self,
+            amq_client,
+            admin_user_pass_secret,
+    ):
         resource_name = "my-rabbit-broker-non-public"
+        aup_sec_ns, aup_sec_name, aup_sec_key = admin_user_pass_secret
 
         replacements = REPLACEMENT_VALUES.copy()
         replacements["BROKER_NAME"] = resource_name
+        replacements["ADMIN_USER_PASS_SECRET_NAMESPACE"] = aup_sec_ns
+        replacements["ADMIN_USER_PASS_SECRET_NAME"] = aup_sec_name
+        replacements["ADMIN_USER_PASS_SECRET_KEY"] = aup_sec_key
 
         resource_data = load_mq_resource(
             "broker_rabbitmq_non_public",
@@ -77,7 +96,6 @@ class TestRabbitMQBroker:
         cr = k8s.wait_resource_consumed_by_controller(ref)
 
         assert cr is not None
-        assert k8s.get_resource_exists(ref)
 
         broker_id = cr['status']['brokerID']
 

@@ -931,7 +931,7 @@ func (in *User) DeepCopyInto(out *User) {
 	}
 	if in.Password != nil {
 		in, out := &in.Password, &out.Password
-		*out = new(string)
+		*out = new(corev1alpha1.SecretKeyReference)
 		**out = **in
 	}
 	if in.Username != nil {
