@@ -101,7 +101,7 @@ func setTerminalCondition(
 	message *string,
 	reason *string,
 ) {
-	c := getSyncedCondition(r)
+	c := getTerminalCondition(r)
 	if c == nil {
 		c = &ackv1alpha1.Condition{
 			Type: ackv1alpha1.ConditionTypeTerminal,
