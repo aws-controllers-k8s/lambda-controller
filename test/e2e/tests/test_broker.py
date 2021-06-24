@@ -21,6 +21,7 @@ import logging
 import time
 from typing import Dict
 
+from acktest.resources import random_suffix_name
 from acktest.k8s import resource as k8s
 
 from e2e import service_marker, CRD_GROUP, CRD_VERSION, load_mq_resource
@@ -46,11 +47,31 @@ def amq_client():
     return boto3.client('mq')
 
 
-# TODO(jaypipes): Move to k8s common library
-def get_resource_arn(self, resource: Dict):
-    assert 'ackResourceMetadata' in resource['status'] and \
-        'arn' in resource['status']['ackResourceMetadata']
-    return resource['status']['ackResourceMetadata']['arn']
+#TODO(a-hilaly): Move to test-infra
+def wait_for_cr_status(
+    reference: k8s.CustomResourceReference,
+    status_field: str,
+    desired_status: str,
+    wait_periods: int,
+    period_length: int,
+):
+    """
+    Waits for the specified condition in CR status to reach the desired value.
+    """
+    actual_status = None
+    for i in range(wait_periods):
+        time.sleep(period_length)
+        resource = k8s.get_resource(reference)
+        actual_status = resource["status"][status_field]
+        if actual_status == desired_status:
+            break
+
+    else:
+        logging.error(
+            f"Wait for status: {desired_status} timed out. Actual status: {actual_status}"
+        )
+
+    assert actual_status == desired_status
 
 
 @pytest.fixture(scope="module")
@@ -72,7 +93,7 @@ class TestRabbitMQBroker:
             amq_client,
             admin_user_pass_secret,
     ):
-        resource_name = "my-rabbit-broker-non-public"
+        resource_name = random_suffix_name("my-rabbit-broker-non-public", 32)
         aup_sec_ns, aup_sec_name, aup_sec_key = admin_user_pass_secret
 
         replacements = REPLACEMENT_VALUES.copy()
@@ -103,16 +124,13 @@ class TestRabbitMQBroker:
         aws_res = amq_client.describe_broker(BrokerId=broker_id)
         assert aws_res is not None
 
-        now = datetime.datetime.now()
-        timeout = now + datetime.timedelta(seconds=CREATE_TIMEOUT_SECONDS)
-
-        # TODO(jaypipes): Move this into generic AWS-side waiter
-        while aws_res['BrokerState'] != "RUNNING":
-            if datetime.datetime.now() >= timeout:
-                pytest.fail("failed to find running Broker before timeout")
-            time.sleep(CREATE_INTERVAL_SLEEP_SECONDS)
-            aws_res = amq_client.describe_broker(BrokerId=broker_id)
-            assert aws_res is not None
+        wait_for_cr_status(
+            ref,
+            "brokerState",
+            "RUNNING",
+            CREATE_INTERVAL_SLEEP_SECONDS,
+            45,
+        )
 
         # At this point, there should be at least one BrokerInstance record in
         # the Broker.Status.BrokerInstances collection which we can grab an

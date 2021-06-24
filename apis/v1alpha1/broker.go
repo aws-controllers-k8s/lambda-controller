@@ -20,7 +20,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// BrokerSpec defines the desired state of Broker
+// BrokerSpec defines the desired state of Broker.
 type BrokerSpec struct {
 	AuthenticationStrategy *string `json:"authenticationStrategy,omitempty"`
 
