@@ -1,0 +1,8 @@
+service:
+  full_name: "Amazon MQ"
+  short_name: "MQ"
+  link: "https://aws.amazon.com/amazon-mq/"
+  documentation: "https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/welcome.html"
+api_versions:
+  - api_version: v1alpha1
+    status: available
