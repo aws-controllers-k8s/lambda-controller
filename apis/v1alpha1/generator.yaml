@@ -1,0 +1,6 @@
+ignore:
+  resource_names:
+    - Function
+    - Alias
+    - CodeSigningConfig
+    - EventSourceMapping
