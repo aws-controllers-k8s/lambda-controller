@@ -16,7 +16,16 @@
 package broker
 
 import (
+	"bytes"
+	"reflect"
+
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
+)
+
+// Hack to avoid import errors during build...
+var (
+	_ = &bytes.Buffer{}
+	_ = &reflect.Method{}
 )
 
 // newResourceDelta returns a new `ackcompare.Delta` used to compare two
@@ -120,7 +129,6 @@ func newResourceDelta(
 	if ackcompare.HasNilDifference(a.ko.Spec.LDAPServerMetadata, b.ko.Spec.LDAPServerMetadata) {
 		delta.Add("Spec.LDAPServerMetadata", a.ko.Spec.LDAPServerMetadata, b.ko.Spec.LDAPServerMetadata)
 	} else if a.ko.Spec.LDAPServerMetadata != nil && b.ko.Spec.LDAPServerMetadata != nil {
-
 		if !ackcompare.SliceStringPEqual(a.ko.Spec.LDAPServerMetadata.Hosts, b.ko.Spec.LDAPServerMetadata.Hosts) {
 			delta.Add("Spec.LDAPServerMetadata.Hosts", a.ko.Spec.LDAPServerMetadata.Hosts, b.ko.Spec.LDAPServerMetadata.Hosts)
 		}
@@ -252,7 +260,6 @@ func newResourceDelta(
 			delta.Add("Spec.PubliclyAccessible", a.ko.Spec.PubliclyAccessible, b.ko.Spec.PubliclyAccessible)
 		}
 	}
-
 	if !ackcompare.SliceStringPEqual(a.ko.Spec.SecurityGroups, b.ko.Spec.SecurityGroups) {
 		delta.Add("Spec.SecurityGroups", a.ko.Spec.SecurityGroups, b.ko.Spec.SecurityGroups)
 	}
@@ -263,7 +270,6 @@ func newResourceDelta(
 			delta.Add("Spec.StorageType", a.ko.Spec.StorageType, b.ko.Spec.StorageType)
 		}
 	}
-
 	if !ackcompare.SliceStringPEqual(a.ko.Spec.SubnetIDs, b.ko.Spec.SubnetIDs) {
 		delta.Add("Spec.SubnetIDs", a.ko.Spec.SubnetIDs, b.ko.Spec.SubnetIDs)
 	}

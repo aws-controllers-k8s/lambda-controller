@@ -59,7 +59,7 @@ func (r *resource) RuntimeObject() k8srt.Object {
 // MetaObject returns the Kubernetes apimachinery/apis/meta/v1.Object
 // representation of the AWSResource
 func (r *resource) MetaObject() metav1.Object {
-	return r.ko
+	return r.ko.GetObjectMeta()
 }
 
 // RuntimeMetaObject returns an object that implements both the Kubernetes
@@ -84,12 +84,24 @@ func (r *resource) SetObjectMeta(meta metav1.ObjectMeta) {
 	r.ko.ObjectMeta = meta
 }
 
+// SetStatus will set the Status field for the resource
+func (r *resource) SetStatus(desired acktypes.AWSResource) {
+	r.ko.Status = desired.(*resource).ko.Status
+}
+
 // SetIdentifiers sets the Spec or Status field that is referenced as the unique
 // resource identifier
 func (r *resource) SetIdentifiers(identifier *ackv1alpha1.AWSIdentifiers) error {
-	if identifier.NameOrID == nil {
+	if identifier.NameOrID == "" {
 		return ackerrors.MissingNameIdentifier
 	}
-	r.ko.Spec.Name = identifier.NameOrID
+	r.ko.Status.BrokerID = &identifier.NameOrID
+
 	return nil
+}
+
+// DeepCopy will return a copy of the resource
+func (r *resource) DeepCopy() acktypes.AWSResource {
+	koCopy := r.ko.DeepCopy()
+	return &resource{koCopy}
 }

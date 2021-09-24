@@ -1,0 +1,42 @@
+ignore:
+  resource_names:
+    - Configuration
+    - User
+resources:
+  Broker:
+    hooks:
+      sdk_update_pre_build_request:
+        template_path: hooks/sdk_update_pre_build_request.go.tpl
+      sdk_delete_pre_build_request:
+        template_path: hooks/sdk_delete_pre_build_request.go.tpl
+      sdk_read_one_post_set_output:
+        template_path: hooks/sdk_read_one_post_set_output.go.tpl
+      sdk_update_pre_set_output:
+        template_path: hooks/sdk_update_pre_set_output.go.tpl
+    renames:
+      operations:
+        CreateBroker:
+          input_fields:
+            BrokerName: Name
+    fields:
+      BrokerState:
+        from:
+          operation: DescribeBroker
+          path: BrokerState
+        is_read_only: true
+      BrokerInstances:
+        from:
+          operation: DescribeBroker
+          path: BrokerInstances
+        is_read_only: true
+      Users:
+        compare:
+          # NOTE(jaypipes): For RabbitMQ brokers, the Users field returned by
+          # DescribeBroker is *always* an empty slice because the only settable
+          # user information at the moment is for the single admin user. So, as
+          # a workaround for right now to prevent update calls from being made
+          # unnecessarily, we ignore Users for the purposes of comparing
+          # resources.
+          is_ignored: true
+      Users..Password:
+        is_secret: true

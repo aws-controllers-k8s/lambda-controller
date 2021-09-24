@@ -1,3 +1,3 @@
 	if brokerDeleteInProgress(r) {
-		return requeueWaitWhileDeleting
+		return r, requeueWaitWhileDeleting
 	}

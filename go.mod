@@ -3,8 +3,8 @@ module github.com/aws-controllers-k8s/mq-controller
 go 1.14
 
 require (
-	github.com/aws-controllers-k8s/runtime v0.2.3
-	github.com/aws/aws-sdk-go v1.37.4
+	github.com/aws-controllers-k8s/runtime v0.14.1
+	github.com/aws/aws-sdk-go v1.37.10
 	github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr v0.1.1 // indirect
 	github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6 // indirect

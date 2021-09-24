@@ -1,6 +1,6 @@
 apiVersion: v1
-name: ack-mq-controller
-description: A Helm chart for the ACK service controller for mq
+name: mq-chart
+description: A Helm chart for the ACK service controller for Amazon MQ (MQ)
 version: v0.0.5
 appVersion: v0.0.5
 home: https://github.com/aws-controllers-k8s/mq-controller
@@ -10,7 +10,7 @@ sources:
 maintainers:
   - name: ACK Admins
     url: https://github.com/orgs/aws-controllers-k8s/teams/ack-admin
-  - name: mq Admins
+  - name: MQ Admins
     url: https://github.com/orgs/aws-controllers-k8s/teams/mq-maintainer
 keywords:
   - aws

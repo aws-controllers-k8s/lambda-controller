@@ -21,6 +21,7 @@ import (
 
 	ackv1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
+	ackcondition "github.com/aws-controllers-k8s/runtime/pkg/condition"
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
 	"github.com/aws/aws-sdk-go/aws"
@@ -40,6 +41,7 @@ var (
 	_ = &svcapitypes.Broker{}
 	_ = ackv1alpha1.AWSAccountID("")
 	_ = &ackerr.NotFound
+	_ = &ackcondition.NotManagedMessage
 )
 
 // sdkFind returns SDK-specific information about a supplied resource
@@ -594,10 +596,107 @@ func (rm *resourceManager) sdkUpdate(
 	latestKOStatus := latest.ko.DeepCopy().Status
 	ko.Status = latestKOStatus
 
+	if resp.AuthenticationStrategy != nil {
+		ko.Spec.AuthenticationStrategy = resp.AuthenticationStrategy
+	} else {
+		ko.Spec.AuthenticationStrategy = nil
+	}
+	if resp.AutoMinorVersionUpgrade != nil {
+		ko.Spec.AutoMinorVersionUpgrade = resp.AutoMinorVersionUpgrade
+	} else {
+		ko.Spec.AutoMinorVersionUpgrade = nil
+	}
 	if resp.BrokerId != nil {
 		ko.Status.BrokerID = resp.BrokerId
 	} else {
 		ko.Status.BrokerID = nil
+	}
+	if resp.Configuration != nil {
+		f3 := &svcapitypes.ConfigurationID{}
+		if resp.Configuration.Id != nil {
+			f3.ID = resp.Configuration.Id
+		}
+		if resp.Configuration.Revision != nil {
+			f3.Revision = resp.Configuration.Revision
+		}
+		ko.Spec.Configuration = f3
+	} else {
+		ko.Spec.Configuration = nil
+	}
+	if resp.EngineVersion != nil {
+		ko.Spec.EngineVersion = resp.EngineVersion
+	} else {
+		ko.Spec.EngineVersion = nil
+	}
+	if resp.HostInstanceType != nil {
+		ko.Spec.HostInstanceType = resp.HostInstanceType
+	} else {
+		ko.Spec.HostInstanceType = nil
+	}
+	if resp.LdapServerMetadata != nil {
+		f6 := &svcapitypes.LDAPServerMetadataInput{}
+		if resp.LdapServerMetadata.Hosts != nil {
+			f6f0 := []*string{}
+			for _, f6f0iter := range resp.LdapServerMetadata.Hosts {
+				var f6f0elem string
+				f6f0elem = *f6f0iter
+				f6f0 = append(f6f0, &f6f0elem)
+			}
+			f6.Hosts = f6f0
+		}
+		if resp.LdapServerMetadata.RoleBase != nil {
+			f6.RoleBase = resp.LdapServerMetadata.RoleBase
+		}
+		if resp.LdapServerMetadata.RoleName != nil {
+			f6.RoleName = resp.LdapServerMetadata.RoleName
+		}
+		if resp.LdapServerMetadata.RoleSearchMatching != nil {
+			f6.RoleSearchMatching = resp.LdapServerMetadata.RoleSearchMatching
+		}
+		if resp.LdapServerMetadata.RoleSearchSubtree != nil {
+			f6.RoleSearchSubtree = resp.LdapServerMetadata.RoleSearchSubtree
+		}
+		if resp.LdapServerMetadata.ServiceAccountUsername != nil {
+			f6.ServiceAccountUsername = resp.LdapServerMetadata.ServiceAccountUsername
+		}
+		if resp.LdapServerMetadata.UserBase != nil {
+			f6.UserBase = resp.LdapServerMetadata.UserBase
+		}
+		if resp.LdapServerMetadata.UserRoleName != nil {
+			f6.UserRoleName = resp.LdapServerMetadata.UserRoleName
+		}
+		if resp.LdapServerMetadata.UserSearchMatching != nil {
+			f6.UserSearchMatching = resp.LdapServerMetadata.UserSearchMatching
+		}
+		if resp.LdapServerMetadata.UserSearchSubtree != nil {
+			f6.UserSearchSubtree = resp.LdapServerMetadata.UserSearchSubtree
+		}
+		ko.Spec.LDAPServerMetadata = f6
+	} else {
+		ko.Spec.LDAPServerMetadata = nil
+	}
+	if resp.Logs != nil {
+		f7 := &svcapitypes.Logs{}
+		if resp.Logs.Audit != nil {
+			f7.Audit = resp.Logs.Audit
+		}
+		if resp.Logs.General != nil {
+			f7.General = resp.Logs.General
+		}
+		ko.Spec.Logs = f7
+	} else {
+		ko.Spec.Logs = nil
+	}
+	if resp.SecurityGroups != nil {
+		f8 := []*string{}
+		for _, f8iter := range resp.SecurityGroups {
+			var f8elem string
+			f8elem = *f8iter
+			f8 = append(f8, &f8elem)
+		}
+		ko.Spec.SecurityGroups = f8
+	} else {
+		ko.Spec.SecurityGroups = nil
 	}
 
 	rm.setStatusDefaults(ko)
@@ -707,21 +806,23 @@ func (rm *resourceManager) newUpdateRequestPayload(
 func (rm *resourceManager) sdkDelete(
 	ctx context.Context,
 	r *resource,
-) (err error) {
+) (latest *resource, err error) {
 	rlog := ackrtlog.FromContext(ctx)
 	exit := rlog.Trace("rm.sdkDelete")
 	defer exit(err)
 	if brokerDeleteInProgress(r) {
-		return requeueWaitWhileDeleting
+		return r, requeueWaitWhileDeleting
 	}
 
 	input, err := rm.newDeleteRequestPayload(r)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	_, err = rm.sdkapi.DeleteBrokerWithContext(ctx, input)
+	var resp *svcsdk.DeleteBrokerResponse
+	_ = resp
+	resp, err = rm.sdkapi.DeleteBrokerWithContext(ctx, input)
 	rm.metrics.RecordAPICall("DELETE", "DeleteBroker", err)
-	return err
+	return nil, err
 }
 
 // newDeleteRequestPayload returns an SDK-specific struct for the HTTP request
@@ -779,16 +880,21 @@ func (rm *resourceManager) updateConditions(
 		}
 	}
 
-	if rm.terminalAWSError(err) {
+	if rm.terminalAWSError(err) || err == ackerr.SecretTypeNotSupported || err == ackerr.SecretNotFound {
 		if terminalCondition == nil {
 			terminalCondition = &ackv1alpha1.Condition{
 				Type: ackv1alpha1.ConditionTypeTerminal,
 			}
 			ko.Status.Conditions = append(ko.Status.Conditions, terminalCondition)
 		}
+		var errorMessage = ""
+		if err == ackerr.SecretTypeNotSupported || err == ackerr.SecretNotFound {
+			errorMessage = err.Error()
+		} else {
+			awsErr, _ := ackerr.AWSError(err)
+			errorMessage = awsErr.Error()
+		}
 		terminalCondition.Status = corev1.ConditionTrue
-		awsErr, _ := ackerr.AWSError(err)
-		errorMessage := awsErr.Message()
 		terminalCondition.Message = &errorMessage
 	} else {
 		// Clear the terminal condition if no longer present
@@ -809,7 +915,7 @@ func (rm *resourceManager) updateConditions(
 			awsErr, _ := ackerr.AWSError(err)
 			errorMessage := err.Error()
 			if awsErr != nil {
-				errorMessage = awsErr.Message()
+				errorMessage = awsErr.Error()
 			}
 			recoverableCondition.Message = &errorMessage
 		} else if recoverableCondition != nil {
