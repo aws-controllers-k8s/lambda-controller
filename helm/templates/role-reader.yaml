@@ -9,6 +9,7 @@ rules:
 - apiGroups:
   - lambda.services.k8s.aws
   resources:
+  - functions
   verbs:
   - get
   - list
