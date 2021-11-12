@@ -21,7 +21,13 @@ from e2e import bootstrap_directory
 
 @dataclass
 class TestBootstrapResources:
-    pass
+    LambdaIAMRoleName: str
+    LambdaIAMRolePolicy: str
+    LambdaBasicRolePolicy: str
+    FunctionsBucketName: str
+    LambdaFunctionFilePath: str
+    LambdaRoleARN: str
+    LambdaFunctionFileZip: str
 
 _bootstrap_resources = None
 

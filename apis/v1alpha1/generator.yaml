@@ -1,6 +1,25 @@
 ignore:
   resource_names:
-    - Function
+    # Function
     - Alias
     - CodeSigningConfig
     - EventSourceMapping
+  shape_names:
+    - LayerList
+resources:
+  Function:
+    fields:
+      Name:
+        is_primary_key: true
+        is_required: true
+    renames:
+      operations:
+        CreateFunction:
+          input_fields:
+            FunctionName: Name
+        DeleteFunction:
+          input_fields:
+            FunctionName: Name
+        GetFunction:
+          input_fields:
+            FunctionName: Name
