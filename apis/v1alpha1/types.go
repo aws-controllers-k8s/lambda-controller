@@ -42,6 +42,24 @@ type AccountUsage struct {
 	TotalCodeSize *int64 `json:"totalCodeSize,omitempty"`
 }
 
+// Provides configuration information about a Lambda function alias (https://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html).
+type AliasConfiguration struct {
+	AliasARN        *string `json:"aliasARN,omitempty"`
+	Description     *string `json:"description,omitempty"`
+	FunctionVersion *string `json:"functionVersion,omitempty"`
+	Name            *string `json:"name,omitempty"`
+	RevisionID      *string `json:"revisionID,omitempty"`
+	// The traffic-shifting (https://docs.aws.amazon.com/lambda/latest/dg/lambda-traffic-shifting-using-aliases.html)
+	// configuration of a Lambda function alias.
+	RoutingConfig *AliasRoutingConfiguration `json:"routingConfig,omitempty"`
+}
+
+// The traffic-shifting (https://docs.aws.amazon.com/lambda/latest/dg/lambda-traffic-shifting-using-aliases.html)
+// configuration of a Lambda function alias.
+type AliasRoutingConfiguration struct {
+	AdditionalVersionWeights map[string]*float64 `json:"additionalVersionWeights,omitempty"`
+}
+
 // Details about a Code signing configuration (https://docs.aws.amazon.com/lambda/latest/dg/configuration-codesigning.html).
 type CodeSigningConfig struct {
 	CodeSigningConfigARN *string `json:"codeSigningConfigARN,omitempty"`

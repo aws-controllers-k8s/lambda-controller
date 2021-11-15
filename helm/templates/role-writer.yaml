@@ -9,6 +9,8 @@ rules:
 - apiGroups:
   - lambda.services.k8s.aws
   resources:
+  - aliases
+
   - functions
 
   verbs:
@@ -22,6 +24,7 @@ rules:
 - apiGroups:
   - lambda.services.k8s.aws
   resources:
+  - aliases
   - functions
   verbs:
   - get
