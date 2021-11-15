@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-"""Integration tests for the Lambda Repository API.
+"""Integration tests for the Lambda function API.
 """
 
 import boto3

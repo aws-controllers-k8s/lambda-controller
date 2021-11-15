@@ -31,6 +31,26 @@ rules:
 - apiGroups:
   - lambda.services.k8s.aws
   resources:
+  - aliases
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - lambda.services.k8s.aws
+  resources:
+  - aliases/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - lambda.services.k8s.aws
+  resources:
   - functions
   verbs:
   - create

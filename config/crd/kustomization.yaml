@@ -3,4 +3,5 @@ kind: Kustomization
 bases:
   - common
 resources:
+  - bases/lambda.services.k8s.aws_aliases.yaml
   - bases/lambda.services.k8s.aws_functions.yaml
