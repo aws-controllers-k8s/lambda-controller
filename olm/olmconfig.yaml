@@ -23,13 +23,19 @@ description: |-
 
 
   This controller is a component of the [AWS Controller for Kubernetes](https://github.com/aws/aws-controllers-k8s)
-  project. This project is currently in **developer preview**. 
+  project. This project is currently in **developer preview**.
+
+
+  **Pre-Installation Steps**
+
+
+  Please follow the following link: [Red Hat OpenShift](https://aws-controllers-k8s.github.io/community/docs/user-docs/openshift/)
 samples:
 - kind: Broker
   spec: '{}'
 maintainers:
-- name: "Your Team Name"
-  email: "your-team@example.com"
+- name: "mq maintainer team"
+  email: "ack-maintainers@amazon.com"
 links:
 - name: Amazon MQ Developer Resources
-  url: "https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/"
+  url: https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/
