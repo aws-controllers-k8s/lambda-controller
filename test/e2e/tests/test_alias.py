@@ -148,7 +148,7 @@ class TestAlias:
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
 
-        # Check alias doesn't exists
+        # Check alias doesn't exist
         exists = self.get_alias(lambda_client, resource_name, lambda_function_name)
         assert not exists
 

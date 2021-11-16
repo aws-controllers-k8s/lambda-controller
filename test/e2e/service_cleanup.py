@@ -59,7 +59,6 @@ def clean_up_and_delete_bucket(bucket_name: str):
     )
     logging.info(f"Deleted bucket {bucket_name}")
 
-
 if __name__ == "__main__":   
     bootstrap_config = resources.read_bootstrap_config(bootstrap_directory)
     service_cleanup(bootstrap_config)
