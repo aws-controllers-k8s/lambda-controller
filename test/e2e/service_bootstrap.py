@@ -41,12 +41,16 @@ LAMBDA_FUNCTION_FILE_ZIP = "main.zip"
 LAMBDA_FUNCTION_FILE_PATH = f"./resources/lambda_function/{LAMBDA_FUNCTION_FILE}"
 LAMBDA_FUNCTION_FILE_PATH_ZIP = f"./resources/lambda_function/{LAMBDA_FUNCTION_FILE_ZIP}"
 
+AWS_SIGNING_PROFILE_NAME = "ack_testing_lambda_signing_profile"
+AWS_SIGNING_PLATFORM_ID = "AWSLambda-SHA384-ECDSA"
+
 def service_bootstrap() -> dict:
     logging.getLogger().setLevel(logging.INFO)
     lambda_role_arn = create_lambda_role(LAMBDA_IAM_ROLE_NAME)
     create_bucket(FUNCTIONS_BUCKET_NAME)
     zip_function_file(LAMBDA_FUNCTION_FILE_PATH, LAMBDA_FUNCTION_FILE_PATH_ZIP)
     upload_function_to_bucket(LAMBDA_FUNCTION_FILE_PATH_ZIP, FUNCTIONS_BUCKET_NAME)
+    signing_profile_version_arn = ensure_signing_profile(AWS_SIGNING_PROFILE_NAME, AWS_SIGNING_PLATFORM_ID)
 
     return TestBootstrapResources(
         LAMBDA_IAM_ROLE_NAME,
@@ -56,8 +60,8 @@ def service_bootstrap() -> dict:
         LAMBDA_FUNCTION_FILE_PATH,
         lambda_role_arn,
         LAMBDA_FUNCTION_FILE_ZIP,
+        signing_profile_version_arn,
     ).__dict__
-
 
 def create_lambda_role(lambda_iam_role_name: str) -> str:
     region = get_region()
@@ -114,6 +118,24 @@ def upload_function_to_bucket(file_path: str, bucket_name: str):
 
     logging.info(f"Uploaded {file_path} to bucket {bucket_name}")
 
+def ensure_signing_profile(signing_profile_name: str, platform_id: str) -> str:
+    region = get_region()
+    signer_client = boto3.client("signer", region_name=region)
+
+    # Signing profiles cannot be deleted. We just reuse the same signing profile
+    # for ACK lambda controller e2e tests.
+    try:
+        resp = signer_client.get_signing_profile(
+            profileName=signing_profile_name,
+        )
+        return resp['profileVersionArn']
+    except:
+        resp = signer_client.put_signing_profile(
+            profileName=signing_profile_name,
+            platformId=platform_id,
+        )
+        logging.info(f"Created signing profile {signing_profile_name}")
+        return resp['profileVersionArn']
 
 if __name__ == "__main__":
     config = service_bootstrap()

@@ -10,6 +10,7 @@ rules:
   - lambda.services.k8s.aws
   resources:
   - aliases
+  - codesigningconfigs
   - functions
   verbs:
   - get

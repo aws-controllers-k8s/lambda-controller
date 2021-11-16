@@ -28,6 +28,7 @@ class TestBootstrapResources:
     LambdaFunctionFilePath: str
     LambdaRoleARN: str
     LambdaFunctionFileZip: str
+    SigningProfileVersionArn: str
 
 _bootstrap_resources = None
 

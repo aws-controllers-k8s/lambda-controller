@@ -2,7 +2,7 @@ ignore:
   resource_names:
     # Function
     # Alias
-    - CodeSigningConfig
+    # CodeSigningConfig
     - EventSourceMapping
   shape_names:
     - LayerList

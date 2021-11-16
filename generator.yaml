@@ -2,7 +2,7 @@ ignore:
   resource_names:
     # Function
     # Alias
-    - CodeSigningConfig
+    # CodeSigningConfig
     - EventSourceMapping
   shape_names:
     - LayerList
@@ -31,4 +31,8 @@ resources:
       FunctionName:
         is_required: true
       FunctionVersion:
+        is_required: true
+  CodeSigningConfig:
+    fields:
+      AllowedPublishers:
         is_required: true

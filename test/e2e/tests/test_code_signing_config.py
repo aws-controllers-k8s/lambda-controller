@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-"""Integration tests for the Lambda function API.
+"""Integration tests for the Lambda code signing config API.
 """
 
 import boto3
@@ -27,7 +27,7 @@ from e2e import service_marker, CRD_GROUP, CRD_VERSION, load_lambda_resource
 from e2e.replacement_values import REPLACEMENT_VALUES
 from e2e.bootstrap_resources import get_bootstrap_resources
 
-RESOURCE_PLURAL = "functions"
+RESOURCE_PLURAL = "codesigningconfigs"
 
 CREATE_WAIT_AFTER_SECONDS = 10
 UPDATE_WAIT_AFTER_SECONDS = 10
@@ -39,38 +39,35 @@ def lambda_client():
 
 @service_marker
 @pytest.mark.canary
-class TestFunction:
-
-    def get_function(self, lambda_client, function_name: str) -> dict:
+class TestCodeSigningConfig:
+    def get_code_signing_config(self, lambda_client, code_signing_config_arn: str) -> dict:
         try:
-            resp = lambda_client.get_function(
-                FunctionName=function_name
+            resp = lambda_client.get_code_signing_config(
+                CodeSigningConfigArn=code_signing_config_arn,
             )
-            return resp["function"]
+            return resp["CodeSigningConfig"]
 
         except Exception as e:
             logging.debug(e)
             return None
 
-    def function_exists(self, lambda_client, function_name: str) -> bool:
-        return self.get_function(lambda_client, function_name) is not None
+    def code_signing_config_exists(self, lambda_client, code_signing_config_arn: str) -> bool:
+        return self.get_code_signing_config(lambda_client, code_signing_config_arn) is not None
 
     def test_smoke(self, lambda_client):
-        resource_name = random_suffix_name("lambda-function", 24)
+        resource_name = random_suffix_name("lambda-csc", 24)
 
         resources = get_bootstrap_resources()
         logging.debug(resources)
 
         replacements = REPLACEMENT_VALUES.copy()
-        replacements["FUNCTION_NAME"] = resource_name
-        replacements["BUCKET_NAME"] = resources.FunctionsBucketName
-        replacements["LAMBDA_ROLE"] = resources.LambdaRoleARN
-        replacements["LAMBDA_FILE_NAME"] = resources.LambdaFunctionFileZip
         replacements["AWS_REGION"] = get_region()
+        replacements["CODE_SIGNING_CONFIG_NAME"] = resource_name
+        replacements["SIGNING_PROFILE_VERSION_ARN"] = resources.SigningProfileVersionArn
 
         # Load Lambda CR
         resource_data = load_lambda_resource(
-            "function",
+            "code_signing_config",
             additional_replacements=replacements,
         )
         logging.debug(resource_data)
@@ -86,19 +83,33 @@ class TestFunction:
         assert cr is not None
         assert k8s.get_resource_exists(ref)
 
+        codeSigningConfigARN = cr['status']['ackResourceMetadata']['arn']
+
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        # Check Lambda function exists
-        repo = self.function_exists(lambda_client, resource_name)
-        assert repo is not None
+        # Check Lambda code signing config exists
+        exists = self.code_signing_config_exists(lambda_client, codeSigningConfigARN)
+        assert exists
+
+        # Update cr
+        cr["spec"]["description"] = "new description"
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        # Check code signing config  description
+        csc = self.get_code_signing_config(lambda_client, codeSigningConfigARN)
+        assert csc is not None
+        assert csc["Description"] == "new description"
 
         # Delete k8s resource
         _, deleted = k8s.delete_custom_resource(ref)
-        assert deleted is True
+        assert deleted
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
 
-        # Check Lambda function doesn't exist
-        exists = self.function_exists(lambda_client, resource_name)
+        # Check Lambda code signing config doesn't exist
+        exists = self.code_signing_config_exists(lambda_client, codeSigningConfigARN)
         assert not exists
 

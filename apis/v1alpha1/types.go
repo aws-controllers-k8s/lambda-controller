@@ -60,11 +60,28 @@ type AliasRoutingConfiguration struct {
 	AdditionalVersionWeights map[string]*float64 `json:"additionalVersionWeights,omitempty"`
 }
 
+// List of signing profiles that can sign a code package.
+type AllowedPublishers struct {
+	SigningProfileVersionARNs []*string `json:"signingProfileVersionARNs,omitempty"`
+}
+
 // Details about a Code signing configuration (https://docs.aws.amazon.com/lambda/latest/dg/configuration-codesigning.html).
-type CodeSigningConfig struct {
-	CodeSigningConfigARN *string `json:"codeSigningConfigARN,omitempty"`
-	Description          *string `json:"description,omitempty"`
-	LastModified         *string `json:"lastModified,omitempty"`
+type CodeSigningConfig_SDK struct {
+	// List of signing profiles that can sign a code package.
+	AllowedPublishers    *AllowedPublishers `json:"allowedPublishers,omitempty"`
+	CodeSigningConfigARN *string            `json:"codeSigningConfigARN,omitempty"`
+	CodeSigningConfigID  *string            `json:"codeSigningConfigID,omitempty"`
+	// Code signing configuration policies (https://docs.aws.amazon.com/lambda/latest/dg/configuration-codesigning.html#config-codesigning-policies)
+	// specify the validation failure action for signature mismatch or expiry.
+	CodeSigningPolicies *CodeSigningPolicies `json:"codeSigningPolicies,omitempty"`
+	Description         *string              `json:"description,omitempty"`
+	LastModified        *string              `json:"lastModified,omitempty"`
+}
+
+// Code signing configuration policies (https://docs.aws.amazon.com/lambda/latest/dg/configuration-codesigning.html#config-codesigning-policies)
+// specify the validation failure action for signature mismatch or expiry.
+type CodeSigningPolicies struct {
+	UntrustedArtifactOnDeployment *string `json:"untrustedArtifactOnDeployment,omitempty"`
 }
 
 // The dead-letter queue (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#dlq)

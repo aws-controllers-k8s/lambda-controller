@@ -1,0 +1,11 @@
+apiVersion: lambda.services.k8s.aws/v1alpha1
+kind: CodeSigningConfig
+metadata:
+  name: $CODE_SIGNING_CONFIG_NAME
+  annotations:
+    services.k8s.aws/region: $AWS_REGION
+spec:
+  allowedPublishers:
+    signingProfileVersionARNs:
+    - $SIGNING_PROFILE_VERSION_ARN
+  description: code signing config created by ACK lambda-controller e2e tests
