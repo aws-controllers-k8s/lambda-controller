@@ -21,14 +21,20 @@ from e2e import bootstrap_directory
 
 @dataclass
 class TestBootstrapResources:
-    LambdaIAMRoleName: str
-    LambdaIAMRolePolicy: str
-    LambdaBasicRolePolicy: str
     FunctionsBucketName: str
     LambdaFunctionFilePath: str
-    LambdaRoleARN: str
     LambdaFunctionFileZip: str
+    LambdaBasicRoleName: str
+    LambdaBasicRoleARN: str
+    LambdaESMRoleName: str
+    LambdaESMRoleARN: str
     SigningProfileVersionArn: str
+    SQSQueueARN: str
+    SQSQueueURL: str
+    DynamoDBTableName: str
+    DynamoDBTableARN: str
+    BasicExecutionRoleARNs: list
+    ESMExecutionRoleARNs: list
 
 _bootstrap_resources = None
 

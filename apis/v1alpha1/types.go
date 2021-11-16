@@ -90,6 +90,15 @@ type DeadLetterConfig struct {
 	TargetARN *string `json:"targetARN,omitempty"`
 }
 
+// A configuration object that specifies the destination of an event after Lambda
+// processes it.
+type DestinationConfig struct {
+	// A destination for events that failed processing.
+	OnFailure *OnFailure `json:"onFailure,omitempty"`
+	// A destination for events that were processed successfully.
+	OnSuccess *OnSuccess `json:"onSuccess,omitempty"`
+}
+
 // A function's environment variable settings. You can use environment variables
 // to adjust your function's behavior without updating code. An environment
 // variable is a pair of strings that are stored in a function's version-specific
@@ -111,6 +120,36 @@ type EnvironmentResponse struct {
 	// Error messages for environment variables that couldn't be applied.
 	Error     *EnvironmentError  `json:"error,omitempty"`
 	Variables map[string]*string `json:"variables,omitempty"`
+}
+
+// A mapping between an Amazon Web Services resource and a Lambda function.
+// For details, see CreateEventSourceMapping.
+type EventSourceMappingConfiguration struct {
+	BatchSize                  *int64 `json:"batchSize,omitempty"`
+	BisectBatchOnFunctionError *bool  `json:"bisectBatchOnFunctionError,omitempty"`
+	// A configuration object that specifies the destination of an event after Lambda
+	// processes it.
+	DestinationConfig              *DestinationConfig `json:"destinationConfig,omitempty"`
+	EventSourceARN                 *string            `json:"eventSourceARN,omitempty"`
+	FunctionARN                    *string            `json:"functionARN,omitempty"`
+	FunctionResponseTypes          []*string          `json:"functionResponseTypes,omitempty"`
+	LastModified                   *metav1.Time       `json:"lastModified,omitempty"`
+	LastProcessingResult           *string            `json:"lastProcessingResult,omitempty"`
+	MaximumBatchingWindowInSeconds *int64             `json:"maximumBatchingWindowInSeconds,omitempty"`
+	MaximumRecordAgeInSeconds      *int64             `json:"maximumRecordAgeInSeconds,omitempty"`
+	MaximumRetryAttempts           *int64             `json:"maximumRetryAttempts,omitempty"`
+	ParallelizationFactor          *int64             `json:"parallelizationFactor,omitempty"`
+	Queues                         []*string          `json:"queues,omitempty"`
+	// The self-managed Apache Kafka cluster for your event source.
+	SelfManagedEventSource     *SelfManagedEventSource      `json:"selfManagedEventSource,omitempty"`
+	SourceAccessConfigurations []*SourceAccessConfiguration `json:"sourceAccessConfigurations,omitempty"`
+	StartingPosition           *string                      `json:"startingPosition,omitempty"`
+	StartingPositionTimestamp  *metav1.Time                 `json:"startingPositionTimestamp,omitempty"`
+	State                      *string                      `json:"state,omitempty"`
+	StateTransitionReason      *string                      `json:"stateTransitionReason,omitempty"`
+	Topics                     []*string                    `json:"topics,omitempty"`
+	TumblingWindowInSeconds    *int64                       `json:"tumblingWindowInSeconds,omitempty"`
+	UUID                       *string                      `json:"uuid,omitempty"`
 }
 
 // Details about the connection between a Lambda function and an Amazon EFS
@@ -183,7 +222,11 @@ type FunctionConfiguration struct {
 }
 
 type FunctionEventInvokeConfig struct {
-	FunctionARN *string `json:"functionARN,omitempty"`
+	// A configuration object that specifies the destination of an event after Lambda
+	// processes it.
+	DestinationConfig *DestinationConfig `json:"destinationConfig,omitempty"`
+	FunctionARN       *string            `json:"functionARN,omitempty"`
+	LastModified      *metav1.Time       `json:"lastModified,omitempty"`
 }
 
 // Configuration values that override the container image Dockerfile settings.
@@ -242,6 +285,16 @@ type LayerVersionsListItem struct {
 	LayerVersionARN *string `json:"layerVersionARN,omitempty"`
 }
 
+// A destination for events that failed processing.
+type OnFailure struct {
+	Destination *string `json:"destination,omitempty"`
+}
+
+// A destination for events that were processed successfully.
+type OnSuccess struct {
+	Destination *string `json:"destination,omitempty"`
+}
+
 // Details about the provisioned concurrency configuration for a function alias
 // or version.
 type ProvisionedConcurrencyConfigListItem struct {
@@ -252,6 +305,18 @@ type ProvisionedConcurrencyConfigListItem struct {
 
 type PutFunctionConcurrencyOutput struct {
 	ReservedConcurrentExecutions *int64 `json:"reservedConcurrentExecutions,omitempty"`
+}
+
+// The self-managed Apache Kafka cluster for your event source.
+type SelfManagedEventSource struct {
+	Endpoints map[string][]*string `json:"endpoints,omitempty"`
+}
+
+// To secure and define access to your event source, you can specify the authentication
+// protocol, VPC components, or virtual host.
+type SourceAccessConfiguration struct {
+	Type *string `json:"type_,omitempty"`
+	URI  *string `json:"uRI,omitempty"`
 }
 
 // The function's X-Ray (https://docs.aws.amazon.com/lambda/latest/dg/services-xray.html)
