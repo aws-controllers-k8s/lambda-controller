@@ -1,0 +1,12 @@
+apiVersion: lambda.services.k8s.aws/v1alpha1
+kind: EventSourceMapping
+metadata:
+  name: $EVENT_SOURCE_MAPPING_NAME
+  annotations:
+    services.k8s.aws/region: $AWS_REGION
+spec:
+  functionName: $FUNCTION_NAME
+  eventSourceARN: $EVENT_SOURCE_ARN
+  batchSize: $BATCH_SIZE
+  maximumBatchingWindowInSeconds: $MAXIMUM_BATCHING_WINDOW_IN_SECONDS
+  enabled: false

@@ -29,20 +29,35 @@ def service_cleanup(config: dict):
     )
 
     try:
-        detach_policy_and_delete_role(resources.LambdaIAMRoleName, resources.LambdaBasicRolePolicy)
+        detach_policies_and_delete_role(resources.LambdaBasicRoleName, resources.BasicExecutionRoleARNs)
     except:
-        logging.exception(f"Unable to delete role {resources.LambdaIAMRoleName}")
+        logging.exception(f"Unable to delete basic role {resources.LambdaBasicRoleARN}")
+
+    try:
+        detach_policies_and_delete_role(resources.LambdaESMRoleName, resources.ESMExecutionRoleARNs)
+    except:
+        logging.exception(f"Unable to delete esm role {resources.LambdaESMRoleARN}")
 
     try:
         clean_up_and_delete_bucket(resources.FunctionsBucketName)
     except:
         logging.exception(f"Unable to delete bucket {resources.FunctionsBucketName}")
 
+    try:
+        delete_sqs_queue(resources.SQSQueueURL)
+    except:
+        logging.exception(f"Unable to delete queue {resources.SQSQueueURL}")
 
-def detach_policy_and_delete_role(iam_role_name: str, iam_policy_arn: str):
+    try:
+        delete_dynamodb_table(resources.DynamoDBTableName)
+    except:
+        logging.exception(f"Unable to delete table {resources.DynamoDBTableName}")
+
+def detach_policies_and_delete_role(iam_role_name: str, iam_policy_arns: list):
     region = get_region()
     iam_client = boto3.client("iam", region_name=region)
-    iam_client.detach_role_policy(RoleName=iam_role_name, PolicyArn=iam_policy_arn)
+    for iam_policy_arn in iam_policy_arns:
+        iam_client.detach_role_policy(RoleName=iam_role_name, PolicyArn=iam_policy_arn)
     iam_client.delete_role(RoleName=iam_role_name)
     logging.info(f"Deleted role {iam_role_name}")
 
@@ -58,6 +73,22 @@ def clean_up_and_delete_bucket(bucket_name: str):
         Bucket=bucket_name,
     )
     logging.info(f"Deleted bucket {bucket_name}")
+
+def delete_sqs_queue(queue_url: str) -> str:
+    region = get_region()
+    sqs_client = boto3.resource('sqs', region_name=region)
+    sqs_client.meta.client.delete_queue(
+        QueueUrl=queue_url,
+    )
+    logging.info(f"Deleted SQS queue {queue_url}")
+
+def delete_dynamodb_table(table_name: str) -> str:
+    region = get_region()
+    ddb_client = boto3.resource('dynamodb', region_name=region)
+    ddb_client.delete_table(
+        TableName=table_name,
+    )
+    logging.info(f"Deleted DynamoDB table {table_name}")
 
 if __name__ == "__main__":   
     bootstrap_config = resources.read_bootstrap_config(bootstrap_directory)

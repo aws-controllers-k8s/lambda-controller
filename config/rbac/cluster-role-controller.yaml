@@ -65,6 +65,26 @@ rules:
 - apiGroups:
   - lambda.services.k8s.aws
   resources:
+  - eventsourcemappings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - lambda.services.k8s.aws
+  resources:
+  - eventsourcemappings/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - lambda.services.k8s.aws
+  resources:
   - functions
   verbs:
   - create

@@ -5,4 +5,5 @@ bases:
 resources:
   - bases/lambda.services.k8s.aws_aliases.yaml
   - bases/lambda.services.k8s.aws_codesigningconfigs.yaml
+  - bases/lambda.services.k8s.aws_eventsourcemappings.yaml
   - bases/lambda.services.k8s.aws_functions.yaml

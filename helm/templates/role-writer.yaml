@@ -13,6 +13,8 @@ rules:
 
   - codesigningconfigs
 
+  - eventsourcemappings
+
   - functions
 
   verbs:
@@ -28,6 +30,7 @@ rules:
   resources:
   - aliases
   - codesigningconfigs
+  - eventsourcemappings
   - functions
   verbs:
   - get

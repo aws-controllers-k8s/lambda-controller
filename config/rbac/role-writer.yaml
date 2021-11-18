@@ -11,6 +11,7 @@ rules:
   resources:
   - aliases
   - codesigningconfigs
+  - eventsourcemappings
   - functions
   verbs:
   - create
@@ -25,6 +26,7 @@ rules:
   resources:
   - aliases
   - codesigningconfigs
+  - eventsourcemappings
   - functions
   verbs:
   - get

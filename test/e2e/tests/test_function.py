@@ -64,7 +64,7 @@ class TestFunction:
         replacements = REPLACEMENT_VALUES.copy()
         replacements["FUNCTION_NAME"] = resource_name
         replacements["BUCKET_NAME"] = resources.FunctionsBucketName
-        replacements["LAMBDA_ROLE"] = resources.LambdaRoleARN
+        replacements["LAMBDA_ROLE"] = resources.LambdaBasicRoleARN
         replacements["LAMBDA_FILE_NAME"] = resources.LambdaFunctionFileZip
         replacements["AWS_REGION"] = get_region()
 
