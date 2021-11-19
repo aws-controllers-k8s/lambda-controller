@@ -12,6 +12,13 @@ resources:
       Name:
         is_primary_key: true
         is_required: true
+      # ReservedConcurrentExecutions:
+      #  from:
+      #    operation: PutFunctionConcurrency
+      #    path: ReservedConcurrentExecutions
+      Code:
+        compare:
+          is_ignored: true
     renames:
       operations:
         CreateFunction:
@@ -23,6 +30,13 @@ resources:
         GetFunction:
           input_fields:
             FunctionName: Name
+    hooks:
+      delta_pre_compare:
+        code: customPreCompare(delta, a, b)
+      sdk_read_one_post_set_output:
+        template_path: hooks/function/sdk_read_one_post_set_output.go.tpl
+    update_operation:
+      custom_method_name: customUpdateFunction
   Alias:
     fields:
       Name:

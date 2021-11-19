@@ -46,7 +46,7 @@ class TestFunction:
             resp = lambda_client.get_function(
                 FunctionName=function_name
             )
-            return resp["function"]
+            return resp
 
         except Exception as e:
             logging.debug(e)
@@ -89,8 +89,27 @@ class TestFunction:
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
         # Check Lambda function exists
-        repo = self.function_exists(lambda_client, resource_name)
-        assert repo is not None
+        exists = self.function_exists(lambda_client, resource_name)
+        assert exists
+
+        # Update cr
+        tags = {
+            "v1": "k1",
+            "v2": "k2",
+            "v3": "k3",
+        }
+        cr["spec"]["description"] = "Updated description"
+        cr["spec"]["tags"] = tags
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        # Check function updated fields
+        function = self.get_function(lambda_client, resource_name)
+        assert function is not None
+        assert function["Configuration"]["Description"] == "Updated description"
+        assert function["Tags"] == tags
 
         # Delete k8s resource
         _, deleted = k8s.delete_custom_resource(ref)
