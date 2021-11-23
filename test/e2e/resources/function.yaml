@@ -13,3 +13,4 @@ spec:
   runtime: python3.9
   handler: main
   description: function created by ACK lambda-controller e2e tests
+  reservedConcurrentExecutions: $RESERVED_CONCURRENT_EXECUTIONS

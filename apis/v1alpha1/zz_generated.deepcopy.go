@@ -1483,6 +1483,11 @@ func (in *FunctionSpec) DeepCopyInto(out *FunctionSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.ReservedConcurrentExecutions != nil {
+		in, out := &in.ReservedConcurrentExecutions, &out.ReservedConcurrentExecutions
+		*out = new(int64)
+		**out = **in
+	}
 	if in.Role != nil {
 		in, out := &in.Role, &out.Role
 		*out = new(string)

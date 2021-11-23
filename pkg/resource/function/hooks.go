@@ -16,6 +16,7 @@ package function
 import (
 	"context"
 
+	svcapitypes "github.com/aws-controllers-k8s/lambda-controller/apis/v1alpha1"
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
 	"github.com/aws/aws-sdk-go/aws"
@@ -59,6 +60,12 @@ func (rm *resourceManager) customUpdateFunction(
 		delta.DifferentAt("Spec.TracingConfig") ||
 		delta.DifferentAt("Spec.VPCConfig") {
 		err = rm.updateFunctionConfiguration(ctx, desired)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if delta.DifferentAt("Spec.ReservedConcurrentExecutions") {
+		err = rm.updateFunctionConcurrency(ctx, desired)
 		if err != nil {
 			return nil, err
 		}
@@ -345,4 +352,59 @@ func customPreCompare(
 			}
 		}
 	}
+}
+
+// updateFunctionConcurrency calls UpdateFunctionConcurrency to update a specific
+// lambda function reserved concurrent executions.
+func (rm *resourceManager) updateFunctionConcurrency(
+	ctx context.Context,
+	desired *resource,
+) error {
+	var err error
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.updateFunctionConcurrency")
+	defer exit(err)
+
+	dspec := desired.ko.Spec
+	input := &svcsdk.PutFunctionConcurrencyInput{
+		FunctionName: aws.String(*dspec.Name),
+	}
+
+	if desired.ko.Spec.ReservedConcurrentExecutions != nil {
+		input.ReservedConcurrentExecutions = aws.Int64(*desired.ko.Spec.ReservedConcurrentExecutions)
+	} else {
+		input.ReservedConcurrentExecutions = aws.Int64(0)
+	}
+
+	_, err = rm.sdkapi.PutFunctionConcurrencyWithContext(ctx, input)
+	rm.metrics.RecordAPICall("UPDATE", "PutFunctionConcurrency", err)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// setResourceAdditionalFields will describe the fields that are not return by
+// GetFunctionConcurrency calls
+func (rm *resourceManager) setResourceAdditionalFields(
+	ctx context.Context,
+	ko *svcapitypes.Function,
+) (err error) {
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.setResourceAdditionalFields")
+	defer exit(err)
+
+	var getFunctionConcurrencyOutput *svcsdk.GetFunctionConcurrencyOutput
+	getFunctionConcurrencyOutput, err = rm.sdkapi.GetFunctionConcurrencyWithContext(
+		ctx,
+		&svcsdk.GetFunctionConcurrencyInput{
+			FunctionName: ko.Spec.Name,
+		},
+	)
+	rm.metrics.RecordAPICall("GET", "GetFunctionConcurrency", err)
+	if err != nil {
+		return err
+	}
+	ko.Spec.ReservedConcurrentExecutions = getFunctionConcurrencyOutput.ReservedConcurrentExecutions
+	return nil
 }

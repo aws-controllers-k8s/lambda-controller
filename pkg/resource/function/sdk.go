@@ -340,6 +340,9 @@ func (rm *resourceManager) sdkFind(
 	} else {
 		ko.Spec.VPCConfig = nil
 	}
+	if err := rm.setResourceAdditionalFields(ctx, ko); err != nil {
+		return nil, err
+	}
 	return &resource{ko}, nil
 }
 

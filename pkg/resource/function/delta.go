@@ -140,6 +140,13 @@ func newResourceDelta(
 			delta.Add("Spec.Publish", a.ko.Spec.Publish, b.ko.Spec.Publish)
 		}
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.ReservedConcurrentExecutions, b.ko.Spec.ReservedConcurrentExecutions) {
+		delta.Add("Spec.ReservedConcurrentExecutions", a.ko.Spec.ReservedConcurrentExecutions, b.ko.Spec.ReservedConcurrentExecutions)
+	} else if a.ko.Spec.ReservedConcurrentExecutions != nil && b.ko.Spec.ReservedConcurrentExecutions != nil {
+		if *a.ko.Spec.ReservedConcurrentExecutions != *b.ko.Spec.ReservedConcurrentExecutions {
+			delta.Add("Spec.ReservedConcurrentExecutions", a.ko.Spec.ReservedConcurrentExecutions, b.ko.Spec.ReservedConcurrentExecutions)
+		}
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.Role, b.ko.Spec.Role) {
 		delta.Add("Spec.Role", a.ko.Spec.Role, b.ko.Spec.Role)
 	} else if a.ko.Spec.Role != nil && b.ko.Spec.Role != nil {

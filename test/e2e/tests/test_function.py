@@ -52,6 +52,17 @@ class TestFunction:
             logging.debug(e)
             return None
 
+    def get_function_concurrency(self, lambda_client, function_name: str) -> int:
+        try:
+            resp = lambda_client.get_function_concurrency(
+                FunctionName=function_name
+            )
+            return resp['ReservedConcurrentExecutions']
+
+        except Exception as e:
+            logging.debug(e)
+            return None
+
     def function_exists(self, lambda_client, function_name: str) -> bool:
         return self.get_function(lambda_client, function_name) is not None
 
@@ -66,6 +77,7 @@ class TestFunction:
         replacements["BUCKET_NAME"] = resources.FunctionsBucketName
         replacements["LAMBDA_ROLE"] = resources.LambdaBasicRoleARN
         replacements["LAMBDA_FILE_NAME"] = resources.LambdaFunctionFileZip
+        replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "0"
         replacements["AWS_REGION"] = get_region()
 
         # Load Lambda CR
@@ -121,3 +133,64 @@ class TestFunction:
         exists = self.function_exists(lambda_client, resource_name)
         assert not exists
 
+    def test_reserved_concurrent_executions(self, lambda_client):
+        resource_name = random_suffix_name("lambda-function", 24)
+
+        resources = get_bootstrap_resources()
+        logging.debug(resources)
+
+        replacements = REPLACEMENT_VALUES.copy()
+        replacements["FUNCTION_NAME"] = resource_name
+        replacements["BUCKET_NAME"] = resources.FunctionsBucketName
+        replacements["LAMBDA_ROLE"] = resources.LambdaBasicRoleARN
+        replacements["LAMBDA_FILE_NAME"] = resources.LambdaFunctionFileZip
+        replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "2"
+        replacements["AWS_REGION"] = get_region()
+
+        # Load Lambda CR
+        resource_data = load_lambda_resource(
+            "function",
+            additional_replacements=replacements,
+        )
+        logging.debug(resource_data)
+
+        # Create k8s resource
+        ref = k8s.CustomResourceReference(
+            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            resource_name, namespace="default",
+        )
+        k8s.create_custom_resource(ref, resource_data)
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        assert cr is not None
+        assert k8s.get_resource_exists(ref)
+
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+        # Check Lambda function exists
+        exists = self.function_exists(lambda_client, resource_name)
+        assert exists
+
+        reservedConcurrentExecutions = self.get_function_concurrency(lambda_client, resource_name)
+        assert reservedConcurrentExecutions == 2
+
+        # Update cr
+        cr["spec"]["reservedConcurrentExecutions"] = 0
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        # Check function updated fields
+        reservedConcurrentExecutions = self.get_function_concurrency(lambda_client, resource_name)
+        assert reservedConcurrentExecutions == 0
+
+        # Delete k8s resource
+        _, deleted = k8s.delete_custom_resource(ref)
+        assert deleted is True
+
+        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+
+        # Check Lambda function doesn't exist
+        exists = self.function_exists(lambda_client, resource_name)
+        assert not exists
