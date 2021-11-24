@@ -12,10 +12,10 @@ resources:
       Name:
         is_primary_key: true
         is_required: true
-      # ReservedConcurrentExecutions:
-      #  from:
-      #    operation: PutFunctionConcurrency
-      #    path: ReservedConcurrentExecutions
+      ReservedConcurrentExecutions:
+        from:
+          operation: PutFunctionConcurrency
+          path: ReservedConcurrentExecutions
       Code:
         compare:
           is_ignored: true
