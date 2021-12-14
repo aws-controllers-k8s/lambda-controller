@@ -14,3 +14,4 @@ spec:
   handler: main
   description: function created by ACK lambda-controller e2e tests
   reservedConcurrentExecutions: $RESERVED_CONCURRENT_EXECUTIONS
+  codeSigningConfigARN: "$CODE_SIGNING_CONFIG_ARN"

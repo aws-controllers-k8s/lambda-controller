@@ -384,6 +384,9 @@ func (rm *resourceManager) sdkCreate(
 	if err != nil {
 		return nil, err
 	}
+	if desired.ko.Spec.CodeSigningConfigARN != nil && *desired.ko.Spec.CodeSigningConfigARN == "" {
+		input.CodeSigningConfigArn = nil
+	}
 
 	var resp *svcsdk.FunctionConfiguration
 	_ = resp

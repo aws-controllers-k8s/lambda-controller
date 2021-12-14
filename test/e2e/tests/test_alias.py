@@ -48,6 +48,7 @@ def lambda_function():
         replacements["LAMBDA_ROLE"] = resources.LambdaBasicRoleARN
         replacements["LAMBDA_FILE_NAME"] = resources.LambdaFunctionFileZip
         replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "0"
+        replacements["CODE_SIGNING_CONFIG_ARN"] = ""
         replacements["AWS_REGION"] = get_region()
 
         # Load function CR

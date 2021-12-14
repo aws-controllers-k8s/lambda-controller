@@ -15,13 +15,37 @@ package function
 
 import (
 	"context"
+	"errors"
+	"time"
 
 	svcapitypes "github.com/aws-controllers-k8s/lambda-controller/apis/v1alpha1"
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
+	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
 	"github.com/aws/aws-sdk-go/aws"
 	svcsdk "github.com/aws/aws-sdk-go/service/lambda"
 )
+
+var (
+	ErrFunctionPending = errors.New("Function in 'Pending' state, cannot be modified or deleted")
+)
+
+var (
+	requeueWaitWhilePending = ackrequeue.NeededAfter(
+		ErrFunctionPending,
+		5*time.Second,
+	)
+)
+
+// isFunctionPending returns true if the supplied Lambda Function is in a pending
+// state
+func isFunctionPending(r *resource) bool {
+	if r.ko.Status.State == nil {
+		return false
+	}
+	state := *r.ko.Status.State
+	return state == string(svcapitypes.State_Pending)
+}
 
 // customUpdateFunction patches each of the resource properties in the backend AWS
 // service API and returns a new resource with updated fields.
@@ -36,8 +60,12 @@ func (rm *resourceManager) customUpdateFunction(
 	exit := rlog.Trace("rm.customUpdateFunction")
 	defer exit(err)
 
+	if isFunctionPending(desired) {
+		return nil, requeueWaitWhilePending
+	}
+
 	if delta.DifferentAt("Spec.Code") {
-		err = rm.updateFunctionCode(ctx, desired)
+		err = rm.updateFunctionCode(ctx, desired, delta)
 		if err != nil {
 			return nil, err
 		}
@@ -66,6 +94,12 @@ func (rm *resourceManager) customUpdateFunction(
 	}
 	if delta.DifferentAt("Spec.ReservedConcurrentExecutions") {
 		err = rm.updateFunctionConcurrency(ctx, desired)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if delta.DifferentAt("Spec.CodeSigningConfigARN") {
+		err = rm.updateFunctionCodeSigningConfig(ctx, desired)
 		if err != nil {
 			return nil, err
 		}
@@ -247,11 +281,21 @@ func (rm *resourceManager) updateFunctionTags(
 func (rm *resourceManager) updateFunctionCode(
 	ctx context.Context,
 	desired *resource,
+	delta *ackcompare.Delta,
 ) error {
 	var err error
 	rlog := ackrtlog.FromContext(ctx)
 	exit := rlog.Trace("rm.updateFunctionCode")
 	defer exit(err)
+
+	if delta.DifferentAt("Spec.Code.S3Key") &&
+		!delta.DifferentAt("Spec.Code.S3Bucket") &&
+		!delta.DifferentAt("Spec.Code.S3ObjectVersion") &&
+		!delta.DifferentAt("Spec.Code.ImageURI") {
+		log := ackrtlog.FromContext(ctx)
+		log.Info("updating code.s3Key field is not currently supported.")
+		return nil
+	}
 
 	dspec := desired.ko.Spec
 	input := &svcsdk.UpdateFunctionCodeInput{
@@ -265,10 +309,6 @@ func (rm *resourceManager) updateFunctionCode(
 		case dspec.Code.S3Bucket != nil,
 			dspec.Code.S3Key != nil,
 			dspec.Code.S3ObjectVersion != nil:
-
-			log := ackrtlog.FromContext(ctx)
-			log.Debug("updating code.s3Bucket field is not currently supported.")
-
 			input.S3Bucket = dspec.Code.S3Bucket
 			input.S3Key = dspec.Code.S3Key
 			input.S3ObjectVersion = dspec.Code.S3ObjectVersion
@@ -384,6 +424,59 @@ func (rm *resourceManager) updateFunctionConcurrency(
 	return nil
 }
 
+// updateFunctionCodeSigningConfig calls PutFunctionCodeSigningConfig to update
+// it code signing configuration
+func (rm *resourceManager) updateFunctionCodeSigningConfig(
+	ctx context.Context,
+	desired *resource,
+) error {
+	var err error
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.updateFunctionCodeSigningConfig")
+	defer exit(err)
+
+	if desired.ko.Spec.CodeSigningConfigARN == nil || *desired.ko.Spec.CodeSigningConfigARN == "" {
+		return rm.deleteFunctionCodeSigningConfig(ctx, desired)
+	}
+
+	dspec := desired.ko.Spec
+	input := &svcsdk.PutFunctionCodeSigningConfigInput{
+		FunctionName:         aws.String(*dspec.Name),
+		CodeSigningConfigArn: aws.String(*dspec.CodeSigningConfigARN),
+	}
+
+	_, err = rm.sdkapi.PutFunctionCodeSigningConfigWithContext(ctx, input)
+	rm.metrics.RecordAPICall("UPDATE", "PutFunctionCodeSigningConfig", err)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// deleteFunctionCodeSigningConfig calls deleteFunctionCodeSigningConfig to update
+// it code signing configuration
+func (rm *resourceManager) deleteFunctionCodeSigningConfig(
+	ctx context.Context,
+	desired *resource,
+) error {
+	var err error
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.deleteFunctionCodeSigningConfig")
+	defer exit(err)
+
+	dspec := desired.ko.Spec
+	input := &svcsdk.DeleteFunctionCodeSigningConfigInput{
+		FunctionName: aws.String(*dspec.Name),
+	}
+
+	_, err = rm.sdkapi.DeleteFunctionCodeSigningConfigWithContext(ctx, input)
+	rm.metrics.RecordAPICall("UPDATE", "DeleteFunctionCodeSigningConfig", err)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // setResourceAdditionalFields will describe the fields that are not return by
 // GetFunctionConcurrency calls
 func (rm *resourceManager) setResourceAdditionalFields(
@@ -406,5 +499,18 @@ func (rm *resourceManager) setResourceAdditionalFields(
 		return err
 	}
 	ko.Spec.ReservedConcurrentExecutions = getFunctionConcurrencyOutput.ReservedConcurrentExecutions
+
+	var getFunctionCodeSigningConfigOutput *svcsdk.GetFunctionCodeSigningConfigOutput
+	getFunctionCodeSigningConfigOutput, err = rm.sdkapi.GetFunctionCodeSigningConfigWithContext(
+		ctx,
+		&svcsdk.GetFunctionCodeSigningConfigInput{
+			FunctionName: ko.Spec.Name,
+		},
+	)
+	rm.metrics.RecordAPICall("GET", "GetFunctionCodeSigningConfig", err)
+	if err != nil {
+		return err
+	}
+	ko.Spec.CodeSigningConfigARN = getFunctionCodeSigningConfigOutput.CodeSigningConfigArn
 	return nil
 }
