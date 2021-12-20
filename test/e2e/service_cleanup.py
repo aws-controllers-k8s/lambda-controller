@@ -76,15 +76,15 @@ def clean_up_and_delete_bucket(bucket_name: str):
 
 def delete_sqs_queue(queue_url: str) -> str:
     region = get_region()
-    sqs_client = boto3.resource('sqs', region_name=region)
-    sqs_client.meta.client.delete_queue(
+    sqs_client = boto3.client('sqs', region_name=region)
+    sqs_client.delete_queue(
         QueueUrl=queue_url,
     )
     logging.info(f"Deleted SQS queue {queue_url}")
 
 def delete_dynamodb_table(table_name: str) -> str:
     region = get_region()
-    ddb_client = boto3.resource('dynamodb', region_name=region)
+    ddb_client = boto3.client('dynamodb', region_name=region)
     ddb_client.delete_table(
         TableName=table_name,
     )
