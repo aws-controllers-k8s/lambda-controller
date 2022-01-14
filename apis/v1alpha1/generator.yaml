@@ -38,5 +38,5 @@ resources:
           # unnecessarily, we ignore Users for the purposes of comparing
           # resources.
           is_ignored: true
-      Users..Password:
+      Users.Password:
         is_secret: true
