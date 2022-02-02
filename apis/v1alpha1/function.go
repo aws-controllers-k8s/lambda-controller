@@ -22,6 +22,9 @@ import (
 
 // FunctionSpec defines the desired state of Function.
 type FunctionSpec struct {
+	// The instruction set architecture that the function supports. Enter a string
+	// array with one of the valid values. The default value is x86_64.
+	Architectures []*string `json:"architectures,omitempty"`
 	// The code for the function.
 	// +kubebuilder:validation:Required
 	Code *FunctionCode `json:"code"`

@@ -15,6 +15,13 @@
 
 package v1alpha1
 
+type Architecture string
+
+const (
+	Architecture_x86_64 Architecture = "x86_64"
+	Architecture_arm64  Architecture = "arm64"
+)
+
 type CodeSigningPolicy string
 
 const (

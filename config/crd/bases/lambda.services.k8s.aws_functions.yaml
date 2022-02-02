@@ -36,6 +36,13 @@ spec:
           spec:
             description: FunctionSpec defines the desired state of Function.
             properties:
+              architectures:
+                description: The instruction set architecture that the function supports.
+                  Enter a string array with one of the valid values. The default value
+                  is x86_64.
+                items:
+                  type: string
+                type: array
               code:
                 description: The code for the function.
                 properties:
