@@ -22,7 +22,10 @@ import (
 
 // EventSourceMappingSpec defines the desired state of EventSourceMapping.
 type EventSourceMappingSpec struct {
-	// The maximum number of items to retrieve in a single batch.
+	// The maximum number of records in each batch that Lambda pulls from your stream
+	// or queue and sends to your function. Lambda passes all of the records in
+	// the batch to the function in a single call, up to the payload limit for synchronous
+	// invocation (6 MB).
 	//
 	//    * Amazon Kinesis - Default 100. Max 10,000.
 	//
@@ -41,8 +44,10 @@ type EventSourceMappingSpec struct {
 	// (Streams only) An Amazon SQS queue or Amazon SNS topic destination for discarded
 	// records.
 	DestinationConfig *DestinationConfig `json:"destinationConfig,omitempty"`
-	// If true, the event source mapping is active. Set to false to pause polling
-	// and invocation.
+	// When true, the event source mapping is active. When false, Lambda pauses
+	// polling and invocation.
+	//
+	// Default: True
 	Enabled *bool `json:"enabled,omitempty"`
 	// The Amazon Resource Name (ARN) of the event source.
 	//
@@ -73,8 +78,13 @@ type EventSourceMappingSpec struct {
 	// (Streams only) A list of current response type enums applied to the event
 	// source mapping.
 	FunctionResponseTypes []*string `json:"functionResponseTypes,omitempty"`
-	// (Streams and SQS standard queues) The maximum amount of time to gather records
-	// before invoking the function, in seconds.
+	// (Streams and Amazon SQS standard queues) The maximum amount of time, in seconds,
+	// that Lambda spends gathering records before invoking the function.
+	//
+	// Default: 0
+	//
+	// Related setting: When you set BatchSize to a value greater than 10, you must
+	// set MaximumBatchingWindowInSeconds to at least 1.
 	MaximumBatchingWindowInSeconds *int64 `json:"maximumBatchingWindowInSeconds,omitempty"`
 	// (Streams only) Discard records older than the specified age. The default
 	// value is infinite (-1).

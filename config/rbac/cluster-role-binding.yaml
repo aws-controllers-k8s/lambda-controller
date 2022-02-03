@@ -8,5 +8,5 @@ roleRef:
   name: ack-lambda-controller
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: ack-lambda-controller
   namespace: ack-system

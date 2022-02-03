@@ -399,6 +399,17 @@ func (rm *resourceManager) sdkCreate(
 	// the original Kubernetes object we passed to the function
 	ko := desired.ko.DeepCopy()
 
+	if resp.Architectures != nil {
+		f0 := []*string{}
+		for _, f0iter := range resp.Architectures {
+			var f0elem string
+			f0elem = *f0iter
+			f0 = append(f0, &f0elem)
+		}
+		ko.Spec.Architectures = f0
+	} else {
+		ko.Spec.Architectures = nil
+	}
 	if resp.CodeSha256 != nil {
 		ko.Status.CodeSHA256 = resp.CodeSha256
 	} else {
@@ -410,11 +421,11 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.CodeSize = nil
 	}
 	if resp.DeadLetterConfig != nil {
-		f2 := &svcapitypes.DeadLetterConfig{}
+		f3 := &svcapitypes.DeadLetterConfig{}
 		if resp.DeadLetterConfig.TargetArn != nil {
-			f2.TargetARN = resp.DeadLetterConfig.TargetArn
+			f3.TargetARN = resp.DeadLetterConfig.TargetArn
 		}
-		ko.Spec.DeadLetterConfig = f2
+		ko.Spec.DeadLetterConfig = f3
 	} else {
 		ko.Spec.DeadLetterConfig = nil
 	}
@@ -424,33 +435,33 @@ func (rm *resourceManager) sdkCreate(
 		ko.Spec.Description = nil
 	}
 	if resp.Environment != nil {
-		f4 := &svcapitypes.Environment{}
+		f5 := &svcapitypes.Environment{}
 		if resp.Environment.Variables != nil {
-			f4f1 := map[string]*string{}
-			for f4f1key, f4f1valiter := range resp.Environment.Variables {
-				var f4f1val string
-				f4f1val = *f4f1valiter
-				f4f1[f4f1key] = &f4f1val
+			f5f1 := map[string]*string{}
+			for f5f1key, f5f1valiter := range resp.Environment.Variables {
+				var f5f1val string
+				f5f1val = *f5f1valiter
+				f5f1[f5f1key] = &f5f1val
 			}
-			f4.Variables = f4f1
+			f5.Variables = f5f1
 		}
-		ko.Spec.Environment = f4
+		ko.Spec.Environment = f5
 	} else {
 		ko.Spec.Environment = nil
 	}
 	if resp.FileSystemConfigs != nil {
-		f5 := []*svcapitypes.FileSystemConfig{}
-		for _, f5iter := range resp.FileSystemConfigs {
-			f5elem := &svcapitypes.FileSystemConfig{}
-			if f5iter.Arn != nil {
-				f5elem.ARN = f5iter.Arn
+		f6 := []*svcapitypes.FileSystemConfig{}
+		for _, f6iter := range resp.FileSystemConfigs {
+			f6elem := &svcapitypes.FileSystemConfig{}
+			if f6iter.Arn != nil {
+				f6elem.ARN = f6iter.Arn
 			}
-			if f5iter.LocalMountPath != nil {
-				f5elem.LocalMountPath = f5iter.LocalMountPath
+			if f6iter.LocalMountPath != nil {
+				f6elem.LocalMountPath = f6iter.LocalMountPath
 			}
-			f5 = append(f5, f5elem)
+			f6 = append(f6, f6elem)
 		}
-		ko.Spec.FileSystemConfigs = f5
+		ko.Spec.FileSystemConfigs = f6
 	} else {
 		ko.Spec.FileSystemConfigs = nil
 	}
@@ -472,43 +483,43 @@ func (rm *resourceManager) sdkCreate(
 		ko.Spec.Handler = nil
 	}
 	if resp.ImageConfigResponse != nil {
-		f9 := &svcapitypes.ImageConfigResponse{}
+		f10 := &svcapitypes.ImageConfigResponse{}
 		if resp.ImageConfigResponse.Error != nil {
-			f9f0 := &svcapitypes.ImageConfigError{}
+			f10f0 := &svcapitypes.ImageConfigError{}
 			if resp.ImageConfigResponse.Error.ErrorCode != nil {
-				f9f0.ErrorCode = resp.ImageConfigResponse.Error.ErrorCode
+				f10f0.ErrorCode = resp.ImageConfigResponse.Error.ErrorCode
 			}
 			if resp.ImageConfigResponse.Error.Message != nil {
-				f9f0.Message = resp.ImageConfigResponse.Error.Message
+				f10f0.Message = resp.ImageConfigResponse.Error.Message
 			}
-			f9.Error = f9f0
+			f10.Error = f10f0
 		}
 		if resp.ImageConfigResponse.ImageConfig != nil {
-			f9f1 := &svcapitypes.ImageConfig{}
+			f10f1 := &svcapitypes.ImageConfig{}
 			if resp.ImageConfigResponse.ImageConfig.Command != nil {
-				f9f1f0 := []*string{}
-				for _, f9f1f0iter := range resp.ImageConfigResponse.ImageConfig.Command {
-					var f9f1f0elem string
-					f9f1f0elem = *f9f1f0iter
-					f9f1f0 = append(f9f1f0, &f9f1f0elem)
+				f10f1f0 := []*string{}
+				for _, f10f1f0iter := range resp.ImageConfigResponse.ImageConfig.Command {
+					var f10f1f0elem string
+					f10f1f0elem = *f10f1f0iter
+					f10f1f0 = append(f10f1f0, &f10f1f0elem)
 				}
-				f9f1.Command = f9f1f0
+				f10f1.Command = f10f1f0
 			}
 			if resp.ImageConfigResponse.ImageConfig.EntryPoint != nil {
-				f9f1f1 := []*string{}
-				for _, f9f1f1iter := range resp.ImageConfigResponse.ImageConfig.EntryPoint {
-					var f9f1f1elem string
-					f9f1f1elem = *f9f1f1iter
-					f9f1f1 = append(f9f1f1, &f9f1f1elem)
+				f10f1f1 := []*string{}
+				for _, f10f1f1iter := range resp.ImageConfigResponse.ImageConfig.EntryPoint {
+					var f10f1f1elem string
+					f10f1f1elem = *f10f1f1iter
+					f10f1f1 = append(f10f1f1, &f10f1f1elem)
 				}
-				f9f1.EntryPoint = f9f1f1
+				f10f1.EntryPoint = f10f1f1
 			}
 			if resp.ImageConfigResponse.ImageConfig.WorkingDirectory != nil {
-				f9f1.WorkingDirectory = resp.ImageConfigResponse.ImageConfig.WorkingDirectory
+				f10f1.WorkingDirectory = resp.ImageConfigResponse.ImageConfig.WorkingDirectory
 			}
-			f9.ImageConfig = f9f1
+			f10.ImageConfig = f10f1
 		}
-		ko.Status.ImageConfigResponse = f9
+		ko.Status.ImageConfigResponse = f10
 	} else {
 		ko.Status.ImageConfigResponse = nil
 	}
@@ -538,24 +549,24 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.LastUpdateStatusReasonCode = nil
 	}
 	if resp.Layers != nil {
-		f15 := []*svcapitypes.Layer{}
-		for _, f15iter := range resp.Layers {
-			f15elem := &svcapitypes.Layer{}
-			if f15iter.Arn != nil {
-				f15elem.ARN = f15iter.Arn
+		f16 := []*svcapitypes.Layer{}
+		for _, f16iter := range resp.Layers {
+			f16elem := &svcapitypes.Layer{}
+			if f16iter.Arn != nil {
+				f16elem.ARN = f16iter.Arn
 			}
-			if f15iter.CodeSize != nil {
-				f15elem.CodeSize = f15iter.CodeSize
+			if f16iter.CodeSize != nil {
+				f16elem.CodeSize = f16iter.CodeSize
 			}
-			if f15iter.SigningJobArn != nil {
-				f15elem.SigningJobARN = f15iter.SigningJobArn
+			if f16iter.SigningJobArn != nil {
+				f16elem.SigningJobARN = f16iter.SigningJobArn
 			}
-			if f15iter.SigningProfileVersionArn != nil {
-				f15elem.SigningProfileVersionARN = f15iter.SigningProfileVersionArn
+			if f16iter.SigningProfileVersionArn != nil {
+				f16elem.SigningProfileVersionARN = f16iter.SigningProfileVersionArn
 			}
-			f15 = append(f15, f15elem)
+			f16 = append(f16, f16elem)
 		}
-		ko.Status.Layers = f15
+		ko.Status.Layers = f16
 	} else {
 		ko.Status.Layers = nil
 	}
@@ -620,11 +631,11 @@ func (rm *resourceManager) sdkCreate(
 		ko.Spec.Timeout = nil
 	}
 	if resp.TracingConfig != nil {
-		f28 := &svcapitypes.TracingConfig{}
+		f29 := &svcapitypes.TracingConfig{}
 		if resp.TracingConfig.Mode != nil {
-			f28.Mode = resp.TracingConfig.Mode
+			f29.Mode = resp.TracingConfig.Mode
 		}
-		ko.Spec.TracingConfig = f28
+		ko.Spec.TracingConfig = f29
 	} else {
 		ko.Spec.TracingConfig = nil
 	}
@@ -634,26 +645,26 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.Version = nil
 	}
 	if resp.VpcConfig != nil {
-		f30 := &svcapitypes.VPCConfig{}
+		f31 := &svcapitypes.VPCConfig{}
 		if resp.VpcConfig.SecurityGroupIds != nil {
-			f30f0 := []*string{}
-			for _, f30f0iter := range resp.VpcConfig.SecurityGroupIds {
-				var f30f0elem string
-				f30f0elem = *f30f0iter
-				f30f0 = append(f30f0, &f30f0elem)
+			f31f0 := []*string{}
+			for _, f31f0iter := range resp.VpcConfig.SecurityGroupIds {
+				var f31f0elem string
+				f31f0elem = *f31f0iter
+				f31f0 = append(f31f0, &f31f0elem)
 			}
-			f30.SecurityGroupIDs = f30f0
+			f31.SecurityGroupIDs = f31f0
 		}
 		if resp.VpcConfig.SubnetIds != nil {
-			f30f1 := []*string{}
-			for _, f30f1iter := range resp.VpcConfig.SubnetIds {
-				var f30f1elem string
-				f30f1elem = *f30f1iter
-				f30f1 = append(f30f1, &f30f1elem)
+			f31f1 := []*string{}
+			for _, f31f1iter := range resp.VpcConfig.SubnetIds {
+				var f31f1elem string
+				f31f1elem = *f31f1iter
+				f31f1 = append(f31f1, &f31f1elem)
 			}
-			f30.SubnetIDs = f30f1
+			f31.SubnetIDs = f31f1
 		}
-		ko.Spec.VPCConfig = f30
+		ko.Spec.VPCConfig = f31
 	} else {
 		ko.Spec.VPCConfig = nil
 	}
@@ -670,64 +681,73 @@ func (rm *resourceManager) newCreateRequestPayload(
 ) (*svcsdk.CreateFunctionInput, error) {
 	res := &svcsdk.CreateFunctionInput{}
 
+	if r.ko.Spec.Architectures != nil {
+		f0 := []*string{}
+		for _, f0iter := range r.ko.Spec.Architectures {
+			var f0elem string
+			f0elem = *f0iter
+			f0 = append(f0, &f0elem)
+		}
+		res.SetArchitectures(f0)
+	}
 	if r.ko.Spec.Code != nil {
-		f0 := &svcsdk.FunctionCode{}
+		f1 := &svcsdk.FunctionCode{}
 		if r.ko.Spec.Code.ImageURI != nil {
-			f0.SetImageUri(*r.ko.Spec.Code.ImageURI)
+			f1.SetImageUri(*r.ko.Spec.Code.ImageURI)
 		}
 		if r.ko.Spec.Code.S3Bucket != nil {
-			f0.SetS3Bucket(*r.ko.Spec.Code.S3Bucket)
+			f1.SetS3Bucket(*r.ko.Spec.Code.S3Bucket)
 		}
 		if r.ko.Spec.Code.S3Key != nil {
-			f0.SetS3Key(*r.ko.Spec.Code.S3Key)
+			f1.SetS3Key(*r.ko.Spec.Code.S3Key)
 		}
 		if r.ko.Spec.Code.S3ObjectVersion != nil {
-			f0.SetS3ObjectVersion(*r.ko.Spec.Code.S3ObjectVersion)
+			f1.SetS3ObjectVersion(*r.ko.Spec.Code.S3ObjectVersion)
 		}
 		if r.ko.Spec.Code.ZipFile != nil {
-			f0.SetZipFile(r.ko.Spec.Code.ZipFile)
+			f1.SetZipFile(r.ko.Spec.Code.ZipFile)
 		}
-		res.SetCode(f0)
+		res.SetCode(f1)
 	}
 	if r.ko.Spec.CodeSigningConfigARN != nil {
 		res.SetCodeSigningConfigArn(*r.ko.Spec.CodeSigningConfigARN)
 	}
 	if r.ko.Spec.DeadLetterConfig != nil {
-		f2 := &svcsdk.DeadLetterConfig{}
+		f3 := &svcsdk.DeadLetterConfig{}
 		if r.ko.Spec.DeadLetterConfig.TargetARN != nil {
-			f2.SetTargetArn(*r.ko.Spec.DeadLetterConfig.TargetARN)
+			f3.SetTargetArn(*r.ko.Spec.DeadLetterConfig.TargetARN)
 		}
-		res.SetDeadLetterConfig(f2)
+		res.SetDeadLetterConfig(f3)
 	}
 	if r.ko.Spec.Description != nil {
 		res.SetDescription(*r.ko.Spec.Description)
 	}
 	if r.ko.Spec.Environment != nil {
-		f4 := &svcsdk.Environment{}
+		f5 := &svcsdk.Environment{}
 		if r.ko.Spec.Environment.Variables != nil {
-			f4f0 := map[string]*string{}
-			for f4f0key, f4f0valiter := range r.ko.Spec.Environment.Variables {
-				var f4f0val string
-				f4f0val = *f4f0valiter
-				f4f0[f4f0key] = &f4f0val
+			f5f0 := map[string]*string{}
+			for f5f0key, f5f0valiter := range r.ko.Spec.Environment.Variables {
+				var f5f0val string
+				f5f0val = *f5f0valiter
+				f5f0[f5f0key] = &f5f0val
 			}
-			f4.SetVariables(f4f0)
+			f5.SetVariables(f5f0)
 		}
-		res.SetEnvironment(f4)
+		res.SetEnvironment(f5)
 	}
 	if r.ko.Spec.FileSystemConfigs != nil {
-		f5 := []*svcsdk.FileSystemConfig{}
-		for _, f5iter := range r.ko.Spec.FileSystemConfigs {
-			f5elem := &svcsdk.FileSystemConfig{}
-			if f5iter.ARN != nil {
-				f5elem.SetArn(*f5iter.ARN)
+		f6 := []*svcsdk.FileSystemConfig{}
+		for _, f6iter := range r.ko.Spec.FileSystemConfigs {
+			f6elem := &svcsdk.FileSystemConfig{}
+			if f6iter.ARN != nil {
+				f6elem.SetArn(*f6iter.ARN)
 			}
-			if f5iter.LocalMountPath != nil {
-				f5elem.SetLocalMountPath(*f5iter.LocalMountPath)
+			if f6iter.LocalMountPath != nil {
+				f6elem.SetLocalMountPath(*f6iter.LocalMountPath)
 			}
-			f5 = append(f5, f5elem)
+			f6 = append(f6, f6elem)
 		}
-		res.SetFileSystemConfigs(f5)
+		res.SetFileSystemConfigs(f6)
 	}
 	if r.ko.Spec.Name != nil {
 		res.SetFunctionName(*r.ko.Spec.Name)
@@ -736,29 +756,29 @@ func (rm *resourceManager) newCreateRequestPayload(
 		res.SetHandler(*r.ko.Spec.Handler)
 	}
 	if r.ko.Spec.ImageConfig != nil {
-		f8 := &svcsdk.ImageConfig{}
+		f9 := &svcsdk.ImageConfig{}
 		if r.ko.Spec.ImageConfig.Command != nil {
-			f8f0 := []*string{}
-			for _, f8f0iter := range r.ko.Spec.ImageConfig.Command {
-				var f8f0elem string
-				f8f0elem = *f8f0iter
-				f8f0 = append(f8f0, &f8f0elem)
+			f9f0 := []*string{}
+			for _, f9f0iter := range r.ko.Spec.ImageConfig.Command {
+				var f9f0elem string
+				f9f0elem = *f9f0iter
+				f9f0 = append(f9f0, &f9f0elem)
 			}
-			f8.SetCommand(f8f0)
+			f9.SetCommand(f9f0)
 		}
 		if r.ko.Spec.ImageConfig.EntryPoint != nil {
-			f8f1 := []*string{}
-			for _, f8f1iter := range r.ko.Spec.ImageConfig.EntryPoint {
-				var f8f1elem string
-				f8f1elem = *f8f1iter
-				f8f1 = append(f8f1, &f8f1elem)
+			f9f1 := []*string{}
+			for _, f9f1iter := range r.ko.Spec.ImageConfig.EntryPoint {
+				var f9f1elem string
+				f9f1elem = *f9f1iter
+				f9f1 = append(f9f1, &f9f1elem)
 			}
-			f8.SetEntryPoint(f8f1)
+			f9.SetEntryPoint(f9f1)
 		}
 		if r.ko.Spec.ImageConfig.WorkingDirectory != nil {
-			f8.SetWorkingDirectory(*r.ko.Spec.ImageConfig.WorkingDirectory)
+			f9.SetWorkingDirectory(*r.ko.Spec.ImageConfig.WorkingDirectory)
 		}
-		res.SetImageConfig(f8)
+		res.SetImageConfig(f9)
 	}
 	if r.ko.Spec.KMSKeyARN != nil {
 		res.SetKMSKeyArn(*r.ko.Spec.KMSKeyARN)
@@ -779,45 +799,45 @@ func (rm *resourceManager) newCreateRequestPayload(
 		res.SetRuntime(*r.ko.Spec.Runtime)
 	}
 	if r.ko.Spec.Tags != nil {
-		f15 := map[string]*string{}
-		for f15key, f15valiter := range r.ko.Spec.Tags {
-			var f15val string
-			f15val = *f15valiter
-			f15[f15key] = &f15val
+		f16 := map[string]*string{}
+		for f16key, f16valiter := range r.ko.Spec.Tags {
+			var f16val string
+			f16val = *f16valiter
+			f16[f16key] = &f16val
 		}
-		res.SetTags(f15)
+		res.SetTags(f16)
 	}
 	if r.ko.Spec.Timeout != nil {
 		res.SetTimeout(*r.ko.Spec.Timeout)
 	}
 	if r.ko.Spec.TracingConfig != nil {
-		f17 := &svcsdk.TracingConfig{}
+		f18 := &svcsdk.TracingConfig{}
 		if r.ko.Spec.TracingConfig.Mode != nil {
-			f17.SetMode(*r.ko.Spec.TracingConfig.Mode)
+			f18.SetMode(*r.ko.Spec.TracingConfig.Mode)
 		}
-		res.SetTracingConfig(f17)
+		res.SetTracingConfig(f18)
 	}
 	if r.ko.Spec.VPCConfig != nil {
-		f18 := &svcsdk.VpcConfig{}
+		f19 := &svcsdk.VpcConfig{}
 		if r.ko.Spec.VPCConfig.SecurityGroupIDs != nil {
-			f18f0 := []*string{}
-			for _, f18f0iter := range r.ko.Spec.VPCConfig.SecurityGroupIDs {
-				var f18f0elem string
-				f18f0elem = *f18f0iter
-				f18f0 = append(f18f0, &f18f0elem)
+			f19f0 := []*string{}
+			for _, f19f0iter := range r.ko.Spec.VPCConfig.SecurityGroupIDs {
+				var f19f0elem string
+				f19f0elem = *f19f0iter
+				f19f0 = append(f19f0, &f19f0elem)
 			}
-			f18.SetSecurityGroupIds(f18f0)
+			f19.SetSecurityGroupIds(f19f0)
 		}
 		if r.ko.Spec.VPCConfig.SubnetIDs != nil {
-			f18f1 := []*string{}
-			for _, f18f1iter := range r.ko.Spec.VPCConfig.SubnetIDs {
-				var f18f1elem string
-				f18f1elem = *f18f1iter
-				f18f1 = append(f18f1, &f18f1elem)
+			f19f1 := []*string{}
+			for _, f19f1iter := range r.ko.Spec.VPCConfig.SubnetIDs {
+				var f19f1elem string
+				f19f1elem = *f19f1iter
+				f19f1 = append(f19f1, &f19f1elem)
 			}
-			f18.SetSubnetIds(f18f1)
+			f19.SetSubnetIds(f19f1)
 		}
-		res.SetVpcConfig(f18)
+		res.SetVpcConfig(f19)
 	}
 
 	return res, nil

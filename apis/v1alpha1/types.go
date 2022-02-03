@@ -180,8 +180,9 @@ type FunctionCodeLocation struct {
 
 // Details about a function's configuration.
 type FunctionConfiguration struct {
-	CodeSHA256 *string `json:"codeSHA256,omitempty"`
-	CodeSize   *int64  `json:"codeSize,omitempty"`
+	Architectures []*string `json:"architectures,omitempty"`
+	CodeSHA256    *string   `json:"codeSHA256,omitempty"`
+	CodeSize      *int64    `json:"codeSize,omitempty"`
 	// The dead-letter queue (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#dlq)
 	// for failed asynchronous invocations.
 	DeadLetterConfig *DeadLetterConfig `json:"deadLetterConfig,omitempty"`

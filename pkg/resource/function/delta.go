@@ -42,6 +42,9 @@ func newResourceDelta(
 	}
 	customPreCompare(delta, a, b)
 
+	if !ackcompare.SliceStringPEqual(a.ko.Spec.Architectures, b.ko.Spec.Architectures) {
+		delta.Add("Spec.Architectures", a.ko.Spec.Architectures, b.ko.Spec.Architectures)
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.CodeSigningConfigARN, b.ko.Spec.CodeSigningConfigARN) {
 		delta.Add("Spec.CodeSigningConfigARN", a.ko.Spec.CodeSigningConfigARN, b.ko.Spec.CodeSigningConfigARN)
 	} else if a.ko.Spec.CodeSigningConfigARN != nil && b.ko.Spec.CodeSigningConfigARN != nil {
