@@ -24,21 +24,26 @@ import (
 type BrokerSpec struct {
 	AuthenticationStrategy *string `json:"authenticationStrategy,omitempty"`
 
-	AutoMinorVersionUpgrade *bool `json:"autoMinorVersionUpgrade,omitempty"`
+	// +kubebuilder:validation:Required
+	AutoMinorVersionUpgrade *bool `json:"autoMinorVersionUpgrade"`
 
 	Configuration *ConfigurationID `json:"configuration,omitempty"`
 
 	CreatorRequestID *string `json:"creatorRequestID,omitempty"`
 
-	DeploymentMode *string `json:"deploymentMode,omitempty"`
+	// +kubebuilder:validation:Required
+	DeploymentMode *string `json:"deploymentMode"`
 
 	EncryptionOptions *EncryptionOptions `json:"encryptionOptions,omitempty"`
 
-	EngineType *string `json:"engineType,omitempty"`
+	// +kubebuilder:validation:Required
+	EngineType *string `json:"engineType"`
 
-	EngineVersion *string `json:"engineVersion,omitempty"`
+	// +kubebuilder:validation:Required
+	EngineVersion *string `json:"engineVersion"`
 
-	HostInstanceType *string `json:"hostInstanceType,omitempty"`
+	// +kubebuilder:validation:Required
+	HostInstanceType *string `json:"hostInstanceType"`
 
 	LDAPServerMetadata *LDAPServerMetadataInput `json:"ldapServerMetadata,omitempty"`
 
@@ -46,9 +51,11 @@ type BrokerSpec struct {
 
 	MaintenanceWindowStartTime *WeeklyStartTime `json:"maintenanceWindowStartTime,omitempty"`
 
-	Name *string `json:"name,omitempty"`
+	// +kubebuilder:validation:Required
+	Name *string `json:"name"`
 
-	PubliclyAccessible *bool `json:"publiclyAccessible,omitempty"`
+	// +kubebuilder:validation:Required
+	PubliclyAccessible *bool `json:"publiclyAccessible"`
 
 	SecurityGroups []*string `json:"securityGroups,omitempty"`
 
@@ -58,7 +65,8 @@ type BrokerSpec struct {
 
 	Tags map[string]*string `json:"tags,omitempty"`
 
-	Users []*User `json:"users,omitempty"`
+	// +kubebuilder:validation:Required
+	Users []*User `json:"users"`
 }
 
 // BrokerStatus defines the observed state of Broker

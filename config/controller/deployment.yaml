@@ -61,6 +61,7 @@ spec:
             drop:
               - ALL
       terminationGracePeriodSeconds: 10
+      serviceAccountName: ack-mq-controller
       hostIPC: false
       hostNetwork: false
       hostPID: false

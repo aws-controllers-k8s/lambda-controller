@@ -689,14 +689,29 @@ func (rm *resourceManager) sdkUpdate(
 	} else {
 		ko.Spec.Logs = nil
 	}
-	if resp.SecurityGroups != nil {
-		f8 := []*string{}
-		for _, f8iter := range resp.SecurityGroups {
-			var f8elem string
-			f8elem = *f8iter
-			f8 = append(f8, &f8elem)
+	if resp.MaintenanceWindowStartTime != nil {
+		f8 := &svcapitypes.WeeklyStartTime{}
+		if resp.MaintenanceWindowStartTime.DayOfWeek != nil {
+			f8.DayOfWeek = resp.MaintenanceWindowStartTime.DayOfWeek
 		}
-		ko.Spec.SecurityGroups = f8
+		if resp.MaintenanceWindowStartTime.TimeOfDay != nil {
+			f8.TimeOfDay = resp.MaintenanceWindowStartTime.TimeOfDay
+		}
+		if resp.MaintenanceWindowStartTime.TimeZone != nil {
+			f8.TimeZone = resp.MaintenanceWindowStartTime.TimeZone
+		}
+		ko.Spec.MaintenanceWindowStartTime = f8
+	} else {
+		ko.Spec.MaintenanceWindowStartTime = nil
+	}
+	if resp.SecurityGroups != nil {
+		f9 := []*string{}
+		for _, f9iter := range resp.SecurityGroups {
+			var f9elem string
+			f9elem = *f9iter
+			f9 = append(f9, &f9elem)
+		}
+		ko.Spec.SecurityGroups = f9
 	} else {
 		ko.Spec.SecurityGroups = nil
 	}
@@ -791,14 +806,27 @@ func (rm *resourceManager) newUpdateRequestPayload(
 		}
 		res.SetLogs(f7)
 	}
-	if r.ko.Spec.SecurityGroups != nil {
-		f8 := []*string{}
-		for _, f8iter := range r.ko.Spec.SecurityGroups {
-			var f8elem string
-			f8elem = *f8iter
-			f8 = append(f8, &f8elem)
+	if r.ko.Spec.MaintenanceWindowStartTime != nil {
+		f8 := &svcsdk.WeeklyStartTime{}
+		if r.ko.Spec.MaintenanceWindowStartTime.DayOfWeek != nil {
+			f8.SetDayOfWeek(*r.ko.Spec.MaintenanceWindowStartTime.DayOfWeek)
 		}
-		res.SetSecurityGroups(f8)
+		if r.ko.Spec.MaintenanceWindowStartTime.TimeOfDay != nil {
+			f8.SetTimeOfDay(*r.ko.Spec.MaintenanceWindowStartTime.TimeOfDay)
+		}
+		if r.ko.Spec.MaintenanceWindowStartTime.TimeZone != nil {
+			f8.SetTimeZone(*r.ko.Spec.MaintenanceWindowStartTime.TimeZone)
+		}
+		res.SetMaintenanceWindowStartTime(f8)
+	}
+	if r.ko.Spec.SecurityGroups != nil {
+		f9 := []*string{}
+		for _, f9iter := range r.ko.Spec.SecurityGroups {
+			var f9elem string
+			f9elem = *f9iter
+			f9 = append(f9, &f9elem)
+		}
+		res.SetSecurityGroups(f9)
 	}
 
 	return res, nil

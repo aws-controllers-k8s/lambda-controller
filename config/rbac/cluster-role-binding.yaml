@@ -8,5 +8,5 @@ roleRef:
   name: ack-mq-controller
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: ack-mq-controller
   namespace: ack-system

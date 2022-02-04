@@ -35,8 +35,7 @@ type AvailabilityZone struct {
 
 // Types of broker engines.
 type BrokerEngineType struct {
-	// The type of broker engine. Note: Currently, Amazon MQ supports ActiveMQ and
-	// RabbitMQ.
+	// The type of broker engine. Amazon MQ supports ActiveMQ and RabbitMQ.
 	EngineType *string `json:"engineType,omitempty"`
 }
 
@@ -49,28 +48,27 @@ type BrokerInstance struct {
 
 // Option for host instance type.
 type BrokerInstanceOption struct {
-	// The type of broker engine. Note: Currently, Amazon MQ supports ActiveMQ and
-	// RabbitMQ.
+	// The type of broker engine. Amazon MQ supports ActiveMQ and RabbitMQ.
 	EngineType       *string `json:"engineType,omitempty"`
 	HostInstanceType *string `json:"hostInstanceType,omitempty"`
-	// The storage type of the broker. EFS is currently not Supported for RabbitMQ
-	// engine type.
+	// The broker's storage type.
+	//
+	// EFS is not supported for RabbitMQ engine type.
 	StorageType             *string   `json:"storageType,omitempty"`
 	SupportedEngineVersions []*string `json:"supportedEngineVersions,omitempty"`
 }
 
-// The Amazon Resource Name (ARN) of the broker.
+// Returns information about all brokers.
 type BrokerSummary struct {
 	BrokerARN  *string `json:"brokerARN,omitempty"`
 	BrokerID   *string `json:"brokerID,omitempty"`
 	BrokerName *string `json:"brokerName,omitempty"`
-	// The status of the broker.
+	// The broker's status.
 	BrokerState *string      `json:"brokerState,omitempty"`
 	Created     *metav1.Time `json:"created,omitempty"`
-	// The deployment mode of the broker.
+	// The broker's deployment mode.
 	DeploymentMode *string `json:"deploymentMode,omitempty"`
-	// The type of broker engine. Note: Currently, Amazon MQ supports ActiveMQ and
-	// RabbitMQ.
+	// The type of broker engine. Amazon MQ supports ActiveMQ and RabbitMQ.
 	EngineType       *string `json:"engineType,omitempty"`
 	HostInstanceType *string `json:"hostInstanceType,omitempty"`
 }
@@ -78,12 +76,12 @@ type BrokerSummary struct {
 // Returns information about all configurations.
 type Configuration struct {
 	ARN *string `json:"arn,omitempty"`
-	// The authentication strategy used to secure the broker.
+	// Optional. The authentication strategy used to secure the broker. The default
+	// is SIMPLE.
 	AuthenticationStrategy *string      `json:"authenticationStrategy,omitempty"`
 	Created                *metav1.Time `json:"created,omitempty"`
 	Description            *string      `json:"description,omitempty"`
-	// The type of broker engine. Note: Currently, Amazon MQ supports ActiveMQ and
-	// RabbitMQ.
+	// The type of broker engine. Amazon MQ supports ActiveMQ and RabbitMQ.
 	EngineType    *string            `json:"engineType,omitempty"`
 	EngineVersion *string            `json:"engineVersion,omitempty"`
 	ID            *string            `json:"id,omitempty"`
@@ -91,8 +89,9 @@ type Configuration struct {
 	Tags          map[string]*string `json:"tags,omitempty"`
 }
 
-// A list of information about the configuration. Does not apply to RabbitMQ
-// brokers.
+// A list of information about the configuration.
+//
+// Does not apply to RabbitMQ brokers.
 type ConfigurationID struct {
 	ID       *string `json:"id,omitempty"`
 	Revision *int64  `json:"revision,omitempty"`
@@ -107,15 +106,19 @@ type ConfigurationRevision struct {
 
 // Broker configuration information
 type Configurations struct {
-	// A list of information about the configuration. Does not apply to RabbitMQ
-	// brokers.
+	// A list of information about the configuration.
+	//
+	// Does not apply to RabbitMQ brokers.
 	Current *ConfigurationID   `json:"current,omitempty"`
 	History []*ConfigurationID `json:"history,omitempty"`
-	// A list of information about the configuration. Does not apply to RabbitMQ
-	// brokers.
+	// A list of information about the configuration.
+	//
+	// Does not apply to RabbitMQ brokers.
 	Pending *ConfigurationID `json:"pending,omitempty"`
 }
 
+// Does not apply to RabbitMQ brokers.
+//
 // Encryption options for the broker.
 type EncryptionOptions struct {
 	KMSKeyID       *string `json:"kmsKeyID,omitempty"`
@@ -127,8 +130,10 @@ type EngineVersion struct {
 	Name *string `json:"name,omitempty"`
 }
 
-// The metadata of the LDAP server used to authenticate and authorize connections
-// to the broker. Currently not supported for RabbitMQ engine type.
+// Optional. The metadata of the LDAP server used to authenticate and authorize
+// connections to the broker.
+//
+// Does not apply to RabbitMQ brokers.
 type LDAPServerMetadataInput struct {
 	Hosts                  []*string `json:"hosts,omitempty"`
 	RoleBase               *string   `json:"roleBase,omitempty"`
@@ -143,8 +148,8 @@ type LDAPServerMetadataInput struct {
 	UserSearchSubtree      *bool     `json:"userSearchSubtree,omitempty"`
 }
 
-// The metadata of the LDAP server used to authenticate and authorize connections
-// to the broker.
+// Optional. The metadata of the LDAP server used to authenticate and authorize
+// connections to the broker.
 type LDAPServerMetadataOutput struct {
 	Hosts                  []*string `json:"hosts,omitempty"`
 	RoleBase               *string   `json:"roleBase,omitempty"`
@@ -188,7 +193,10 @@ type SanitizationWarning struct {
 	ElementName   *string `json:"elementName,omitempty"`
 }
 
-// A user associated with the broker.
+// A user associated with the broker. For RabbitMQ brokers, one and only one
+// administrative user is accepted and created when a broker is first provisioned.
+// All subsequent broker users are created by making RabbitMQ API calls directly
+// to brokers or via the RabbitMQ web console.
 type User struct {
 	ConsoleAccess *bool                           `json:"consoleAccess,omitempty"`
 	Groups        []*string                       `json:"groups,omitempty"`
@@ -205,7 +213,7 @@ type UserPendingChanges struct {
 	PendingChange *string `json:"pendingChange,omitempty"`
 }
 
-// Returns a list of all broker users.
+// Returns a list of all broker users. Does not apply to RabbitMQ brokers.
 type UserSummary struct {
 	// The type of change pending for the ActiveMQ user.
 	PendingChange *string `json:"pendingChange,omitempty"`
