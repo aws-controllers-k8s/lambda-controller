@@ -115,6 +115,9 @@ func newResourceDelta(
 			delta.Add("Spec.KMSKeyARN", a.ko.Spec.KMSKeyARN, b.ko.Spec.KMSKeyARN)
 		}
 	}
+	if !ackcompare.SliceStringPEqual(a.ko.Spec.Layers, b.ko.Spec.Layers) {
+		delta.Add("Spec.Layers", a.ko.Spec.Layers, b.ko.Spec.Layers)
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.MemorySize, b.ko.Spec.MemorySize) {
 		delta.Add("Spec.MemorySize", a.ko.Spec.MemorySize, b.ko.Spec.MemorySize)
 	} else if a.ko.Spec.MemorySize != nil && b.ko.Spec.MemorySize != nil {
