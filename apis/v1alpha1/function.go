@@ -54,6 +54,10 @@ type FunctionSpec struct {
 	// used to encrypt your function's environment variables. If it's not provided,
 	// Lambda uses a default service key.
 	KMSKeyARN *string `json:"kmsKeyARN,omitempty"`
+	// A list of function layers (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html)
+	// to add to the function's execution environment. Specify each layer by its
+	// ARN, including the version.
+	Layers []*string `json:"layers,omitempty"`
 	// The amount of memory available to the function (https://docs.aws.amazon.com/lambda/latest/dg/configuration-memory.html)
 	// at runtime. Increasing the function memory also increases its CPU allocation.
 	// The default value is 128 MB. The value can be any multiple of 1 MB.
@@ -139,7 +143,7 @@ type FunctionStatus struct {
 	LastUpdateStatusReasonCode *string `json:"lastUpdateStatusReasonCode,omitempty"`
 	// The function's layers (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html).
 	// +kubebuilder:validation:Optional
-	Layers []*Layer `json:"layers,omitempty"`
+	LayerStatuses []*Layer `json:"layerStatuses,omitempty"`
 	// For Lambda@Edge functions, the ARN of the master function.
 	// +kubebuilder:validation:Optional
 	MasterARN *string `json:"masterARN,omitempty"`

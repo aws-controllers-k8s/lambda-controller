@@ -242,7 +242,28 @@ func (rm *resourceManager) sdkFind(
 	} else {
 		ko.Status.LastUpdateStatusReasonCode = nil
 	}
-
+	if resp.Configuration.Layers != nil {
+		f16 := []*svcapitypes.Layer{}
+		for _, f16iter := range resp.Configuration.Layers {
+			f16elem := &svcapitypes.Layer{}
+			if f16iter.Arn != nil {
+				f16elem.ARN = f16iter.Arn
+			}
+			if f16iter.CodeSize != nil {
+				f16elem.CodeSize = f16iter.CodeSize
+			}
+			if f16iter.SigningJobArn != nil {
+				f16elem.SigningJobARN = f16iter.SigningJobArn
+			}
+			if f16iter.SigningProfileVersionArn != nil {
+				f16elem.SigningProfileVersionARN = f16iter.SigningProfileVersionArn
+			}
+			f16 = append(f16, f16elem)
+		}
+		ko.Status.LayerStatuses = f16
+	} else {
+		ko.Status.LayerStatuses = nil
+	}
 	if resp.Configuration.MasterArn != nil {
 		ko.Status.MasterARN = resp.Configuration.MasterArn
 	} else {
@@ -549,28 +570,6 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Status.LastUpdateStatusReasonCode = nil
 	}
-	if resp.Layers != nil {
-		f16 := []*svcapitypes.Layer{}
-		for _, f16iter := range resp.Layers {
-			f16elem := &svcapitypes.Layer{}
-			if f16iter.Arn != nil {
-				f16elem.ARN = f16iter.Arn
-			}
-			if f16iter.CodeSize != nil {
-				f16elem.CodeSize = f16iter.CodeSize
-			}
-			if f16iter.SigningJobArn != nil {
-				f16elem.SigningJobARN = f16iter.SigningJobArn
-			}
-			if f16iter.SigningProfileVersionArn != nil {
-				f16elem.SigningProfileVersionARN = f16iter.SigningProfileVersionArn
-			}
-			f16 = append(f16, f16elem)
-		}
-		ko.Status.Layers = f16
-	} else {
-		ko.Status.Layers = nil
-	}
 	if resp.MasterArn != nil {
 		ko.Status.MasterARN = resp.MasterArn
 	} else {
@@ -671,6 +670,28 @@ func (rm *resourceManager) sdkCreate(
 	}
 
 	rm.setStatusDefaults(ko)
+	if resp.Layers != nil {
+		f16 := []*svcapitypes.Layer{}
+		for _, f16iter := range resp.Layers {
+			f16elem := &svcapitypes.Layer{}
+			if f16iter.Arn != nil {
+				f16elem.ARN = f16iter.Arn
+			}
+			if f16iter.CodeSize != nil {
+				f16elem.CodeSize = f16iter.CodeSize
+			}
+			if f16iter.SigningJobArn != nil {
+				f16elem.SigningJobARN = f16iter.SigningJobArn
+			}
+			if f16iter.SigningProfileVersionArn != nil {
+				f16elem.SigningProfileVersionARN = f16iter.SigningProfileVersionArn
+			}
+			f16 = append(f16, f16elem)
+		}
+		ko.Status.LayerStatuses = f16
+	} else {
+		ko.Status.LayerStatuses = nil
+	}
 	return &resource{ko}, nil
 }
 
@@ -784,6 +805,15 @@ func (rm *resourceManager) newCreateRequestPayload(
 	if r.ko.Spec.KMSKeyARN != nil {
 		res.SetKMSKeyArn(*r.ko.Spec.KMSKeyARN)
 	}
+	if r.ko.Spec.Layers != nil {
+		f11 := []*string{}
+		for _, f11iter := range r.ko.Spec.Layers {
+			var f11elem string
+			f11elem = *f11iter
+			f11 = append(f11, &f11elem)
+		}
+		res.SetLayers(f11)
+	}
 	if r.ko.Spec.MemorySize != nil {
 		res.SetMemorySize(*r.ko.Spec.MemorySize)
 	}
@@ -800,45 +830,45 @@ func (rm *resourceManager) newCreateRequestPayload(
 		res.SetRuntime(*r.ko.Spec.Runtime)
 	}
 	if r.ko.Spec.Tags != nil {
-		f16 := map[string]*string{}
-		for f16key, f16valiter := range r.ko.Spec.Tags {
-			var f16val string
-			f16val = *f16valiter
-			f16[f16key] = &f16val
+		f17 := map[string]*string{}
+		for f17key, f17valiter := range r.ko.Spec.Tags {
+			var f17val string
+			f17val = *f17valiter
+			f17[f17key] = &f17val
 		}
-		res.SetTags(f16)
+		res.SetTags(f17)
 	}
 	if r.ko.Spec.Timeout != nil {
 		res.SetTimeout(*r.ko.Spec.Timeout)
 	}
 	if r.ko.Spec.TracingConfig != nil {
-		f18 := &svcsdk.TracingConfig{}
+		f19 := &svcsdk.TracingConfig{}
 		if r.ko.Spec.TracingConfig.Mode != nil {
-			f18.SetMode(*r.ko.Spec.TracingConfig.Mode)
+			f19.SetMode(*r.ko.Spec.TracingConfig.Mode)
 		}
-		res.SetTracingConfig(f18)
+		res.SetTracingConfig(f19)
 	}
 	if r.ko.Spec.VPCConfig != nil {
-		f19 := &svcsdk.VpcConfig{}
+		f20 := &svcsdk.VpcConfig{}
 		if r.ko.Spec.VPCConfig.SecurityGroupIDs != nil {
-			f19f0 := []*string{}
-			for _, f19f0iter := range r.ko.Spec.VPCConfig.SecurityGroupIDs {
-				var f19f0elem string
-				f19f0elem = *f19f0iter
-				f19f0 = append(f19f0, &f19f0elem)
+			f20f0 := []*string{}
+			for _, f20f0iter := range r.ko.Spec.VPCConfig.SecurityGroupIDs {
+				var f20f0elem string
+				f20f0elem = *f20f0iter
+				f20f0 = append(f20f0, &f20f0elem)
 			}
-			f19.SetSecurityGroupIds(f19f0)
+			f20.SetSecurityGroupIds(f20f0)
 		}
 		if r.ko.Spec.VPCConfig.SubnetIDs != nil {
-			f19f1 := []*string{}
-			for _, f19f1iter := range r.ko.Spec.VPCConfig.SubnetIDs {
-				var f19f1elem string
-				f19f1elem = *f19f1iter
-				f19f1 = append(f19f1, &f19f1elem)
+			f20f1 := []*string{}
+			for _, f20f1iter := range r.ko.Spec.VPCConfig.SubnetIDs {
+				var f20f1elem string
+				f20f1elem = *f20f1iter
+				f20f1 = append(f20f1, &f20f1elem)
 			}
-			f19.SetSubnetIds(f19f1)
+			f20.SetSubnetIds(f20f1)
 		}
-		res.SetVpcConfig(f19)
+		res.SetVpcConfig(f20)
 	}
 
 	return res, nil

@@ -1486,6 +1486,17 @@ func (in *FunctionSpec) DeepCopyInto(out *FunctionSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.Layers != nil {
+		in, out := &in.Layers, &out.Layers
+		*out = make([]*string, len(*in))
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(string)
+				**out = **in
+			}
+		}
+	}
 	if in.MemorySize != nil {
 		in, out := &in.MemorySize, &out.MemorySize
 		*out = new(int64)
@@ -1617,8 +1628,8 @@ func (in *FunctionStatus) DeepCopyInto(out *FunctionStatus) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.Layers != nil {
-		in, out := &in.Layers, &out.Layers
+	if in.LayerStatuses != nil {
+		in, out := &in.LayerStatuses, &out.LayerStatuses
 		*out = make([]*Layer, len(*in))
 		for i := range *in {
 			if (*in)[i] != nil {
