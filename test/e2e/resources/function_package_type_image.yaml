@@ -1,0 +1,13 @@
+apiVersion: lambda.services.k8s.aws/v1alpha1
+kind: Function
+metadata:
+  name: $FUNCTION_NAME
+  annotations:
+    services.k8s.aws/region: $AWS_REGION
+spec:
+  name: $FUNCTION_NAME
+  code:
+    imageURI: $IMAGE_URL
+  role: $LAMBDA_ROLE
+  description: function created by ACK lambda-controller e2e tests
+  packageType: Image

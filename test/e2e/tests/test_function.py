@@ -21,7 +21,7 @@ import logging
 from typing import Dict, Tuple
 
 from acktest.resources import random_suffix_name
-from acktest.aws.identity import get_region
+from acktest.aws.identity import get_region, get_account_id
 from acktest.k8s import resource as k8s
 from e2e import service_marker, CRD_GROUP, CRD_VERSION, load_lambda_resource
 from e2e.replacement_values import REPLACEMENT_VALUES
@@ -32,6 +32,12 @@ RESOURCE_PLURAL = "functions"
 CREATE_WAIT_AFTER_SECONDS = 25
 UPDATE_WAIT_AFTER_SECONDS = 25
 DELETE_WAIT_AFTER_SECONDS = 25
+
+
+def get_testing_image_url():
+    aws_region = get_region()
+    account_id = get_account_id()
+    return f"{account_id}.dkr.ecr.{aws_region}.amazonaws.com/ack-e2e-testing-lambda-controller:v1"
 
 @pytest.fixture(scope="module")
 def lambda_client():
@@ -304,6 +310,123 @@ class TestFunction:
         function_csc_arn = self.get_function_code_signing_config(lambda_client, resource_name)
         assert function_csc_arn is None
 
+        # Delete k8s resource
+        _, deleted = k8s.delete_custom_resource(ref)
+        assert deleted is True
+
+        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+
+        # Check Lambda function doesn't exist
+        exists = self.function_exists(lambda_client, resource_name)
+        assert not exists
+
+    def test_function_package_type_image(self, lambda_client, code_signing_config):
+        resource_name = random_suffix_name("lambda-function", 24)
+
+        resources = get_bootstrap_resources()
+
+        replacements = REPLACEMENT_VALUES.copy()
+        replacements["FUNCTION_NAME"] = resource_name
+        replacements["LAMBDA_ROLE"] = resources.LambdaBasicRoleARN
+        replacements["AWS_REGION"] = get_region()
+        replacements["IMAGE_URL"] = get_testing_image_url()
+
+        # Load Lambda CR
+        resource_data = load_lambda_resource(
+            "function_package_type_image",
+            additional_replacements=replacements,
+        )
+        logging.debug(resource_data)
+
+        # Create k8s resource
+        ref = k8s.CustomResourceReference(
+            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            resource_name, namespace="default",
+        )
+        k8s.create_custom_resource(ref, resource_data)
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        assert cr is not None
+        assert k8s.get_resource_exists(ref)
+
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        # Check Lambda function exists
+        exists = self.function_exists(lambda_client, resource_name)
+        assert exists
+
+        # Delete k8s resource
+        _, deleted = k8s.delete_custom_resource(ref)
+        assert deleted is True
+
+        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+
+        # Check Lambda function doesn't exist
+        exists = self.function_exists(lambda_client, resource_name)
+        assert not exists
+
+    def test_function_package_type_image_with_signing_config(self, lambda_client, code_signing_config):
+        resource_name = random_suffix_name("lambda-function", 24)
+
+        resources = get_bootstrap_resources()
+
+        replacements = REPLACEMENT_VALUES.copy()
+        replacements["FUNCTION_NAME"] = resource_name
+        replacements["LAMBDA_ROLE"] = resources.LambdaBasicRoleARN
+        replacements["AWS_REGION"] = get_region()
+        replacements["IMAGE_URL"] = get_testing_image_url()
+
+        # Load Lambda CR
+        resource_data = load_lambda_resource(
+            "function_package_type_image",
+            additional_replacements=replacements,
+        )
+        logging.debug(resource_data)
+
+        # Create k8s resource
+        ref = k8s.CustomResourceReference(
+            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            resource_name, namespace="default",
+        )
+        k8s.create_custom_resource(ref, resource_data)
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        assert cr is not None
+        assert k8s.get_resource_exists(ref)
+
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        # Check Lambda function exists
+        exists = self.function_exists(lambda_client, resource_name)
+        assert exists
+
+        # Add signing configuration
+        cr["spec"]["codeSigningConfigARN"] = "random-csc"
+        k8s.patch_custom_resource(ref, cr)
+
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+        # assert condition
+        assert k8s.assert_condition_state_message(
+            ref,
+            "ACK.Terminal",
+            "True",
+            "cannot set function code signing config when package type is Image",
+        )
+
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        # Remove signing configuration
+        cr["spec"]["codeSigningConfigARN"] = ""
+        k8s.patch_custom_resource(ref, cr)
+
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+        
         # Delete k8s resource
         _, deleted = k8s.delete_custom_resource(ref)
         assert deleted is True

@@ -18,16 +18,19 @@ import (
 	"errors"
 	"time"
 
-	svcapitypes "github.com/aws-controllers-k8s/lambda-controller/apis/v1alpha1"
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
+	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
 	"github.com/aws/aws-sdk-go/aws"
 	svcsdk "github.com/aws/aws-sdk-go/service/lambda"
+
+	svcapitypes "github.com/aws-controllers-k8s/lambda-controller/apis/v1alpha1"
 )
 
 var (
-	ErrFunctionPending = errors.New("Function in 'Pending' state, cannot be modified or deleted")
+	ErrFunctionPending      = errors.New("Function in 'Pending' state, cannot be modified or deleted")
+	ErrCannotSetFunctionCSC = errors.New("cannot set function code signing config when package type is Image")
 )
 
 var (
@@ -98,10 +101,16 @@ func (rm *resourceManager) customUpdateFunction(
 			return nil, err
 		}
 	}
+
 	if delta.DifferentAt("Spec.CodeSigningConfigARN") {
-		err = rm.updateFunctionCodeSigningConfig(ctx, desired)
-		if err != nil {
-			return nil, err
+		if desired.ko.Spec.PackageType != nil && *desired.ko.Spec.PackageType == "Image" &&
+			desired.ko.Spec.CodeSigningConfigARN != nil && *desired.ko.Spec.CodeSigningConfigARN != "" {
+			return nil, ackerr.NewTerminalError(ErrCannotSetFunctionCSC)
+		} else {
+			err = rm.updateFunctionCodeSigningConfig(ctx, desired)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -500,17 +509,23 @@ func (rm *resourceManager) setResourceAdditionalFields(
 	}
 	ko.Spec.ReservedConcurrentExecutions = getFunctionConcurrencyOutput.ReservedConcurrentExecutions
 
-	var getFunctionCodeSigningConfigOutput *svcsdk.GetFunctionCodeSigningConfigOutput
-	getFunctionCodeSigningConfigOutput, err = rm.sdkapi.GetFunctionCodeSigningConfigWithContext(
-		ctx,
-		&svcsdk.GetFunctionCodeSigningConfigInput{
-			FunctionName: ko.Spec.Name,
-		},
-	)
-	rm.metrics.RecordAPICall("GET", "GetFunctionCodeSigningConfig", err)
-	if err != nil {
-		return err
+	if ko.Spec.PackageType != nil && *ko.Spec.PackageType == "Zip" {
+		var getFunctionCodeSigningConfigOutput *svcsdk.GetFunctionCodeSigningConfigOutput
+		getFunctionCodeSigningConfigOutput, err = rm.sdkapi.GetFunctionCodeSigningConfigWithContext(
+			ctx,
+			&svcsdk.GetFunctionCodeSigningConfigInput{
+				FunctionName: ko.Spec.Name,
+			},
+		)
+		rm.metrics.RecordAPICall("GET", "GetFunctionCodeSigningConfig", err)
+		if err != nil {
+			return err
+		}
+		ko.Spec.CodeSigningConfigARN = getFunctionCodeSigningConfigOutput.CodeSigningConfigArn
 	}
-	ko.Spec.CodeSigningConfigARN = getFunctionCodeSigningConfigOutput.CodeSigningConfigArn
+	if ko.Spec.PackageType != nil && *ko.Spec.PackageType == "Image" &&
+		ko.Spec.CodeSigningConfigARN != nil && *ko.Spec.CodeSigningConfigARN != "" {
+		return ackerr.NewTerminalError(ErrCannotSetFunctionCSC)
+	}
 	return nil
 }

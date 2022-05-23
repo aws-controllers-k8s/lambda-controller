@@ -37,6 +37,9 @@ resources:
         GetFunction:
           input_fields:
             FunctionName: Name
+    exceptions:
+      terminal_codes:
+        - InvalidParameterValueException
     hooks:
       delta_pre_compare:
         code: customPreCompare(delta, a, b)
