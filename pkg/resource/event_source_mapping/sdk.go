@@ -122,19 +122,36 @@ func (rm *resourceManager) sdkFind(
 	} else {
 		ko.Spec.EventSourceARN = nil
 	}
+	if resp.FilterCriteria != nil {
+		f4 := &svcapitypes.FilterCriteria{}
+		if resp.FilterCriteria.Filters != nil {
+			f4f0 := []*svcapitypes.Filter{}
+			for _, f4f0iter := range resp.FilterCriteria.Filters {
+				f4f0elem := &svcapitypes.Filter{}
+				if f4f0iter.Pattern != nil {
+					f4f0elem.Pattern = f4f0iter.Pattern
+				}
+				f4f0 = append(f4f0, f4f0elem)
+			}
+			f4.Filters = f4f0
+		}
+		ko.Spec.FilterCriteria = f4
+	} else {
+		ko.Spec.FilterCriteria = nil
+	}
 	if resp.FunctionArn != nil {
 		ko.Status.FunctionARN = resp.FunctionArn
 	} else {
 		ko.Status.FunctionARN = nil
 	}
 	if resp.FunctionResponseTypes != nil {
-		f5 := []*string{}
-		for _, f5iter := range resp.FunctionResponseTypes {
-			var f5elem string
-			f5elem = *f5iter
-			f5 = append(f5, &f5elem)
+		f6 := []*string{}
+		for _, f6iter := range resp.FunctionResponseTypes {
+			var f6elem string
+			f6elem = *f6iter
+			f6 = append(f6, &f6elem)
 		}
-		ko.Spec.FunctionResponseTypes = f5
+		ko.Spec.FunctionResponseTypes = f6
 	} else {
 		ko.Spec.FunctionResponseTypes = nil
 	}
@@ -169,48 +186,48 @@ func (rm *resourceManager) sdkFind(
 		ko.Spec.ParallelizationFactor = nil
 	}
 	if resp.Queues != nil {
-		f12 := []*string{}
-		for _, f12iter := range resp.Queues {
-			var f12elem string
-			f12elem = *f12iter
-			f12 = append(f12, &f12elem)
+		f13 := []*string{}
+		for _, f13iter := range resp.Queues {
+			var f13elem string
+			f13elem = *f13iter
+			f13 = append(f13, &f13elem)
 		}
-		ko.Spec.Queues = f12
+		ko.Spec.Queues = f13
 	} else {
 		ko.Spec.Queues = nil
 	}
 	if resp.SelfManagedEventSource != nil {
-		f13 := &svcapitypes.SelfManagedEventSource{}
+		f14 := &svcapitypes.SelfManagedEventSource{}
 		if resp.SelfManagedEventSource.Endpoints != nil {
-			f13f0 := map[string][]*string{}
-			for f13f0key, f13f0valiter := range resp.SelfManagedEventSource.Endpoints {
-				f13f0val := []*string{}
-				for _, f13f0valiter := range f13f0valiter {
-					var f13f0valelem string
-					f13f0valelem = *f13f0valiter
-					f13f0val = append(f13f0val, &f13f0valelem)
+			f14f0 := map[string][]*string{}
+			for f14f0key, f14f0valiter := range resp.SelfManagedEventSource.Endpoints {
+				f14f0val := []*string{}
+				for _, f14f0valiter := range f14f0valiter {
+					var f14f0valelem string
+					f14f0valelem = *f14f0valiter
+					f14f0val = append(f14f0val, &f14f0valelem)
 				}
-				f13f0[f13f0key] = f13f0val
+				f14f0[f14f0key] = f14f0val
 			}
-			f13.Endpoints = f13f0
+			f14.Endpoints = f14f0
 		}
-		ko.Spec.SelfManagedEventSource = f13
+		ko.Spec.SelfManagedEventSource = f14
 	} else {
 		ko.Spec.SelfManagedEventSource = nil
 	}
 	if resp.SourceAccessConfigurations != nil {
-		f14 := []*svcapitypes.SourceAccessConfiguration{}
-		for _, f14iter := range resp.SourceAccessConfigurations {
-			f14elem := &svcapitypes.SourceAccessConfiguration{}
-			if f14iter.Type != nil {
-				f14elem.Type = f14iter.Type
+		f15 := []*svcapitypes.SourceAccessConfiguration{}
+		for _, f15iter := range resp.SourceAccessConfigurations {
+			f15elem := &svcapitypes.SourceAccessConfiguration{}
+			if f15iter.Type != nil {
+				f15elem.Type = f15iter.Type
 			}
-			if f14iter.URI != nil {
-				f14elem.URI = f14iter.URI
+			if f15iter.URI != nil {
+				f15elem.URI = f15iter.URI
 			}
-			f14 = append(f14, f14elem)
+			f15 = append(f15, f15elem)
 		}
-		ko.Spec.SourceAccessConfigurations = f14
+		ko.Spec.SourceAccessConfigurations = f15
 	} else {
 		ko.Spec.SourceAccessConfigurations = nil
 	}
@@ -235,13 +252,13 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.StateTransitionReason = nil
 	}
 	if resp.Topics != nil {
-		f19 := []*string{}
-		for _, f19iter := range resp.Topics {
-			var f19elem string
-			f19elem = *f19iter
-			f19 = append(f19, &f19elem)
+		f20 := []*string{}
+		for _, f20iter := range resp.Topics {
+			var f20elem string
+			f20elem = *f20iter
+			f20 = append(f20, &f20elem)
 		}
-		ko.Spec.Topics = f19
+		ko.Spec.Topics = f20
 	} else {
 		ko.Spec.Topics = nil
 	}
@@ -347,19 +364,36 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Spec.EventSourceARN = nil
 	}
+	if resp.FilterCriteria != nil {
+		f4 := &svcapitypes.FilterCriteria{}
+		if resp.FilterCriteria.Filters != nil {
+			f4f0 := []*svcapitypes.Filter{}
+			for _, f4f0iter := range resp.FilterCriteria.Filters {
+				f4f0elem := &svcapitypes.Filter{}
+				if f4f0iter.Pattern != nil {
+					f4f0elem.Pattern = f4f0iter.Pattern
+				}
+				f4f0 = append(f4f0, f4f0elem)
+			}
+			f4.Filters = f4f0
+		}
+		ko.Spec.FilterCriteria = f4
+	} else {
+		ko.Spec.FilterCriteria = nil
+	}
 	if resp.FunctionArn != nil {
 		ko.Status.FunctionARN = resp.FunctionArn
 	} else {
 		ko.Status.FunctionARN = nil
 	}
 	if resp.FunctionResponseTypes != nil {
-		f5 := []*string{}
-		for _, f5iter := range resp.FunctionResponseTypes {
-			var f5elem string
-			f5elem = *f5iter
-			f5 = append(f5, &f5elem)
+		f6 := []*string{}
+		for _, f6iter := range resp.FunctionResponseTypes {
+			var f6elem string
+			f6elem = *f6iter
+			f6 = append(f6, &f6elem)
 		}
-		ko.Spec.FunctionResponseTypes = f5
+		ko.Spec.FunctionResponseTypes = f6
 	} else {
 		ko.Spec.FunctionResponseTypes = nil
 	}
@@ -394,48 +428,48 @@ func (rm *resourceManager) sdkCreate(
 		ko.Spec.ParallelizationFactor = nil
 	}
 	if resp.Queues != nil {
-		f12 := []*string{}
-		for _, f12iter := range resp.Queues {
-			var f12elem string
-			f12elem = *f12iter
-			f12 = append(f12, &f12elem)
+		f13 := []*string{}
+		for _, f13iter := range resp.Queues {
+			var f13elem string
+			f13elem = *f13iter
+			f13 = append(f13, &f13elem)
 		}
-		ko.Spec.Queues = f12
+		ko.Spec.Queues = f13
 	} else {
 		ko.Spec.Queues = nil
 	}
 	if resp.SelfManagedEventSource != nil {
-		f13 := &svcapitypes.SelfManagedEventSource{}
+		f14 := &svcapitypes.SelfManagedEventSource{}
 		if resp.SelfManagedEventSource.Endpoints != nil {
-			f13f0 := map[string][]*string{}
-			for f13f0key, f13f0valiter := range resp.SelfManagedEventSource.Endpoints {
-				f13f0val := []*string{}
-				for _, f13f0valiter := range f13f0valiter {
-					var f13f0valelem string
-					f13f0valelem = *f13f0valiter
-					f13f0val = append(f13f0val, &f13f0valelem)
+			f14f0 := map[string][]*string{}
+			for f14f0key, f14f0valiter := range resp.SelfManagedEventSource.Endpoints {
+				f14f0val := []*string{}
+				for _, f14f0valiter := range f14f0valiter {
+					var f14f0valelem string
+					f14f0valelem = *f14f0valiter
+					f14f0val = append(f14f0val, &f14f0valelem)
 				}
-				f13f0[f13f0key] = f13f0val
+				f14f0[f14f0key] = f14f0val
 			}
-			f13.Endpoints = f13f0
+			f14.Endpoints = f14f0
 		}
-		ko.Spec.SelfManagedEventSource = f13
+		ko.Spec.SelfManagedEventSource = f14
 	} else {
 		ko.Spec.SelfManagedEventSource = nil
 	}
 	if resp.SourceAccessConfigurations != nil {
-		f14 := []*svcapitypes.SourceAccessConfiguration{}
-		for _, f14iter := range resp.SourceAccessConfigurations {
-			f14elem := &svcapitypes.SourceAccessConfiguration{}
-			if f14iter.Type != nil {
-				f14elem.Type = f14iter.Type
+		f15 := []*svcapitypes.SourceAccessConfiguration{}
+		for _, f15iter := range resp.SourceAccessConfigurations {
+			f15elem := &svcapitypes.SourceAccessConfiguration{}
+			if f15iter.Type != nil {
+				f15elem.Type = f15iter.Type
 			}
-			if f14iter.URI != nil {
-				f14elem.URI = f14iter.URI
+			if f15iter.URI != nil {
+				f15elem.URI = f15iter.URI
 			}
-			f14 = append(f14, f14elem)
+			f15 = append(f15, f15elem)
 		}
-		ko.Spec.SourceAccessConfigurations = f14
+		ko.Spec.SourceAccessConfigurations = f15
 	} else {
 		ko.Spec.SourceAccessConfigurations = nil
 	}
@@ -460,13 +494,13 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.StateTransitionReason = nil
 	}
 	if resp.Topics != nil {
-		f19 := []*string{}
-		for _, f19iter := range resp.Topics {
-			var f19elem string
-			f19elem = *f19iter
-			f19 = append(f19, &f19elem)
+		f20 := []*string{}
+		for _, f20iter := range resp.Topics {
+			var f20elem string
+			f20elem = *f20iter
+			f20 = append(f20, &f20elem)
 		}
-		ko.Spec.Topics = f19
+		ko.Spec.Topics = f20
 	} else {
 		ko.Spec.Topics = nil
 	}
@@ -523,17 +557,32 @@ func (rm *resourceManager) newCreateRequestPayload(
 	if r.ko.Spec.EventSourceARN != nil {
 		res.SetEventSourceArn(*r.ko.Spec.EventSourceARN)
 	}
+	if r.ko.Spec.FilterCriteria != nil {
+		f5 := &svcsdk.FilterCriteria{}
+		if r.ko.Spec.FilterCriteria.Filters != nil {
+			f5f0 := []*svcsdk.Filter{}
+			for _, f5f0iter := range r.ko.Spec.FilterCriteria.Filters {
+				f5f0elem := &svcsdk.Filter{}
+				if f5f0iter.Pattern != nil {
+					f5f0elem.SetPattern(*f5f0iter.Pattern)
+				}
+				f5f0 = append(f5f0, f5f0elem)
+			}
+			f5.SetFilters(f5f0)
+		}
+		res.SetFilterCriteria(f5)
+	}
 	if r.ko.Spec.FunctionName != nil {
 		res.SetFunctionName(*r.ko.Spec.FunctionName)
 	}
 	if r.ko.Spec.FunctionResponseTypes != nil {
-		f6 := []*string{}
-		for _, f6iter := range r.ko.Spec.FunctionResponseTypes {
-			var f6elem string
-			f6elem = *f6iter
-			f6 = append(f6, &f6elem)
+		f7 := []*string{}
+		for _, f7iter := range r.ko.Spec.FunctionResponseTypes {
+			var f7elem string
+			f7elem = *f7iter
+			f7 = append(f7, &f7elem)
 		}
-		res.SetFunctionResponseTypes(f6)
+		res.SetFunctionResponseTypes(f7)
 	}
 	if r.ko.Spec.MaximumBatchingWindowInSeconds != nil {
 		res.SetMaximumBatchingWindowInSeconds(*r.ko.Spec.MaximumBatchingWindowInSeconds)
@@ -548,44 +597,44 @@ func (rm *resourceManager) newCreateRequestPayload(
 		res.SetParallelizationFactor(*r.ko.Spec.ParallelizationFactor)
 	}
 	if r.ko.Spec.Queues != nil {
-		f11 := []*string{}
-		for _, f11iter := range r.ko.Spec.Queues {
-			var f11elem string
-			f11elem = *f11iter
-			f11 = append(f11, &f11elem)
+		f12 := []*string{}
+		for _, f12iter := range r.ko.Spec.Queues {
+			var f12elem string
+			f12elem = *f12iter
+			f12 = append(f12, &f12elem)
 		}
-		res.SetQueues(f11)
+		res.SetQueues(f12)
 	}
 	if r.ko.Spec.SelfManagedEventSource != nil {
-		f12 := &svcsdk.SelfManagedEventSource{}
+		f13 := &svcsdk.SelfManagedEventSource{}
 		if r.ko.Spec.SelfManagedEventSource.Endpoints != nil {
-			f12f0 := map[string][]*string{}
-			for f12f0key, f12f0valiter := range r.ko.Spec.SelfManagedEventSource.Endpoints {
-				f12f0val := []*string{}
-				for _, f12f0valiter := range f12f0valiter {
-					var f12f0valelem string
-					f12f0valelem = *f12f0valiter
-					f12f0val = append(f12f0val, &f12f0valelem)
+			f13f0 := map[string][]*string{}
+			for f13f0key, f13f0valiter := range r.ko.Spec.SelfManagedEventSource.Endpoints {
+				f13f0val := []*string{}
+				for _, f13f0valiter := range f13f0valiter {
+					var f13f0valelem string
+					f13f0valelem = *f13f0valiter
+					f13f0val = append(f13f0val, &f13f0valelem)
 				}
-				f12f0[f12f0key] = f12f0val
+				f13f0[f13f0key] = f13f0val
 			}
-			f12.SetEndpoints(f12f0)
+			f13.SetEndpoints(f13f0)
 		}
-		res.SetSelfManagedEventSource(f12)
+		res.SetSelfManagedEventSource(f13)
 	}
 	if r.ko.Spec.SourceAccessConfigurations != nil {
-		f13 := []*svcsdk.SourceAccessConfiguration{}
-		for _, f13iter := range r.ko.Spec.SourceAccessConfigurations {
-			f13elem := &svcsdk.SourceAccessConfiguration{}
-			if f13iter.Type != nil {
-				f13elem.SetType(*f13iter.Type)
+		f14 := []*svcsdk.SourceAccessConfiguration{}
+		for _, f14iter := range r.ko.Spec.SourceAccessConfigurations {
+			f14elem := &svcsdk.SourceAccessConfiguration{}
+			if f14iter.Type != nil {
+				f14elem.SetType(*f14iter.Type)
 			}
-			if f13iter.URI != nil {
-				f13elem.SetURI(*f13iter.URI)
+			if f14iter.URI != nil {
+				f14elem.SetURI(*f14iter.URI)
 			}
-			f13 = append(f13, f13elem)
+			f14 = append(f14, f14elem)
 		}
-		res.SetSourceAccessConfigurations(f13)
+		res.SetSourceAccessConfigurations(f14)
 	}
 	if r.ko.Spec.StartingPosition != nil {
 		res.SetStartingPosition(*r.ko.Spec.StartingPosition)
@@ -594,13 +643,13 @@ func (rm *resourceManager) newCreateRequestPayload(
 		res.SetStartingPositionTimestamp(r.ko.Spec.StartingPositionTimestamp.Time)
 	}
 	if r.ko.Spec.Topics != nil {
-		f16 := []*string{}
-		for _, f16iter := range r.ko.Spec.Topics {
-			var f16elem string
-			f16elem = *f16iter
-			f16 = append(f16, &f16elem)
+		f17 := []*string{}
+		for _, f17iter := range r.ko.Spec.Topics {
+			var f17elem string
+			f17elem = *f17iter
+			f17 = append(f17, &f17elem)
 		}
-		res.SetTopics(f16)
+		res.SetTopics(f17)
 	}
 	if r.ko.Spec.TumblingWindowInSeconds != nil {
 		res.SetTumblingWindowInSeconds(*r.ko.Spec.TumblingWindowInSeconds)
@@ -625,6 +674,15 @@ func (rm *resourceManager) sdkUpdate(
 	input, err := rm.newUpdateRequestPayload(ctx, desired)
 	if err != nil {
 		return nil, err
+	}
+
+	// We need to carefully craft the update request if a user
+	// wants to delete their filterCriterias. Mainly because the
+	// aws-sdk-go doesn't try to update nil fields.
+	if filterCriteriasDeleted(latest, desired, delta) {
+		input.FilterCriteria = &svcsdk.FilterCriteria{
+			Filters: []*svcsdk.Filter{},
+		}
 	}
 
 	var resp *svcsdk.EventSourceMappingConfiguration
@@ -673,19 +731,36 @@ func (rm *resourceManager) sdkUpdate(
 	} else {
 		ko.Spec.EventSourceARN = nil
 	}
+	if resp.FilterCriteria != nil {
+		f4 := &svcapitypes.FilterCriteria{}
+		if resp.FilterCriteria.Filters != nil {
+			f4f0 := []*svcapitypes.Filter{}
+			for _, f4f0iter := range resp.FilterCriteria.Filters {
+				f4f0elem := &svcapitypes.Filter{}
+				if f4f0iter.Pattern != nil {
+					f4f0elem.Pattern = f4f0iter.Pattern
+				}
+				f4f0 = append(f4f0, f4f0elem)
+			}
+			f4.Filters = f4f0
+		}
+		ko.Spec.FilterCriteria = f4
+	} else {
+		ko.Spec.FilterCriteria = nil
+	}
 	if resp.FunctionArn != nil {
 		ko.Status.FunctionARN = resp.FunctionArn
 	} else {
 		ko.Status.FunctionARN = nil
 	}
 	if resp.FunctionResponseTypes != nil {
-		f5 := []*string{}
-		for _, f5iter := range resp.FunctionResponseTypes {
-			var f5elem string
-			f5elem = *f5iter
-			f5 = append(f5, &f5elem)
+		f6 := []*string{}
+		for _, f6iter := range resp.FunctionResponseTypes {
+			var f6elem string
+			f6elem = *f6iter
+			f6 = append(f6, &f6elem)
 		}
-		ko.Spec.FunctionResponseTypes = f5
+		ko.Spec.FunctionResponseTypes = f6
 	} else {
 		ko.Spec.FunctionResponseTypes = nil
 	}
@@ -720,48 +795,48 @@ func (rm *resourceManager) sdkUpdate(
 		ko.Spec.ParallelizationFactor = nil
 	}
 	if resp.Queues != nil {
-		f12 := []*string{}
-		for _, f12iter := range resp.Queues {
-			var f12elem string
-			f12elem = *f12iter
-			f12 = append(f12, &f12elem)
+		f13 := []*string{}
+		for _, f13iter := range resp.Queues {
+			var f13elem string
+			f13elem = *f13iter
+			f13 = append(f13, &f13elem)
 		}
-		ko.Spec.Queues = f12
+		ko.Spec.Queues = f13
 	} else {
 		ko.Spec.Queues = nil
 	}
 	if resp.SelfManagedEventSource != nil {
-		f13 := &svcapitypes.SelfManagedEventSource{}
+		f14 := &svcapitypes.SelfManagedEventSource{}
 		if resp.SelfManagedEventSource.Endpoints != nil {
-			f13f0 := map[string][]*string{}
-			for f13f0key, f13f0valiter := range resp.SelfManagedEventSource.Endpoints {
-				f13f0val := []*string{}
-				for _, f13f0valiter := range f13f0valiter {
-					var f13f0valelem string
-					f13f0valelem = *f13f0valiter
-					f13f0val = append(f13f0val, &f13f0valelem)
+			f14f0 := map[string][]*string{}
+			for f14f0key, f14f0valiter := range resp.SelfManagedEventSource.Endpoints {
+				f14f0val := []*string{}
+				for _, f14f0valiter := range f14f0valiter {
+					var f14f0valelem string
+					f14f0valelem = *f14f0valiter
+					f14f0val = append(f14f0val, &f14f0valelem)
 				}
-				f13f0[f13f0key] = f13f0val
+				f14f0[f14f0key] = f14f0val
 			}
-			f13.Endpoints = f13f0
+			f14.Endpoints = f14f0
 		}
-		ko.Spec.SelfManagedEventSource = f13
+		ko.Spec.SelfManagedEventSource = f14
 	} else {
 		ko.Spec.SelfManagedEventSource = nil
 	}
 	if resp.SourceAccessConfigurations != nil {
-		f14 := []*svcapitypes.SourceAccessConfiguration{}
-		for _, f14iter := range resp.SourceAccessConfigurations {
-			f14elem := &svcapitypes.SourceAccessConfiguration{}
-			if f14iter.Type != nil {
-				f14elem.Type = f14iter.Type
+		f15 := []*svcapitypes.SourceAccessConfiguration{}
+		for _, f15iter := range resp.SourceAccessConfigurations {
+			f15elem := &svcapitypes.SourceAccessConfiguration{}
+			if f15iter.Type != nil {
+				f15elem.Type = f15iter.Type
 			}
-			if f14iter.URI != nil {
-				f14elem.URI = f14iter.URI
+			if f15iter.URI != nil {
+				f15elem.URI = f15iter.URI
 			}
-			f14 = append(f14, f14elem)
+			f15 = append(f15, f15elem)
 		}
-		ko.Spec.SourceAccessConfigurations = f14
+		ko.Spec.SourceAccessConfigurations = f15
 	} else {
 		ko.Spec.SourceAccessConfigurations = nil
 	}
@@ -786,13 +861,13 @@ func (rm *resourceManager) sdkUpdate(
 		ko.Status.StateTransitionReason = nil
 	}
 	if resp.Topics != nil {
-		f19 := []*string{}
-		for _, f19iter := range resp.Topics {
-			var f19elem string
-			f19elem = *f19iter
-			f19 = append(f19, &f19elem)
+		f20 := []*string{}
+		for _, f20iter := range resp.Topics {
+			var f20elem string
+			f20elem = *f20iter
+			f20 = append(f20, &f20elem)
 		}
-		ko.Spec.Topics = f19
+		ko.Spec.Topics = f20
 	} else {
 		ko.Spec.Topics = nil
 	}
@@ -846,17 +921,32 @@ func (rm *resourceManager) newUpdateRequestPayload(
 	if r.ko.Spec.Enabled != nil {
 		res.SetEnabled(*r.ko.Spec.Enabled)
 	}
+	if r.ko.Spec.FilterCriteria != nil {
+		f4 := &svcsdk.FilterCriteria{}
+		if r.ko.Spec.FilterCriteria.Filters != nil {
+			f4f0 := []*svcsdk.Filter{}
+			for _, f4f0iter := range r.ko.Spec.FilterCriteria.Filters {
+				f4f0elem := &svcsdk.Filter{}
+				if f4f0iter.Pattern != nil {
+					f4f0elem.SetPattern(*f4f0iter.Pattern)
+				}
+				f4f0 = append(f4f0, f4f0elem)
+			}
+			f4.SetFilters(f4f0)
+		}
+		res.SetFilterCriteria(f4)
+	}
 	if r.ko.Spec.FunctionName != nil {
 		res.SetFunctionName(*r.ko.Spec.FunctionName)
 	}
 	if r.ko.Spec.FunctionResponseTypes != nil {
-		f5 := []*string{}
-		for _, f5iter := range r.ko.Spec.FunctionResponseTypes {
-			var f5elem string
-			f5elem = *f5iter
-			f5 = append(f5, &f5elem)
+		f6 := []*string{}
+		for _, f6iter := range r.ko.Spec.FunctionResponseTypes {
+			var f6elem string
+			f6elem = *f6iter
+			f6 = append(f6, &f6elem)
 		}
-		res.SetFunctionResponseTypes(f5)
+		res.SetFunctionResponseTypes(f6)
 	}
 	if r.ko.Spec.MaximumBatchingWindowInSeconds != nil {
 		res.SetMaximumBatchingWindowInSeconds(*r.ko.Spec.MaximumBatchingWindowInSeconds)
@@ -871,18 +961,18 @@ func (rm *resourceManager) newUpdateRequestPayload(
 		res.SetParallelizationFactor(*r.ko.Spec.ParallelizationFactor)
 	}
 	if r.ko.Spec.SourceAccessConfigurations != nil {
-		f10 := []*svcsdk.SourceAccessConfiguration{}
-		for _, f10iter := range r.ko.Spec.SourceAccessConfigurations {
-			f10elem := &svcsdk.SourceAccessConfiguration{}
-			if f10iter.Type != nil {
-				f10elem.SetType(*f10iter.Type)
+		f11 := []*svcsdk.SourceAccessConfiguration{}
+		for _, f11iter := range r.ko.Spec.SourceAccessConfigurations {
+			f11elem := &svcsdk.SourceAccessConfiguration{}
+			if f11iter.Type != nil {
+				f11elem.SetType(*f11iter.Type)
 			}
-			if f10iter.URI != nil {
-				f10elem.SetURI(*f10iter.URI)
+			if f11iter.URI != nil {
+				f11elem.SetURI(*f11iter.URI)
 			}
-			f10 = append(f10, f10elem)
+			f11 = append(f11, f11elem)
 		}
-		res.SetSourceAccessConfigurations(f10)
+		res.SetSourceAccessConfigurations(f11)
 	}
 	if r.ko.Spec.TumblingWindowInSeconds != nil {
 		res.SetTumblingWindowInSeconds(*r.ko.Spec.TumblingWindowInSeconds)

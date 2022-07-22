@@ -49,6 +49,13 @@ const (
 	FunctionResponseType_ReportBatchItemFailures FunctionResponseType = "ReportBatchItemFailures"
 )
 
+type FunctionURLAuthType string
+
+const (
+	FunctionURLAuthType_NONE    FunctionURLAuthType = "NONE"
+	FunctionURLAuthType_AWS_IAM FunctionURLAuthType = "AWS_IAM"
+)
+
 type FunctionVersion string
 
 const (
@@ -118,6 +125,7 @@ const (
 	Runtime_nodejs10_x     Runtime = "nodejs10.x"
 	Runtime_nodejs12_x     Runtime = "nodejs12.x"
 	Runtime_nodejs14_x     Runtime = "nodejs14.x"
+	Runtime_nodejs16_x     Runtime = "nodejs16.x"
 	Runtime_java8          Runtime = "java8"
 	Runtime_java8_al2      Runtime = "java8.al2"
 	Runtime_java11         Runtime = "java11"
@@ -130,6 +138,7 @@ const (
 	Runtime_dotnetcore2_0  Runtime = "dotnetcore2.0"
 	Runtime_dotnetcore2_1  Runtime = "dotnetcore2.1"
 	Runtime_dotnetcore3_1  Runtime = "dotnetcore3.1"
+	Runtime_dotnet6        Runtime = "dotnet6"
 	Runtime_nodejs4_3_edge Runtime = "nodejs4.3-edge"
 	Runtime_go1_x          Runtime = "go1.x"
 	Runtime_ruby2_5        Runtime = "ruby2.5"
@@ -141,12 +150,14 @@ const (
 type SourceAccessType string
 
 const (
-	SourceAccessType_BASIC_AUTH          SourceAccessType = "BASIC_AUTH"
-	SourceAccessType_VPC_SUBNET          SourceAccessType = "VPC_SUBNET"
-	SourceAccessType_VPC_SECURITY_GROUP  SourceAccessType = "VPC_SECURITY_GROUP"
-	SourceAccessType_SASL_SCRAM_512_AUTH SourceAccessType = "SASL_SCRAM_512_AUTH"
-	SourceAccessType_SASL_SCRAM_256_AUTH SourceAccessType = "SASL_SCRAM_256_AUTH"
-	SourceAccessType_VIRTUAL_HOST        SourceAccessType = "VIRTUAL_HOST"
+	SourceAccessType_BASIC_AUTH                  SourceAccessType = "BASIC_AUTH"
+	SourceAccessType_VPC_SUBNET                  SourceAccessType = "VPC_SUBNET"
+	SourceAccessType_VPC_SECURITY_GROUP          SourceAccessType = "VPC_SECURITY_GROUP"
+	SourceAccessType_SASL_SCRAM_512_AUTH         SourceAccessType = "SASL_SCRAM_512_AUTH"
+	SourceAccessType_SASL_SCRAM_256_AUTH         SourceAccessType = "SASL_SCRAM_256_AUTH"
+	SourceAccessType_VIRTUAL_HOST                SourceAccessType = "VIRTUAL_HOST"
+	SourceAccessType_CLIENT_CERTIFICATE_TLS_AUTH SourceAccessType = "CLIENT_CERTIFICATE_TLS_AUTH"
+	SourceAccessType_SERVER_ROOT_CA_CERTIFICATE  SourceAccessType = "SERVER_ROOT_CA_CERTIFICATE"
 )
 
 type State string

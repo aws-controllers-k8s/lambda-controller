@@ -40,6 +40,7 @@ func newResourceDelta(
 		delta.Add("", a, b)
 		return delta
 	}
+	customPreCompare(delta, a, b)
 
 	if ackcompare.HasNilDifference(a.ko.Spec.BatchSize, b.ko.Spec.BatchSize) {
 		delta.Add("Spec.BatchSize", a.ko.Spec.BatchSize, b.ko.Spec.BatchSize)

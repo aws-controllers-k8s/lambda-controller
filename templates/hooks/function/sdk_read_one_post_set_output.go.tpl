@@ -260,3 +260,12 @@
 	if err := rm.setResourceAdditionalFields(ctx, ko); err != nil {
 		return nil, err
 	}
+	if resp.Configuration.EphemeralStorage != nil {
+		f31 := &svcapitypes.EphemeralStorage{}
+		if resp.Configuration.EphemeralStorage.Size != nil {
+			f31.Size = resp.Configuration.EphemeralStorage.Size
+		}
+		ko.Spec.EphemeralStorage = f31
+	} else {
+		ko.Spec.EphemeralStorage = nil
+	}
