@@ -132,6 +132,8 @@ class TestAlias:
         alias = self.alias_exist(lambda_client, resource_name, lambda_function_name)
         assert alias is not None
 
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+        
         # Update cr
         cr["spec"]["description"] = ""
 
