@@ -14,18 +14,19 @@
 """Integration tests for the Lambda alias API.
 """
 
-import boto3
 import pytest
 import time
 import logging
-from typing import Dict, Tuple
 
 from acktest.resources import random_suffix_name
 from acktest.aws.identity import get_region
 from acktest.k8s import resource as k8s
+
 from e2e import service_marker, CRD_GROUP, CRD_VERSION, load_lambda_resource
 from e2e.replacement_values import REPLACEMENT_VALUES
 from e2e.bootstrap_resources import get_bootstrap_resources
+from e2e.service_bootstrap import LAMBDA_FUNCTION_FILE_ZIP
+from e2e.tests.helper import LambdaValidator
 
 RESOURCE_PLURAL = "aliases"
 
@@ -34,19 +35,15 @@ UPDATE_WAIT_AFTER_SECONDS = 10
 DELETE_WAIT_AFTER_SECONDS = 10
 
 @pytest.fixture(scope="module")
-def lambda_client():
-    return boto3.client("lambda")
-
-@pytest.fixture(scope="module")
 def lambda_function():
         resource_name = random_suffix_name("lambda-function", 24)
         resources = get_bootstrap_resources()
 
         replacements = REPLACEMENT_VALUES.copy()
         replacements["FUNCTION_NAME"] = resource_name
-        replacements["BUCKET_NAME"] = resources.FunctionsBucketName
-        replacements["LAMBDA_ROLE"] = resources.LambdaBasicRoleARN
-        replacements["LAMBDA_FILE_NAME"] = resources.LambdaFunctionFileZip
+        replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
+        replacements["LAMBDA_ROLE"] = resources.BasicRole.arn
+        replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
         replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "0"
         replacements["CODE_SIGNING_CONFIG_ARN"] = ""
         replacements["AWS_REGION"] = get_region()
@@ -81,21 +78,6 @@ def lambda_function():
 @service_marker
 @pytest.mark.canary
 class TestAlias:
-    def get_alias(self, lambda_client, alias_name: str, function_name: str) -> dict:
-        try:
-            resp = lambda_client.get_alias(
-                Name=alias_name,
-                FunctionName=function_name
-            )
-            return resp
-
-        except Exception as e:
-            logging.debug(e)
-            return None
-
-    def alias_exist(self, lambda_client, alias_name: str, function_name: str) -> bool:
-        return self.get_alias(lambda_client, alias_name, function_name) is not None
-
     def test_smoke(self, lambda_client, lambda_function):
         (_, function_resource) = lambda_function
         lambda_function_name = function_resource["spec"]["name"]
@@ -128,9 +110,9 @@ class TestAlias:
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
+        lambda_validator = LambdaValidator(lambda_client)
         # Check alias exists
-        alias = self.alias_exist(lambda_client, resource_name, lambda_function_name)
-        assert alias is not None
+        assert lambda_validator.alias_exists(resource_name, lambda_function_name)
 
         # Update cr
         cr["spec"]["description"] = ""
@@ -140,7 +122,7 @@ class TestAlias:
         time.sleep(UPDATE_WAIT_AFTER_SECONDS)
 
         # Check alias description
-        alias = self.get_alias(lambda_client, resource_name, lambda_function_name)
+        alias = lambda_validator.get_alias(resource_name, lambda_function_name)
         assert alias is not None
         assert alias["Description"] == ""
 
@@ -151,6 +133,4 @@ class TestAlias:
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
 
         # Check alias doesn't exist
-        exists = self.get_alias(lambda_client, resource_name, lambda_function_name)
-        assert not exists
-
+        assert not lambda_validator.alias_exists(resource_name, lambda_function_name)

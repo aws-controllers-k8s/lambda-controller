@@ -11,9 +11,10 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-import os
 import pytest
+import boto3
 
+from acktest.aws.identity import get_region
 from acktest import k8s
 
 
@@ -44,3 +45,7 @@ def pytest_collection_modifyitems(config, items):
 @pytest.fixture(scope='class')
 def k8s_client():
     return k8s._get_k8s_api_client()
+
+@pytest.fixture(scope='module')
+def lambda_client():
+    return boto3.client('lambda', region_name=get_region())

@@ -16,32 +16,29 @@ for them.
 """
 
 from dataclasses import dataclass
-from acktest.resources import read_bootstrap_config
+
+from acktest.bootstrapping import Resources
+from acktest.bootstrapping.s3 import Bucket
+from acktest.bootstrapping.dynamodb import Table
+from acktest.bootstrapping.signer import SigningProfile
+from acktest.bootstrapping.sqs import Queue
+from acktest.bootstrapping.iam import Role
+
 from e2e import bootstrap_directory
 
 @dataclass
-class TestBootstrapResources:
-    FunctionsBucketName: str
-    LambdaFunctionFilePath: str
-    LambdaFunctionFileZip: str
-    LambdaBasicRoleName: str
-    LambdaBasicRoleARN: str
-    LambdaESMRoleName: str
-    LambdaESMRoleARN: str
-    SigningProfileVersionArn: str
-    SQSQueueARN: str
-    SQSQueueURL: str
-    DynamoDBTableName: str
-    DynamoDBTableARN: str
-    BasicExecutionRoleARNs: list
-    ESMExecutionRoleARNs: list
+class BootstrapResources(Resources):
+    FunctionsBucket: Bucket
+    SigningProfile: SigningProfile
+    BasicRole: Role
+    ESMRole: Role
+    ESMTable: Table
+    ESMQueue: Queue
 
 _bootstrap_resources = None
 
-def get_bootstrap_resources(bootstrap_file_name: str = "bootstrap.yaml"):
+def get_bootstrap_resources(bootstrap_file_name: str = "bootstrap.pkl") -> BootstrapResources:
     global _bootstrap_resources
     if _bootstrap_resources is None:
-        _bootstrap_resources = TestBootstrapResources(
-            **read_bootstrap_config(bootstrap_directory, bootstrap_file_name=bootstrap_file_name),
-        )
+        _bootstrap_resources = BootstrapResources.deserialize(bootstrap_directory, bootstrap_file_name=bootstrap_file_name)
     return _bootstrap_resources
