@@ -14,34 +14,30 @@
 """Integration tests for the Lambda function API.
 """
 
-import boto3
 import pytest
 import time
 import logging
-from typing import Dict, Tuple
 
 from acktest.resources import random_suffix_name
 from acktest.aws.identity import get_region, get_account_id
 from acktest.k8s import resource as k8s
+
 from e2e import service_marker, CRD_GROUP, CRD_VERSION, load_lambda_resource
 from e2e.replacement_values import REPLACEMENT_VALUES
 from e2e.bootstrap_resources import get_bootstrap_resources
+from e2e.service_bootstrap import LAMBDA_FUNCTION_FILE_ZIP
+from e2e.tests.helper import LambdaValidator
 
 RESOURCE_PLURAL = "functions"
 
-CREATE_WAIT_AFTER_SECONDS = 25
-UPDATE_WAIT_AFTER_SECONDS = 25
-DELETE_WAIT_AFTER_SECONDS = 25
-
+CREATE_WAIT_AFTER_SECONDS = 30
+UPDATE_WAIT_AFTER_SECONDS = 30
+DELETE_WAIT_AFTER_SECONDS = 30
 
 def get_testing_image_url():
     aws_region = get_region()
     account_id = get_account_id()
     return f"{account_id}.dkr.ecr.{aws_region}.amazonaws.com/ack-e2e-testing-lambda-controller:v1"
-
-@pytest.fixture(scope="module")
-def lambda_client():
-    return boto3.client("lambda")
 
 @pytest.fixture(scope="module")
 def code_signing_config():
@@ -53,7 +49,7 @@ def code_signing_config():
         replacements = REPLACEMENT_VALUES.copy()
         replacements["AWS_REGION"] = get_region()
         replacements["CODE_SIGNING_CONFIG_NAME"] = resource_name
-        replacements["SIGNING_PROFILE_VERSION_ARN"] = resources.SigningProfileVersionArn
+        replacements["SIGNING_PROFILE_VERSION_ARN"] = resources.SigningProfile.signing_profile_arn
 
         # Load Lambda CR
         resource_data = load_lambda_resource(
@@ -84,41 +80,6 @@ def code_signing_config():
 @service_marker
 @pytest.mark.canary
 class TestFunction:
-    def get_function(self, lambda_client, function_name: str) -> dict:
-        try:
-            resp = lambda_client.get_function(
-                FunctionName=function_name
-            )
-            return resp
-
-        except Exception as e:
-            logging.debug(e)
-            return None
-
-    def get_function_concurrency(self, lambda_client, function_name: str) -> int:
-        try:
-            resp = lambda_client.get_function_concurrency(
-                FunctionName=function_name
-            )
-            return resp['ReservedConcurrentExecutions']
-
-        except Exception as e:
-            logging.debug(e)
-            return None
-
-    def get_function_code_signing_config(self, lambda_client, function_name: str) -> int:
-        try:
-            resp = lambda_client.get_function_code_signing_config(
-                FunctionName=function_name
-            )
-            return resp['CodeSigningConfigArn']
-
-        except Exception as e:
-            logging.debug(e)
-            return None
-
-    def function_exists(self, lambda_client, function_name: str) -> bool:
-        return self.get_function(lambda_client, function_name) is not None
 
     def test_smoke(self, lambda_client):
         resource_name = random_suffix_name("lambda-function", 24)
@@ -128,9 +89,9 @@ class TestFunction:
 
         replacements = REPLACEMENT_VALUES.copy()
         replacements["FUNCTION_NAME"] = resource_name
-        replacements["BUCKET_NAME"] = resources.FunctionsBucketName
-        replacements["LAMBDA_ROLE"] = resources.LambdaBasicRoleARN
-        replacements["LAMBDA_FILE_NAME"] = resources.LambdaFunctionFileZip
+        replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
+        replacements["LAMBDA_ROLE"] = resources.BasicRole.arn
+        replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
         replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "0"
         replacements["CODE_SIGNING_CONFIG_ARN"] = ""
         replacements["AWS_REGION"] = get_region()
@@ -157,9 +118,10 @@ class TestFunction:
 
         cr = k8s.wait_resource_consumed_by_controller(ref)
 
+        lambda_validator = LambdaValidator(lambda_client)
+
         # Check Lambda function exists
-        exists = self.function_exists(lambda_client, resource_name)
-        assert exists
+        assert lambda_validator.function_exists(resource_name)
 
         # Update cr
         tags = {
@@ -175,7 +137,7 @@ class TestFunction:
         time.sleep(UPDATE_WAIT_AFTER_SECONDS)
 
         # Check function updated fields
-        function = self.get_function(lambda_client, resource_name)
+        function = lambda_validator.get_function(resource_name)
         assert function is not None
         assert function["Configuration"]["Description"] == "Updated description"
         assert function["Tags"] == tags
@@ -187,8 +149,7 @@ class TestFunction:
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
 
         # Check Lambda function doesn't exist
-        exists = self.function_exists(lambda_client, resource_name)
-        assert not exists
+        assert not lambda_validator.function_exists(resource_name)
 
     def test_reserved_concurrent_executions(self, lambda_client):
         resource_name = random_suffix_name("lambda-function", 24)
@@ -198,9 +159,9 @@ class TestFunction:
 
         replacements = REPLACEMENT_VALUES.copy()
         replacements["FUNCTION_NAME"] = resource_name
-        replacements["BUCKET_NAME"] = resources.FunctionsBucketName
-        replacements["LAMBDA_ROLE"] = resources.LambdaBasicRoleARN
-        replacements["LAMBDA_FILE_NAME"] = resources.LambdaFunctionFileZip
+        replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
+        replacements["LAMBDA_ROLE"] = resources.BasicRole.arn
+        replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
         replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "2"
         replacements["CODE_SIGNING_CONFIG_ARN"] = ""
         replacements["AWS_REGION"] = get_region()
@@ -227,11 +188,11 @@ class TestFunction:
 
         cr = k8s.wait_resource_consumed_by_controller(ref)
 
+        lambda_validator = LambdaValidator(lambda_client)
         # Check Lambda function exists
-        exists = self.function_exists(lambda_client, resource_name)
-        assert exists
+        assert lambda_validator.function_exists(resource_name)
 
-        reservedConcurrentExecutions = self.get_function_concurrency(lambda_client, resource_name)
+        reservedConcurrentExecutions = lambda_validator.get_function_concurrency(resource_name)
         assert reservedConcurrentExecutions == 2
 
         # Update cr
@@ -242,7 +203,7 @@ class TestFunction:
         time.sleep(UPDATE_WAIT_AFTER_SECONDS)
 
         # Check function updated fields
-        reservedConcurrentExecutions = self.get_function_concurrency(lambda_client, resource_name)
+        reservedConcurrentExecutions = lambda_validator.get_function_concurrency(resource_name)
         assert reservedConcurrentExecutions == 0
 
         # Delete k8s resource
@@ -252,8 +213,7 @@ class TestFunction:
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
 
         # Check Lambda function doesn't exist
-        exists = self.function_exists(lambda_client, resource_name)
-        assert not exists
+        assert not lambda_validator.function_exists(resource_name)
 
     def test_function_code_signing_config(self, lambda_client, code_signing_config):
         (_, csc_resource) = code_signing_config
@@ -264,9 +224,9 @@ class TestFunction:
 
         replacements = REPLACEMENT_VALUES.copy()
         replacements["FUNCTION_NAME"] = resource_name
-        replacements["BUCKET_NAME"] = resources.FunctionsBucketName
-        replacements["LAMBDA_ROLE"] = resources.LambdaBasicRoleARN
-        replacements["LAMBDA_FILE_NAME"] = resources.LambdaFunctionFileZip
+        replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
+        replacements["LAMBDA_ROLE"] = resources.BasicRole.arn
+        replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
         replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "2"
         replacements["CODE_SIGNING_CONFIG_ARN"] = code_signing_config_arn
         replacements["AWS_REGION"] = get_region()
@@ -293,12 +253,12 @@ class TestFunction:
 
         cr = k8s.wait_resource_consumed_by_controller(ref)
 
+        lambda_validator = LambdaValidator(lambda_client)
         # Check Lambda function exists
-        exists = self.function_exists(lambda_client, resource_name)
-        assert exists
+        assert lambda_validator.function_exists(resource_name)
 
         # Check function code signing config is correct
-        function_csc_arn = self.get_function_code_signing_config(lambda_client, resource_name)
+        function_csc_arn = lambda_validator.get_function_code_signing_config(resource_name)
         assert function_csc_arn == code_signing_config_arn
 
         # Delete function code signing config
@@ -307,7 +267,7 @@ class TestFunction:
 
         time.sleep(UPDATE_WAIT_AFTER_SECONDS)
 
-        function_csc_arn = self.get_function_code_signing_config(lambda_client, resource_name)
+        function_csc_arn = lambda_validator.get_function_code_signing_config(resource_name)
         assert function_csc_arn is None
 
         # Delete k8s resource
@@ -317,17 +277,16 @@ class TestFunction:
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
 
         # Check Lambda function doesn't exist
-        exists = self.function_exists(lambda_client, resource_name)
-        assert not exists
+        assert not lambda_validator.function_exists(resource_name)
 
-    def test_function_package_type_image(self, lambda_client, code_signing_config):
+    def test_function_package_type_image(self, lambda_client):
         resource_name = random_suffix_name("lambda-function", 24)
 
         resources = get_bootstrap_resources()
 
         replacements = REPLACEMENT_VALUES.copy()
         replacements["FUNCTION_NAME"] = resource_name
-        replacements["LAMBDA_ROLE"] = resources.LambdaBasicRoleARN
+        replacements["LAMBDA_ROLE"] = resources.BasicRole.arn
         replacements["AWS_REGION"] = get_region()
         replacements["IMAGE_URL"] = get_testing_image_url()
 
@@ -353,9 +312,9 @@ class TestFunction:
 
         cr = k8s.wait_resource_consumed_by_controller(ref)
 
+        lambda_validator = LambdaValidator(lambda_client)
         # Check Lambda function exists
-        exists = self.function_exists(lambda_client, resource_name)
-        assert exists
+        assert lambda_validator.function_exists(resource_name)
 
         # Delete k8s resource
         _, deleted = k8s.delete_custom_resource(ref)
@@ -364,17 +323,16 @@ class TestFunction:
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
 
         # Check Lambda function doesn't exist
-        exists = self.function_exists(lambda_client, resource_name)
-        assert not exists
+        assert not lambda_validator.function_exists(resource_name)
 
-    def test_function_package_type_image_with_signing_config(self, lambda_client, code_signing_config):
+    def test_function_package_type_image_with_signing_config(self, lambda_client):
         resource_name = random_suffix_name("lambda-function", 24)
 
         resources = get_bootstrap_resources()
 
         replacements = REPLACEMENT_VALUES.copy()
         replacements["FUNCTION_NAME"] = resource_name
-        replacements["LAMBDA_ROLE"] = resources.LambdaBasicRoleARN
+        replacements["LAMBDA_ROLE"] = resources.BasicRole.arn
         replacements["AWS_REGION"] = get_region()
         replacements["IMAGE_URL"] = get_testing_image_url()
 
@@ -400,9 +358,9 @@ class TestFunction:
 
         cr = k8s.wait_resource_consumed_by_controller(ref)
 
+        lambda_validator = LambdaValidator(lambda_client)
         # Check Lambda function exists
-        exists = self.function_exists(lambda_client, resource_name)
-        assert exists
+        assert lambda_validator.function_exists(resource_name)
 
         # Add signing configuration
         cr["spec"]["codeSigningConfigARN"] = "random-csc"
@@ -434,5 +392,4 @@ class TestFunction:
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
 
         # Check Lambda function doesn't exist
-        exists = self.function_exists(lambda_client, resource_name)
-        assert not exists
+        assert not lambda_validator.function_exists(resource_name)

@@ -14,18 +14,18 @@
 """Integration tests for the Lambda code signing config API.
 """
 
-import boto3
 import pytest
 import time
 import logging
-from typing import Dict, Tuple
 
 from acktest.resources import random_suffix_name
 from acktest.aws.identity import get_region
 from acktest.k8s import resource as k8s
+
 from e2e import service_marker, CRD_GROUP, CRD_VERSION, load_lambda_resource
 from e2e.replacement_values import REPLACEMENT_VALUES
 from e2e.bootstrap_resources import get_bootstrap_resources
+from e2e.tests.helper import LambdaValidator
 
 RESOURCE_PLURAL = "codesigningconfigs"
 
@@ -33,27 +33,9 @@ CREATE_WAIT_AFTER_SECONDS = 10
 UPDATE_WAIT_AFTER_SECONDS = 10
 DELETE_WAIT_AFTER_SECONDS = 10
 
-@pytest.fixture(scope="module")
-def lambda_client():
-    return boto3.client("lambda")
-
 @service_marker
 @pytest.mark.canary
 class TestCodeSigningConfig:
-    def get_code_signing_config(self, lambda_client, code_signing_config_arn: str) -> dict:
-        try:
-            resp = lambda_client.get_code_signing_config(
-                CodeSigningConfigArn=code_signing_config_arn,
-            )
-            return resp["CodeSigningConfig"]
-
-        except Exception as e:
-            logging.debug(e)
-            return None
-
-    def code_signing_config_exists(self, lambda_client, code_signing_config_arn: str) -> bool:
-        return self.get_code_signing_config(lambda_client, code_signing_config_arn) is not None
-
     def test_smoke(self, lambda_client):
         resource_name = random_suffix_name("lambda-csc", 24)
 
@@ -63,7 +45,7 @@ class TestCodeSigningConfig:
         replacements = REPLACEMENT_VALUES.copy()
         replacements["AWS_REGION"] = get_region()
         replacements["CODE_SIGNING_CONFIG_NAME"] = resource_name
-        replacements["SIGNING_PROFILE_VERSION_ARN"] = resources.SigningProfileVersionArn
+        replacements["SIGNING_PROFILE_VERSION_ARN"] = resources.SigningProfile.signing_profile_arn
 
         # Load Lambda CR
         resource_data = load_lambda_resource(
@@ -87,9 +69,9 @@ class TestCodeSigningConfig:
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
+        lambda_validator = LambdaValidator(lambda_client)
         # Check Lambda code signing config exists
-        exists = self.code_signing_config_exists(lambda_client, codeSigningConfigARN)
-        assert exists
+        assert lambda_validator.code_signing_config_exists(codeSigningConfigARN)
 
         # Update cr
         cr["spec"]["description"] = "new description"
@@ -99,7 +81,7 @@ class TestCodeSigningConfig:
         time.sleep(UPDATE_WAIT_AFTER_SECONDS)
 
         # Check code signing config  description
-        csc = self.get_code_signing_config(lambda_client, codeSigningConfigARN)
+        csc = lambda_validator.get_code_signing_config(codeSigningConfigARN)
         assert csc is not None
         assert csc["Description"] == "new description"
 
@@ -108,8 +90,5 @@ class TestCodeSigningConfig:
         assert deleted
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
-
         # Check Lambda code signing config doesn't exist
-        exists = self.code_signing_config_exists(lambda_client, codeSigningConfigARN)
-        assert not exists
-
+        assert not lambda_validator.code_signing_config_exists(codeSigningConfigARN)

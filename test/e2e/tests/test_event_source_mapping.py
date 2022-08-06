@@ -14,18 +14,19 @@
 """Integration tests for the Lambda event source mapping API.
 """
 
-import boto3
 import pytest
 import time
 import logging
-from typing import Dict, Tuple
 
 from acktest.resources import random_suffix_name
 from acktest.aws.identity import get_region
 from acktest.k8s import resource as k8s
+
 from e2e import service_marker, CRD_GROUP, CRD_VERSION, load_lambda_resource
 from e2e.replacement_values import REPLACEMENT_VALUES
 from e2e.bootstrap_resources import get_bootstrap_resources
+from e2e.service_bootstrap import LAMBDA_FUNCTION_FILE_ZIP
+from e2e.tests.helper import LambdaValidator
 
 RESOURCE_PLURAL = "eventsourcemappings"
 
@@ -34,19 +35,15 @@ UPDATE_WAIT_AFTER_SECONDS = 20
 DELETE_WAIT_AFTER_SECONDS = 120
 
 @pytest.fixture(scope="module")
-def lambda_client():
-    return boto3.client("lambda")
-
-@pytest.fixture(scope="module")
 def lambda_function():
         resource_name = random_suffix_name("lambda-function", 24)
         resources = get_bootstrap_resources()
 
         replacements = REPLACEMENT_VALUES.copy()
         replacements["FUNCTION_NAME"] = resource_name
-        replacements["BUCKET_NAME"] = resources.FunctionsBucketName
-        replacements["LAMBDA_ROLE"] = resources.LambdaESMRoleARN
-        replacements["LAMBDA_FILE_NAME"] = resources.LambdaFunctionFileZip
+        replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
+        replacements["LAMBDA_ROLE"] = resources.ESMRole.arn
+        replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
         replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "0"
         replacements["CODE_SIGNING_CONFIG_ARN"] = ""
         replacements["AWS_REGION"] = get_region()
@@ -81,20 +78,6 @@ def lambda_function():
 @service_marker
 @pytest.mark.canary
 class TestEventSourceMapping:
-    def get_event_source_mapping(self, lambda_client, esm_uuid: str) -> dict:
-        try:
-            resp = lambda_client.get_event_source_mapping(
-                UUID=esm_uuid,
-            )
-            return resp
-
-        except Exception as e:
-            logging.debug(e)
-            return None
-
-    def event_source_mapping_exists(self, lambda_client, esm_uuid: str) -> bool:
-        return self.get_event_source_mapping(lambda_client, esm_uuid) is not None
-
     def test_smoke_sqs_queue_stream(self, lambda_client, lambda_function):
         (_, function_resource) = lambda_function
         lambda_function_name = function_resource["spec"]["name"]
@@ -107,7 +90,7 @@ class TestEventSourceMapping:
         replacements["EVENT_SOURCE_MAPPING_NAME"] = resource_name
         replacements["BATCH_SIZE"] = "10"
         replacements["FUNCTION_NAME"] = lambda_function_name
-        replacements["EVENT_SOURCE_ARN"] = resources.SQSQueueARN
+        replacements["EVENT_SOURCE_ARN"] = resources.ESMQueue.arn
         replacements["MAXIMUM_BATCHING_WINDOW_IN_SECONDS"] = "1"
 
         # Load ESM CR
@@ -132,9 +115,9 @@ class TestEventSourceMapping:
 
         esm_uuid = cr['status']['uuid']
 
+        lambda_validator = LambdaValidator(lambda_client)
         # Check ESM exists
-        exists = self.event_source_mapping_exists(lambda_client, esm_uuid)
-        assert exists
+        assert lambda_validator.event_source_mapping_exists(esm_uuid)
 
         # Update cr
         cr["spec"]["batchSize"] = 20
@@ -144,7 +127,7 @@ class TestEventSourceMapping:
         time.sleep(UPDATE_WAIT_AFTER_SECONDS)
 
         # Check ESM batch size
-        esm = self.get_event_source_mapping(lambda_client, esm_uuid)
+        esm = lambda_validator.get_event_source_mapping(esm_uuid)
         assert esm is not None
         assert esm["BatchSize"] == 20
 
@@ -155,8 +138,7 @@ class TestEventSourceMapping:
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
 
         # Check ESM doesn't exist
-        exists = self.event_source_mapping_exists(lambda_client, esm_uuid)
-        assert not exists
+        assert not lambda_validator.event_source_mapping_exists(esm_uuid)
 
     def test_smoke_dynamodb_table_stream(self, lambda_client, lambda_function):
         (_, function_resource) = lambda_function
@@ -170,7 +152,7 @@ class TestEventSourceMapping:
         replacements["EVENT_SOURCE_MAPPING_NAME"] = resource_name
         replacements["BATCH_SIZE"] = "10"
         replacements["FUNCTION_NAME"] = lambda_function_name
-        replacements["EVENT_SOURCE_ARN"] = resources.DynamoDBTableARN
+        replacements["EVENT_SOURCE_ARN"] = resources.ESMTable.latest_stream_arn
         replacements["STARTING_POSITION"] = "LATEST"
         replacements["MAXIMUM_RETRY_ATTEMPTS"] = "-1"
 
@@ -196,15 +178,15 @@ class TestEventSourceMapping:
 
         esm_uuid = cr['status']['uuid']
 
+        lambda_validator = LambdaValidator(lambda_client)
         # Check ESM exists
-        exists = self.event_source_mapping_exists(lambda_client, esm_uuid)
-        assert exists
+        assert lambda_validator.event_source_mapping_exists(esm_uuid)
 
         # Update cr
         cr["spec"]["maximumRetryAttempts"] = 3
         cr["spec"]["destinationConfig"] = {
             'onFailure': {
-                'destination': resources.SQSQueueARN,
+                'destination': resources.ESMQueue.arn,
             }
         }
 
@@ -213,7 +195,7 @@ class TestEventSourceMapping:
         time.sleep(UPDATE_WAIT_AFTER_SECONDS)
 
         # Check ESM maximum retry attempts
-        esm = self.get_event_source_mapping(lambda_client, esm_uuid)
+        esm = lambda_validator.get_event_source_mapping(esm_uuid)
         assert esm is not None
         logging.info(esm)
         assert esm["MaximumRetryAttempts"] == 3
@@ -225,5 +207,4 @@ class TestEventSourceMapping:
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
 
         # Check ESM doesn't exist
-        exists = self.event_source_mapping_exists(lambda_client, esm_uuid)
-        assert not exists
+        assert not lambda_validator.event_source_mapping_exists(esm_uuid)
