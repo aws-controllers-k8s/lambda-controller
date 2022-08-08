@@ -18,6 +18,7 @@ import pytest
 import time
 import logging
 
+from acktest import tags
 from acktest.resources import random_suffix_name
 from acktest.aws.identity import get_region, get_account_id
 from acktest.k8s import resource as k8s
@@ -76,7 +77,6 @@ def code_signing_config():
         _, deleted = k8s.delete_custom_resource(ref)
         assert deleted
 
-
 @service_marker
 @pytest.mark.canary
 class TestFunction:
@@ -124,13 +124,13 @@ class TestFunction:
         assert lambda_validator.function_exists(resource_name)
 
         # Update cr
-        tags = {
+        update_tags = {
             "v1": "k1",
             "v2": "k2",
             "v3": "k3",
         }
         cr["spec"]["description"] = "Updated description"
-        cr["spec"]["tags"] = tags
+        cr["spec"]["tags"] = update_tags
 
         # Patch k8s resource
         k8s.patch_custom_resource(ref, cr)
@@ -140,7 +140,15 @@ class TestFunction:
         function = lambda_validator.get_function(resource_name)
         assert function is not None
         assert function["Configuration"]["Description"] == "Updated description"
-        assert function["Tags"] == tags
+
+        function_tags = function["Tags"]
+        tags.assert_ack_system_tags(
+            tags=function_tags,
+        )
+        tags.assert_equal_without_ack_tags(
+            expected=update_tags,
+            actual=function_tags,
+        )
 
         # Delete k8s resource
         _, deleted = k8s.delete_custom_resource(ref)

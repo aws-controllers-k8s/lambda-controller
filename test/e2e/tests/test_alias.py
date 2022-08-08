@@ -114,6 +114,8 @@ class TestAlias:
         # Check alias exists
         assert lambda_validator.alias_exists(resource_name, lambda_function_name)
 
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+        
         # Update cr
         cr["spec"]["description"] = ""
 
