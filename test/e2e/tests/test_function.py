@@ -130,6 +130,7 @@ class TestFunction:
             "v3": "k3",
         }
         cr["spec"]["description"] = "Updated description"
+        cr["spec"]["timeout"] = 10
         cr["spec"]["tags"] = update_tags
 
         # Patch k8s resource
@@ -140,6 +141,7 @@ class TestFunction:
         function = lambda_validator.get_function(resource_name)
         assert function is not None
         assert function["Configuration"]["Description"] == "Updated description"
+        assert function["Configuration"]["Timeout"] == 10
 
         function_tags = function["Tags"]
         tags.assert_ack_system_tags(
@@ -323,6 +325,16 @@ class TestFunction:
         lambda_validator = LambdaValidator(lambda_client)
         # Check Lambda function exists
         assert lambda_validator.function_exists(resource_name)
+
+        cr["spec"]["timeout"] = 10
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        # Check function updated fields
+        function = lambda_validator.get_function(resource_name)
+        assert function["Configuration"]["Timeout"] == 10
 
         # Delete k8s resource
         _, deleted = k8s.delete_custom_resource(ref)
