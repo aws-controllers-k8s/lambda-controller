@@ -18,6 +18,9 @@ resources:
       Code:
         compare:
           is_ignored: true
+        set:
+          - ignore: true
+            operation: ReadOne
       Layers:
         set:
           - method: Create

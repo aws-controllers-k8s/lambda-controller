@@ -87,15 +87,6 @@ func (rm *resourceManager) sdkFind(
 	// the original Kubernetes object we passed to the function
 	ko := r.ko.DeepCopy()
 
-	if resp.Code != nil {
-		f0 := &svcapitypes.FunctionCode{}
-		if resp.Code.ImageUri != nil {
-			f0.ImageURI = resp.Code.ImageUri
-		}
-		ko.Spec.Code = f0
-	} else {
-		ko.Spec.Code = nil
-	}
 	if resp.Tags != nil {
 		f3 := map[string]*string{}
 		for f3key, f3valiter := range resp.Tags {
@@ -109,6 +100,16 @@ func (rm *resourceManager) sdkFind(
 	}
 
 	rm.setStatusDefaults(ko)
+	if resp.Code != nil {
+		if resp.Code.ImageUri != nil {
+			ko.Spec.Code.ImageURI = resp.Code.ImageUri
+		}
+	} else {
+		// We need to keep the desired .Code s3Bucket s3Key and s3ObjectVersion
+		// part of the function's spec. So instead of setting Spec.Code to nil
+		// we take no action in this block.
+		// ko.Spec.Code = nil
+	}
 	if resp.Configuration.CodeSha256 != nil {
 		ko.Status.CodeSHA256 = resp.Configuration.CodeSha256
 	} else {

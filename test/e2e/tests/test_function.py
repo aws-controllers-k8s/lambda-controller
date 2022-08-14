@@ -120,6 +120,11 @@ class TestFunction:
 
         lambda_validator = LambdaValidator(lambda_client)
 
+        # Assert that the original code.s3Bucket and code.s3Key is still part of
+        # the function's CR
+        assert cr["spec"]["code"]["s3Bucket"] == resources.FunctionsBucket.name
+        assert cr["spec"]["code"]["s3Key"] == LAMBDA_FUNCTION_FILE_ZIP
+
         # Check Lambda function exists
         assert lambda_validator.function_exists(resource_name)
 
