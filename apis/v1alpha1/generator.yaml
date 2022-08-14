@@ -4,6 +4,7 @@ ignore:
     # Alias
     # CodeSigningConfig
     # EventSourceMapping
+    - FunctionUrlConfig
 resources:
   Function:
     fields:
@@ -77,5 +78,13 @@ resources:
         is_primary_key: true
       FunctionName:
         is_required: true
+      FilterCriteria:
+        compare:
+          is_ignored: true
+    hooks:
+      delta_pre_compare:
+        code: customPreCompare(delta, a, b)
+      sdk_update_post_build_request:
+        template_path: hooks/eventsourcemapping/sdk_update_post_build_request.go.tpl
     tags:
       ignore: true

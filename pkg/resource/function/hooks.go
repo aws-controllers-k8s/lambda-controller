@@ -67,30 +67,8 @@ func (rm *resourceManager) customUpdateFunction(
 		return nil, requeueWaitWhilePending
 	}
 
-	if delta.DifferentAt("Spec.Code") {
-		err = rm.updateFunctionCode(ctx, desired, delta)
-		if err != nil {
-			return nil, err
-		}
-	}
 	if delta.DifferentAt("Spec.Tags") {
 		err = rm.updateFunctionTags(ctx, latest, desired)
-		if err != nil {
-			return nil, err
-		}
-	}
-	if delta.DifferentAt("Spec.Description") ||
-		delta.DifferentAt("Spec.Handler") ||
-		delta.DifferentAt("Spec.KMSKeyARN") ||
-		delta.DifferentAt("Spec.MemorySize") ||
-		delta.DifferentAt("Spec.Role") ||
-		delta.DifferentAt("Spec.Timeout") ||
-		delta.DifferentAt("Spec.Environement") ||
-		delta.DifferentAt("Spec.FileSystemConfigs") ||
-		delta.DifferentAt("Spec.ImageConfig") ||
-		delta.DifferentAt("Spec.TracingConfig") ||
-		delta.DifferentAt("Spec.VPCConfig") {
-		err = rm.updateFunctionConfiguration(ctx, desired)
 		if err != nil {
 			return nil, err
 		}
@@ -101,7 +79,6 @@ func (rm *resourceManager) customUpdateFunction(
 			return nil, err
 		}
 	}
-
 	if delta.DifferentAt("Spec.CodeSigningConfigARN") {
 		if desired.ko.Spec.PackageType != nil && *desired.ko.Spec.PackageType == "Image" &&
 			desired.ko.Spec.CodeSigningConfigARN != nil && *desired.ko.Spec.CodeSigningConfigARN != "" {
@@ -111,6 +88,27 @@ func (rm *resourceManager) customUpdateFunction(
 			if err != nil {
 				return nil, err
 			}
+		}
+	}
+
+	// Only try to update Spec.Code or Spec.Configuration at once. It is
+	// not correct to sequentially call UpdateFunctionConfiguration and
+	// UpdateFunctionCode because both of them can put the function in a
+	// Pending state.
+	switch {
+	case delta.DifferentAt("Spec.Code"):
+		err = rm.updateFunctionCode(ctx, desired, delta)
+		if err != nil {
+			return nil, err
+		}
+	case delta.DifferentExcept(
+		"Spec.Code",
+		"Spec.Tags",
+		"Spec.ReservedConcurrentExecutions",
+		"Spec.CodeSigningConfigARN"):
+		err = rm.updateFunctionConfiguration(ctx, desired, delta)
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -126,6 +124,7 @@ func (rm *resourceManager) customUpdateFunction(
 func (rm *resourceManager) updateFunctionConfiguration(
 	ctx context.Context,
 	desired *resource,
+	delta *ackcompare.Delta,
 ) error {
 	var err error
 	rlog := ackrtlog.FromContext(ctx)
@@ -137,86 +136,107 @@ func (rm *resourceManager) updateFunctionConfiguration(
 		FunctionName: aws.String(*dspec.Name),
 	}
 
-	if dspec.Description != nil {
-		input.Description = aws.String(*dspec.Description)
-	} else {
-		input.Description = aws.String("")
+	if delta.DifferentAt("Spec.Description") {
+		if dspec.Description != nil {
+			input.Description = aws.String(*dspec.Description)
+		} else {
+			input.Description = aws.String("")
+		}
 	}
 
-	if dspec.Handler != nil {
-		input.Handler = aws.String(*dspec.Handler)
-	} else {
-		input.Handler = aws.String("")
+	if delta.DifferentAt("Spec.Handler") {
+		if dspec.Handler != nil {
+			input.Handler = aws.String(*dspec.Handler)
+		} else {
+			input.Handler = aws.String("")
+		}
 	}
 
-	if dspec.KMSKeyARN != nil {
-		input.KMSKeyArn = aws.String(*dspec.KMSKeyARN)
-	} else {
-		input.KMSKeyArn = aws.String("")
+	if delta.DifferentAt("Spec.KMSKeyARN") {
+		if dspec.KMSKeyARN != nil {
+			input.KMSKeyArn = aws.String(*dspec.KMSKeyARN)
+		} else {
+			input.KMSKeyArn = aws.String("")
+		}
 	}
 
-	if dspec.Role != nil {
-		input.Role = aws.String(*dspec.Role)
-	} else {
-		input.Role = aws.String("")
+	if delta.DifferentAt("Spec.Role") {
+		if dspec.Role != nil {
+			input.Role = aws.String(*dspec.Role)
+		} else {
+			input.Role = aws.String("")
+		}
 	}
 
-	if dspec.MemorySize != nil {
-		input.MemorySize = aws.Int64(*dspec.MemorySize)
-	} else {
-		input.MemorySize = aws.Int64(0)
+	if delta.DifferentAt("Spec.MemorySize") {
+		if dspec.MemorySize != nil {
+			input.MemorySize = aws.Int64(*dspec.MemorySize)
+		} else {
+			input.MemorySize = aws.Int64(0)
+		}
 	}
 
-	if dspec.Timeout != nil {
-		input.Timeout = aws.Int64(*dspec.Timeout)
-	} else {
-		input.Timeout = aws.Int64(0)
+	if delta.DifferentAt("Spec.Timeout") {
+		if dspec.Timeout != nil {
+			input.Timeout = aws.Int64(*dspec.Timeout)
+		} else {
+			input.Timeout = aws.Int64(0)
+		}
 	}
 
-	environment := &svcsdk.Environment{}
-	if dspec.Environment != nil {
-		environment.Variables = dspec.Environment.DeepCopy().Variables
-
+	if delta.DifferentAt("Spec.Environment") {
+		environment := &svcsdk.Environment{}
+		if dspec.Environment != nil {
+			environment.Variables = dspec.Environment.DeepCopy().Variables
+		}
+		input.Environment = environment
 	}
-	input.Environment = environment
 
-	fileSystemConfigs := []*svcsdk.FileSystemConfig{}
-	if len(dspec.FileSystemConfigs) > 0 {
-		for _, elem := range dspec.FileSystemConfigs {
-			elemCopy := elem.DeepCopy()
-			fscElem := &svcsdk.FileSystemConfig{
-				Arn:            elemCopy.ARN,
-				LocalMountPath: elemCopy.LocalMountPath,
+	if delta.DifferentAt("Spec.FileSystemConfigs") {
+		fileSystemConfigs := []*svcsdk.FileSystemConfig{}
+		if len(dspec.FileSystemConfigs) > 0 {
+			for _, elem := range dspec.FileSystemConfigs {
+				elemCopy := elem.DeepCopy()
+				fscElem := &svcsdk.FileSystemConfig{
+					Arn:            elemCopy.ARN,
+					LocalMountPath: elemCopy.LocalMountPath,
+				}
+				fileSystemConfigs = append(fileSystemConfigs, fscElem)
 			}
-			fileSystemConfigs = append(fileSystemConfigs, fscElem)
+			input.FileSystemConfigs = fileSystemConfigs
 		}
-		input.FileSystemConfigs = fileSystemConfigs
 	}
 
-	if dspec.ImageConfig != nil && dspec.Code.ImageURI != nil && *dspec.Code.ImageURI != "" {
-		imageConfig := &svcsdk.ImageConfig{}
-		if dspec.ImageConfig != nil {
-			imageConfigCopy := dspec.ImageConfig.DeepCopy()
-			imageConfig.Command = imageConfigCopy.Command
-			imageConfig.EntryPoint = imageConfigCopy.EntryPoint
-			imageConfig.WorkingDirectory = imageConfigCopy.WorkingDirectory
+	if delta.DifferentAt("Spec.ImageConfig") {
+		if dspec.ImageConfig != nil && dspec.Code.ImageURI != nil && *dspec.Code.ImageURI != "" {
+			imageConfig := &svcsdk.ImageConfig{}
+			if dspec.ImageConfig != nil {
+				imageConfigCopy := dspec.ImageConfig.DeepCopy()
+				imageConfig.Command = imageConfigCopy.Command
+				imageConfig.EntryPoint = imageConfigCopy.EntryPoint
+				imageConfig.WorkingDirectory = imageConfigCopy.WorkingDirectory
+			}
+			input.ImageConfig = imageConfig
 		}
-		input.ImageConfig = imageConfig
 	}
 
-	tracingConfig := &svcsdk.TracingConfig{}
-	if dspec.TracingConfig != nil {
-		tracingConfig.Mode = aws.String(*dspec.TracingConfig.Mode)
+	if delta.DifferentAt("Spec.TracingConfig") {
+		tracingConfig := &svcsdk.TracingConfig{}
+		if dspec.TracingConfig != nil {
+			tracingConfig.Mode = aws.String(*dspec.TracingConfig.Mode)
+		}
+		input.TracingConfig = tracingConfig
 	}
-	input.TracingConfig = tracingConfig
 
-	VPCConfig := &svcsdk.VpcConfig{}
-	if dspec.VPCConfig != nil {
-		vpcConfigCopy := dspec.VPCConfig.DeepCopy()
-		VPCConfig.SubnetIds = vpcConfigCopy.SubnetIDs
-		VPCConfig.SecurityGroupIds = vpcConfigCopy.SecurityGroupIDs
+	if delta.DifferentAt("Spec.VPCConfig") {
+		VPCConfig := &svcsdk.VpcConfig{}
+		if dspec.VPCConfig != nil {
+			vpcConfigCopy := dspec.VPCConfig.DeepCopy()
+			VPCConfig.SubnetIds = vpcConfigCopy.SubnetIDs
+			VPCConfig.SecurityGroupIds = vpcConfigCopy.SecurityGroupIDs
+		}
+		input.VpcConfig = VPCConfig
 	}
-	input.VpcConfig = VPCConfig
 
 	_, err = rm.sdkapi.UpdateFunctionConfigurationWithContext(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateFunctionConfiguration", err)
