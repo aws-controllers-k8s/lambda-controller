@@ -13,6 +13,7 @@ rules:
   - codesigningconfigs
   - eventsourcemappings
   - functions
+  - functionurlconfigs
   verbs:
   - get
   - list

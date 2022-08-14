@@ -98,3 +98,17 @@ class LambdaValidator:
 
     def alias_exists(self, alias_name: str, function_name: str) -> bool:
         return self.get_alias(alias_name, function_name) is not None
+
+    def get_function_url_config(self, function_name: str) -> dict:
+        try:
+            resp = self.lambda_client.get_function_url_config(
+                FunctionName=function_name
+            )
+            return resp
+
+        except Exception as e:
+            logging.debug(e)
+            return None
+
+    def function_url_config_exists(self, function_name: str) -> bool:
+        return self.get_function_url_config(function_name) is not None

@@ -101,14 +101,12 @@ func (rm *resourceManager) sdkFind(
 
 	rm.setStatusDefaults(ko)
 	if resp.Code != nil {
+		// We need to keep the desired .Code s3Bucket s3Key and s3ObjectVersion
+		// part of the function's spec. So instead of setting Spec.Code to nil
+		// we only set ImageURI
 		if resp.Code.ImageUri != nil {
 			ko.Spec.Code.ImageURI = resp.Code.ImageUri
 		}
-	} else {
-		// We need to keep the desired .Code s3Bucket s3Key and s3ObjectVersion
-		// part of the function's spec. So instead of setting Spec.Code to nil
-		// we take no action in this block.
-		// ko.Spec.Code = nil
 	}
 	if resp.Configuration.CodeSha256 != nil {
 		ko.Status.CodeSHA256 = resp.Configuration.CodeSha256

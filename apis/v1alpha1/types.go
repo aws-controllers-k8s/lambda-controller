@@ -65,6 +65,19 @@ type AllowedPublishers struct {
 	SigningProfileVersionARNs []*string `json:"signingProfileVersionARNs,omitempty"`
 }
 
+// The cross-origin resource sharing (CORS) (https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
+// settings for your Lambda function URL. Use CORS to grant access to your function
+// URL from any origin. You can also use CORS to control access for specific
+// HTTP headers and methods in requests to your function URL.
+type CORS struct {
+	AllowCredentials *bool     `json:"allowCredentials,omitempty"`
+	AllowHeaders     []*string `json:"allowHeaders,omitempty"`
+	AllowMethods     []*string `json:"allowMethods,omitempty"`
+	AllowOrigins     []*string `json:"allowOrigins,omitempty"`
+	ExposeHeaders    []*string `json:"exposeHeaders,omitempty"`
+	MaxAge           *int64    `json:"maxAge,omitempty"`
+}
+
 // Details about a Code signing configuration (https://docs.aws.amazon.com/lambda/latest/dg/configuration-codesigning.html).
 type CodeSigningConfig_SDK struct {
 	// List of signing profiles that can sign a code package.
@@ -253,9 +266,16 @@ type FunctionEventInvokeConfig struct {
 }
 
 // Details about a Lambda function URL.
-type FunctionURLConfig struct {
+type FunctionURLConfig_SDK struct {
+	AuthType *string `json:"authType,omitempty"`
+	// The cross-origin resource sharing (CORS) (https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
+	// settings for your Lambda function URL. Use CORS to grant access to your function
+	// URL from any origin. You can also use CORS to control access for specific
+	// HTTP headers and methods in requests to your function URL.
+	CORS             *CORS   `json:"cors,omitempty"`
 	CreationTime     *string `json:"creationTime,omitempty"`
 	FunctionARN      *string `json:"functionARN,omitempty"`
+	FunctionURL      *string `json:"functionURL,omitempty"`
 	LastModifiedTime *string `json:"lastModifiedTime,omitempty"`
 }
 

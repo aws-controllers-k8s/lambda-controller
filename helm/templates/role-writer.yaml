@@ -17,6 +17,8 @@ rules:
 
   - functions
 
+  - functionurlconfigs
+
   verbs:
   - create
   - delete
@@ -32,6 +34,7 @@ rules:
   - codesigningconfigs
   - eventsourcemappings
   - functions
+  - functionurlconfigs
   verbs:
   - get
   - patch
