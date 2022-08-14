@@ -43,11 +43,12 @@ spec:
                   passes all of the records in the batch to the function in a single
                   call, up to the payload limit for synchronous invocation (6 MB).
                   \n    * Amazon Kinesis - Default 100. Max 10,000. \n    * Amazon
-                  DynamoDB Streams - Default 100. Max 1,000. \n    * Amazon Simple
+                  DynamoDB Streams - Default 100. Max 10,000. \n    * Amazon Simple
                   Queue Service - Default 10. For standard queues the max    is 10,000.
                   For FIFO queues the max is 10. \n    * Amazon Managed Streaming
                   for Apache Kafka - Default 100. Max 10,000. \n    * Self-Managed
-                  Apache Kafka - Default 100. Max 10,000."
+                  Apache Kafka - Default 100. Max 10,000. \n    * Amazon MQ (ActiveMQ
+                  and RabbitMQ) - Default 100. Max 10,000."
                 format: int64
                 type: integer
               bisectBatchOnFunctionError:
@@ -82,6 +83,21 @@ spec:
                   \n    * Amazon Simple Queue Service - The ARN of the queue. \n    *
                   Amazon Managed Streaming for Apache Kafka - The ARN of the cluster."
                 type: string
+              filterCriteria:
+                description: (Streams and Amazon SQS) An object that defines the filter
+                  criteria that determine whether Lambda should process an event.
+                  For more information, see Lambda event filtering (https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html).
+                properties:
+                  filters:
+                    items:
+                      description: A structure within a FilterCriteria object that
+                        defines an event filtering pattern.
+                      properties:
+                        pattern:
+                          type: string
+                      type: object
+                    type: array
+                type: object
               functionName:
                 description: "The name of the Lambda function. \n Name formats \n
                   \   * Function name - MyFunction. \n    * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:MyFunction.
@@ -91,8 +107,8 @@ spec:
                   function name, it's limited to 64 characters in length."
                 type: string
               functionResponseTypes:
-                description: (Streams only) A list of current response type enums
-                  applied to the event source mapping.
+                description: (Streams and Amazon SQS) A list of current response type
+                  enums applied to the event source mapping.
                 items:
                   type: string
                 type: array

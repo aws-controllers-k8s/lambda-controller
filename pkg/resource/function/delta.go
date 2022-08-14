@@ -81,6 +81,17 @@ func newResourceDelta(
 			}
 		}
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.EphemeralStorage, b.ko.Spec.EphemeralStorage) {
+		delta.Add("Spec.EphemeralStorage", a.ko.Spec.EphemeralStorage, b.ko.Spec.EphemeralStorage)
+	} else if a.ko.Spec.EphemeralStorage != nil && b.ko.Spec.EphemeralStorage != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.EphemeralStorage.Size, b.ko.Spec.EphemeralStorage.Size) {
+			delta.Add("Spec.EphemeralStorage.Size", a.ko.Spec.EphemeralStorage.Size, b.ko.Spec.EphemeralStorage.Size)
+		} else if a.ko.Spec.EphemeralStorage.Size != nil && b.ko.Spec.EphemeralStorage.Size != nil {
+			if *a.ko.Spec.EphemeralStorage.Size != *b.ko.Spec.EphemeralStorage.Size {
+				delta.Add("Spec.EphemeralStorage.Size", a.ko.Spec.EphemeralStorage.Size, b.ko.Spec.EphemeralStorage.Size)
+			}
+		}
+	}
 	if !reflect.DeepEqual(a.ko.Spec.FileSystemConfigs, b.ko.Spec.FileSystemConfigs) {
 		delta.Add("Spec.FileSystemConfigs", a.ko.Spec.FileSystemConfigs, b.ko.Spec.FileSystemConfigs)
 	}

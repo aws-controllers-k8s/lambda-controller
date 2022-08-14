@@ -29,7 +29,7 @@ type EventSourceMappingSpec struct {
 	//
 	//    * Amazon Kinesis - Default 100. Max 10,000.
 	//
-	//    * Amazon DynamoDB Streams - Default 100. Max 1,000.
+	//    * Amazon DynamoDB Streams - Default 100. Max 10,000.
 	//
 	//    * Amazon Simple Queue Service - Default 10. For standard queues the max
 	//    is 10,000. For FIFO queues the max is 10.
@@ -37,6 +37,8 @@ type EventSourceMappingSpec struct {
 	//    * Amazon Managed Streaming for Apache Kafka - Default 100. Max 10,000.
 	//
 	//    * Self-Managed Apache Kafka - Default 100. Max 10,000.
+	//
+	//    * Amazon MQ (ActiveMQ and RabbitMQ) - Default 100. Max 10,000.
 	BatchSize *int64 `json:"batchSize,omitempty"`
 	// (Streams only) If the function returns an error, split the batch in two and
 	// retry.
@@ -59,6 +61,10 @@ type EventSourceMappingSpec struct {
 	//
 	//    * Amazon Managed Streaming for Apache Kafka - The ARN of the cluster.
 	EventSourceARN *string `json:"eventSourceARN,omitempty"`
+	// (Streams and Amazon SQS) An object that defines the filter criteria that
+	// determine whether Lambda should process an event. For more information, see
+	// Lambda event filtering (https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html).
+	FilterCriteria *FilterCriteria `json:"filterCriteria,omitempty"`
 	// The name of the Lambda function.
 	//
 	// Name formats
@@ -75,8 +81,8 @@ type EventSourceMappingSpec struct {
 	// function name, it's limited to 64 characters in length.
 	// +kubebuilder:validation:Required
 	FunctionName *string `json:"functionName"`
-	// (Streams only) A list of current response type enums applied to the event
-	// source mapping.
+	// (Streams and Amazon SQS) A list of current response type enums applied to
+	// the event source mapping.
 	FunctionResponseTypes []*string `json:"functionResponseTypes,omitempty"`
 	// (Streams and Amazon SQS standard queues) The maximum amount of time, in seconds,
 	// that Lambda spends gathering records before invoking the function.

@@ -30,9 +30,9 @@ from e2e.tests.helper import LambdaValidator
 
 RESOURCE_PLURAL = "eventsourcemappings"
 
-CREATE_WAIT_AFTER_SECONDS = 60
+CREATE_WAIT_AFTER_SECONDS = 20
 UPDATE_WAIT_AFTER_SECONDS = 20
-DELETE_WAIT_AFTER_SECONDS = 120
+DELETE_WAIT_AFTER_SECONDS = 20
 
 @pytest.fixture(scope="module")
 def lambda_function():
@@ -121,15 +121,40 @@ class TestEventSourceMapping:
 
         # Update cr
         cr["spec"]["batchSize"] = 20
+        cr["spec"]["filterCriteria"] = {
+            "filters": [
+                {
+                    "pattern": "{\"controller-version\":[\"v1\"]}"
+                },
+            ]
+        }
 
         # Patch k8s resource
         k8s.patch_custom_resource(ref, cr)
         time.sleep(UPDATE_WAIT_AFTER_SECONDS)
 
-        # Check ESM batch size
+        # Check ESM batch size & filters
         esm = lambda_validator.get_event_source_mapping(esm_uuid)
         assert esm is not None
         assert esm["BatchSize"] == 20
+        assert esm["FilterCriteria"]["Filters"] == [
+            {
+                "Pattern": "{\"controller-version\":[\"v1\"]}"
+            },
+        ]
+
+        # Delete the filterCriteria field
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr["spec"]["filterCriteria"] = None
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        # Check filters have been deleted
+        esm = lambda_validator.get_event_source_mapping(esm_uuid)
+        assert esm is not None
+        assert "FilterCriteria" not in esm
 
         # Delete k8s resource
         _, deleted = k8s.delete_custom_resource(ref)

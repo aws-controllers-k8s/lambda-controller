@@ -122,6 +122,12 @@ type EnvironmentResponse struct {
 	Variables map[string]*string `json:"variables,omitempty"`
 }
 
+// The size of the function’s /tmp directory in MB. The default value is 512,
+// but can be any whole number between 512 and 10240 MB.
+type EphemeralStorage struct {
+	Size *int64 `json:"size,omitempty"`
+}
+
 // A mapping between an Amazon Web Services resource and a Lambda function.
 // For details, see CreateEventSourceMapping.
 type EventSourceMappingConfiguration struct {
@@ -129,17 +135,19 @@ type EventSourceMappingConfiguration struct {
 	BisectBatchOnFunctionError *bool  `json:"bisectBatchOnFunctionError,omitempty"`
 	// A configuration object that specifies the destination of an event after Lambda
 	// processes it.
-	DestinationConfig              *DestinationConfig `json:"destinationConfig,omitempty"`
-	EventSourceARN                 *string            `json:"eventSourceARN,omitempty"`
-	FunctionARN                    *string            `json:"functionARN,omitempty"`
-	FunctionResponseTypes          []*string          `json:"functionResponseTypes,omitempty"`
-	LastModified                   *metav1.Time       `json:"lastModified,omitempty"`
-	LastProcessingResult           *string            `json:"lastProcessingResult,omitempty"`
-	MaximumBatchingWindowInSeconds *int64             `json:"maximumBatchingWindowInSeconds,omitempty"`
-	MaximumRecordAgeInSeconds      *int64             `json:"maximumRecordAgeInSeconds,omitempty"`
-	MaximumRetryAttempts           *int64             `json:"maximumRetryAttempts,omitempty"`
-	ParallelizationFactor          *int64             `json:"parallelizationFactor,omitempty"`
-	Queues                         []*string          `json:"queues,omitempty"`
+	DestinationConfig *DestinationConfig `json:"destinationConfig,omitempty"`
+	EventSourceARN    *string            `json:"eventSourceARN,omitempty"`
+	// An object that contains the filters for an event source.
+	FilterCriteria                 *FilterCriteria `json:"filterCriteria,omitempty"`
+	FunctionARN                    *string         `json:"functionARN,omitempty"`
+	FunctionResponseTypes          []*string       `json:"functionResponseTypes,omitempty"`
+	LastModified                   *metav1.Time    `json:"lastModified,omitempty"`
+	LastProcessingResult           *string         `json:"lastProcessingResult,omitempty"`
+	MaximumBatchingWindowInSeconds *int64          `json:"maximumBatchingWindowInSeconds,omitempty"`
+	MaximumRecordAgeInSeconds      *int64          `json:"maximumRecordAgeInSeconds,omitempty"`
+	MaximumRetryAttempts           *int64          `json:"maximumRetryAttempts,omitempty"`
+	ParallelizationFactor          *int64          `json:"parallelizationFactor,omitempty"`
+	Queues                         []*string       `json:"queues,omitempty"`
 	// The self-managed Apache Kafka cluster for your event source.
 	SelfManagedEventSource     *SelfManagedEventSource      `json:"selfManagedEventSource,omitempty"`
 	SourceAccessConfigurations []*SourceAccessConfiguration `json:"sourceAccessConfigurations,omitempty"`
@@ -157,6 +165,17 @@ type EventSourceMappingConfiguration struct {
 type FileSystemConfig struct {
 	ARN            *string `json:"arn,omitempty"`
 	LocalMountPath *string `json:"localMountPath,omitempty"`
+}
+
+// A structure within a FilterCriteria object that defines an event filtering
+// pattern.
+type Filter struct {
+	Pattern *string `json:"pattern,omitempty"`
+}
+
+// An object that contains the filters for an event source.
+type FilterCriteria struct {
+	Filters []*Filter `json:"filters,omitempty"`
 }
 
 // The code for the Lambda function. You can specify either an object in Amazon
@@ -190,11 +209,14 @@ type FunctionConfiguration struct {
 	// The results of an operation to update or read environment variables. If the
 	// operation is successful, the response contains the environment variables.
 	// If it failed, the response contains details about the error.
-	Environment       *EnvironmentResponse `json:"environment,omitempty"`
-	FileSystemConfigs []*FileSystemConfig  `json:"fileSystemConfigs,omitempty"`
-	FunctionARN       *string              `json:"functionARN,omitempty"`
-	FunctionName      *string              `json:"functionName,omitempty"`
-	Handler           *string              `json:"handler,omitempty"`
+	Environment *EnvironmentResponse `json:"environment,omitempty"`
+	// The size of the function’s /tmp directory in MB. The default value is 512,
+	// but can be any whole number between 512 and 10240 MB.
+	EphemeralStorage  *EphemeralStorage   `json:"ephemeralStorage,omitempty"`
+	FileSystemConfigs []*FileSystemConfig `json:"fileSystemConfigs,omitempty"`
+	FunctionARN       *string             `json:"functionARN,omitempty"`
+	FunctionName      *string             `json:"functionName,omitempty"`
+	Handler           *string             `json:"handler,omitempty"`
 	// Response to GetFunctionConfiguration request.
 	ImageConfigResponse        *ImageConfigResponse `json:"imageConfigResponse,omitempty"`
 	KMSKeyARN                  *string              `json:"kmsKeyARN,omitempty"`
@@ -228,6 +250,13 @@ type FunctionEventInvokeConfig struct {
 	DestinationConfig *DestinationConfig `json:"destinationConfig,omitempty"`
 	FunctionARN       *string            `json:"functionARN,omitempty"`
 	LastModified      *metav1.Time       `json:"lastModified,omitempty"`
+}
+
+// Details about a Lambda function URL.
+type FunctionURLConfig struct {
+	CreationTime     *string `json:"creationTime,omitempty"`
+	FunctionARN      *string `json:"functionARN,omitempty"`
+	LastModifiedTime *string `json:"lastModifiedTime,omitempty"`
 }
 
 // Configuration values that override the container image Dockerfile settings.

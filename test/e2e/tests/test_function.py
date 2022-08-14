@@ -327,6 +327,7 @@ class TestFunction:
         assert lambda_validator.function_exists(resource_name)
 
         cr["spec"]["timeout"] = 10
+        cr["spec"]["ephemeralStorage"] = { "size" : 512 }
 
         # Patch k8s resource
         k8s.patch_custom_resource(ref, cr)
@@ -335,6 +336,7 @@ class TestFunction:
         # Check function updated fields
         function = lambda_validator.get_function(resource_name)
         assert function["Configuration"]["Timeout"] == 10
+        assert function["Configuration"]["EphemeralStorage"]["Size"] == 512
 
         # Delete k8s resource
         _, deleted = k8s.delete_custom_resource(ref)
