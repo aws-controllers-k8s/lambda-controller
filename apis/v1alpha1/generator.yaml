@@ -4,7 +4,7 @@ ignore:
     # Alias
     # CodeSigningConfig
     # EventSourceMapping
-    - FunctionUrlConfig
+    # FunctionUrlConfig
 resources:
   Function:
     fields:
@@ -88,3 +88,9 @@ resources:
         template_path: hooks/eventsourcemapping/sdk_update_post_build_request.go.tpl
     tags:
       ignore: true
+  FunctionUrlConfig:
+    tags:
+      ignore: true
+    fields:
+      FunctionName:
+        is_primary_key: true
