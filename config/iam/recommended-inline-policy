@@ -6,9 +6,18 @@
             "Action": [
                 "lambda:*",
                 "s3:Get*",
-                "ecr:Get*",
-                "iam:PassRole"
+                "ecr:Get*"
             ],
+            "Resource": "*"
+        },
+        {
+            "Action": "iam:PassRole",
+            "Condition": {
+              "StringEquals": {
+                "iam:PassedToService": "lambda.amazonaws.com"
+              }
+            },
+            "Effect": "Allow",
             "Resource": "*"
         }
     ]
