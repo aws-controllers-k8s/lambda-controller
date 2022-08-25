@@ -14,4 +14,9 @@ publish-image:
 create-ecr-repository:
 	aws ecr create-repository --region $(AWS_REGION) --repository-name $(ECR_REPOSITORY) >/dev/null
 
+docker-ecr-auth:
+	aws ecr get-login-password --region us-west-2 | \
+		docker login --username AWS --password-stdin\
+		$(AWS_ACCOUNT_ID).dkr.ecr.us-west-2.amazonaws.com
+
 all: build-image publish-image
