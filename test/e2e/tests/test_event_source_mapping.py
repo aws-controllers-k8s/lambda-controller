@@ -18,101 +18,23 @@ import pytest
 import time
 import logging
 
-from acktest.resources import random_suffix_name
-from acktest.aws.identity import get_region
 from acktest.k8s import resource as k8s
 
-from e2e import service_marker, CRD_GROUP, CRD_VERSION, load_lambda_resource
-from e2e.replacement_values import REPLACEMENT_VALUES
+from e2e import service_marker
+from e2e.conftest import Wait
 from e2e.bootstrap_resources import get_bootstrap_resources
-from e2e.service_bootstrap import LAMBDA_FUNCTION_FILE_ZIP
 from e2e.tests.helper import LambdaValidator
-
-RESOURCE_PLURAL = "eventsourcemappings"
-
-CREATE_WAIT_AFTER_SECONDS = 20
-UPDATE_WAIT_AFTER_SECONDS = 20
-DELETE_WAIT_AFTER_SECONDS = 20
-
-@pytest.fixture(scope="module")
-def lambda_function():
-        resource_name = random_suffix_name("lambda-function", 24)
-        resources = get_bootstrap_resources()
-
-        replacements = REPLACEMENT_VALUES.copy()
-        replacements["FUNCTION_NAME"] = resource_name
-        replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
-        replacements["LAMBDA_ROLE"] = resources.ESMRole.arn
-        replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
-        replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "0"
-        replacements["CODE_SIGNING_CONFIG_ARN"] = ""
-        replacements["AWS_REGION"] = get_region()
-
-        # Load function CR
-        resource_data = load_lambda_resource(
-            "function",
-            additional_replacements=replacements,
-        )
-        logging.debug(resource_data)
-
-        # Create k8s resource
-        function_reference = k8s.CustomResourceReference(
-            CRD_GROUP, CRD_VERSION, "functions",
-            resource_name, namespace="default",
-        )
-
-        # Create lambda function
-        k8s.create_custom_resource(function_reference, resource_data)
-        function_resource = k8s.wait_resource_consumed_by_controller(function_reference)
-
-        assert function_resource is not None
-        assert k8s.get_resource_exists(function_reference)
-
-        time.sleep(CREATE_WAIT_AFTER_SECONDS)
-
-        yield (function_reference, function_resource)
-
-        _, deleted = k8s.delete_custom_resource(function_reference)
-        assert deleted
 
 @service_marker
 @pytest.mark.canary
 class TestEventSourceMapping:
-    def test_smoke_sqs_queue_stream(self, lambda_client, lambda_function):
-        (_, function_resource) = lambda_function
-        lambda_function_name = function_resource["spec"]["name"]
-
-        resource_name = random_suffix_name("lambda-esm", 24)
-        resources = get_bootstrap_resources()
-
-        replacements = REPLACEMENT_VALUES.copy()
-        replacements["AWS_REGION"] = get_region()
-        replacements["EVENT_SOURCE_MAPPING_NAME"] = resource_name
-        replacements["BATCH_SIZE"] = "10"
-        replacements["FUNCTION_NAME"] = lambda_function_name
-        replacements["EVENT_SOURCE_ARN"] = resources.ESMQueue.arn
-        replacements["MAXIMUM_BATCHING_WINDOW_IN_SECONDS"] = "1"
-
-        # Load ESM CR
-        resource_data = load_lambda_resource(
-            "event_source_mapping_sqs",
-            additional_replacements=replacements,
-        )
-        logging.debug(resource_data)
-
-        # Create k8s resource
-        ref = k8s.CustomResourceReference(
-            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
-            resource_name, namespace="default",
-        )
-        k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
-
-        assert cr is not None
-        assert k8s.get_resource_exists(ref)
-
-        time.sleep(CREATE_WAIT_AFTER_SECONDS)
-
+    @pytest.mark.function_overrides({
+        'package_type': 'Zip',
+        'role_type': 'esm',
+    })
+    @pytest.mark.esm_overrides({'source': 'sqsqueue'})
+    def test_smoke_sqs_queue_stream(self, lambda_client, event_source_mapping):
+        (ref, cr) = event_source_mapping
         esm_uuid = cr['status']['uuid']
 
         lambda_validator = LambdaValidator(lambda_client)
@@ -131,7 +53,7 @@ class TestEventSourceMapping:
 
         # Patch k8s resource
         k8s.patch_custom_resource(ref, cr)
-        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+        time.sleep(Wait.EventSourceMapping.Update)
 
         # Check ESM batch size & filters
         esm = lambda_validator.get_event_source_mapping(esm_uuid)
@@ -149,7 +71,7 @@ class TestEventSourceMapping:
 
         # Patch k8s resource
         k8s.patch_custom_resource(ref, cr)
-        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+        time.sleep(Wait.EventSourceMapping.Update)
 
         # Check filters have been deleted
         esm = lambda_validator.get_event_source_mapping(esm_uuid)
@@ -160,48 +82,20 @@ class TestEventSourceMapping:
         _, deleted = k8s.delete_custom_resource(ref)
         assert deleted
 
-        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+        time.sleep(Wait.EventSourceMapping.Delete)
 
         # Check ESM doesn't exist
         assert not lambda_validator.event_source_mapping_exists(esm_uuid)
 
-    def test_smoke_dynamodb_table_stream(self, lambda_client, lambda_function):
-        (_, function_resource) = lambda_function
-        lambda_function_name = function_resource["spec"]["name"]
-
-        resource_name = random_suffix_name("lambda-esm", 24)
-        resources = get_bootstrap_resources()
-
-        replacements = REPLACEMENT_VALUES.copy()
-        replacements["AWS_REGION"] = get_region()
-        replacements["EVENT_SOURCE_MAPPING_NAME"] = resource_name
-        replacements["BATCH_SIZE"] = "10"
-        replacements["FUNCTION_NAME"] = lambda_function_name
-        replacements["EVENT_SOURCE_ARN"] = resources.ESMTable.latest_stream_arn
-        replacements["STARTING_POSITION"] = "LATEST"
-        replacements["MAXIMUM_RETRY_ATTEMPTS"] = "-1"
-
-        # Load ESM CR
-        resource_data = load_lambda_resource(
-            "event_source_mapping_dynamodb",
-            additional_replacements=replacements,
-        )
-        logging.debug(resource_data)
-
-        # Create k8s resource
-        ref = k8s.CustomResourceReference(
-            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
-            resource_name, namespace="default",
-        )
-        k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
-
-        assert cr is not None
-        assert k8s.get_resource_exists(ref)
-
-        time.sleep(CREATE_WAIT_AFTER_SECONDS)
-
+    @pytest.mark.function_overrides({
+        'package_type': 'Zip',
+        'role_type': 'esm',
+    })
+    @pytest.mark.esm_overrides({'source': 'ddbtable'})
+    def test_smoke_dynamodb_table_stream(self, lambda_client, event_source_mapping):
+        (ref, cr) = event_source_mapping
         esm_uuid = cr['status']['uuid']
+        resources = get_bootstrap_resources()
 
         lambda_validator = LambdaValidator(lambda_client)
         # Check ESM exists
@@ -217,19 +111,18 @@ class TestEventSourceMapping:
 
         # Patch k8s resource
         k8s.patch_custom_resource(ref, cr)
-        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+        time.sleep(Wait.EventSourceMapping.Update)
 
         # Check ESM maximum retry attempts
         esm = lambda_validator.get_event_source_mapping(esm_uuid)
         assert esm is not None
-        logging.info(esm)
         assert esm["MaximumRetryAttempts"] == 3
 
         # Delete k8s resource
         _, deleted = k8s.delete_custom_resource(ref)
         assert deleted
 
-        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+        time.sleep(Wait.EventSourceMapping.Delete)
 
         # Check ESM doesn't exist
         assert not lambda_validator.event_source_mapping_exists(esm_uuid)

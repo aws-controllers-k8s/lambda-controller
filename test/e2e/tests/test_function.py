@@ -19,104 +19,22 @@ import time
 import logging
 
 from acktest import tags
-from acktest.resources import random_suffix_name
-from acktest.aws.identity import get_region, get_account_id
 from acktest.k8s import resource as k8s
 
-from e2e import service_marker, CRD_GROUP, CRD_VERSION, load_lambda_resource
-from e2e.replacement_values import REPLACEMENT_VALUES
+from e2e import service_marker
 from e2e.bootstrap_resources import get_bootstrap_resources
+from e2e.conftest import Wait
 from e2e.service_bootstrap import LAMBDA_FUNCTION_FILE_ZIP
 from e2e.tests.helper import LambdaValidator
-
-RESOURCE_PLURAL = "functions"
-
-CREATE_WAIT_AFTER_SECONDS = 30
-UPDATE_WAIT_AFTER_SECONDS = 30
-DELETE_WAIT_AFTER_SECONDS = 30
-
-def get_testing_image_url():
-    aws_region = get_region()
-    account_id = get_account_id()
-    return f"{account_id}.dkr.ecr.{aws_region}.amazonaws.com/ack-e2e-testing-lambda-controller:v1"
-
-@pytest.fixture(scope="module")
-def code_signing_config():
-        resource_name = random_suffix_name("lambda-csc", 24)
-
-        resources = get_bootstrap_resources()
-        logging.debug(resources)
-
-        replacements = REPLACEMENT_VALUES.copy()
-        replacements["AWS_REGION"] = get_region()
-        replacements["CODE_SIGNING_CONFIG_NAME"] = resource_name
-        replacements["SIGNING_PROFILE_VERSION_ARN"] = resources.SigningProfile.signing_profile_arn
-
-        # Load Lambda CR
-        resource_data = load_lambda_resource(
-            "code_signing_config",
-            additional_replacements=replacements,
-        )
-        logging.debug(resource_data)
-
-        # Create k8s resource
-        ref = k8s.CustomResourceReference(
-            CRD_GROUP, CRD_VERSION, "codesigningconfigs",
-            resource_name, namespace="default",
-        )
-        k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
-
-        assert cr is not None
-        assert k8s.get_resource_exists(ref)
-
-        time.sleep(CREATE_WAIT_AFTER_SECONDS)
-
-        yield (ref, cr)
-
-        _, deleted = k8s.delete_custom_resource(ref)
-        assert deleted
 
 @service_marker
 @pytest.mark.canary
 class TestFunction:
-
-    def test_smoke(self, lambda_client):
-        resource_name = random_suffix_name("lambda-function", 24)
-
+    @pytest.mark.function_overrides({'package_type': 'Zip', 'role_type': 'basic'})
+    def test_smoke(self, lambda_client, function):
+        (ref, cr) = function
+        resource_name = cr["spec"]["name"]
         resources = get_bootstrap_resources()
-        logging.debug(resources)
-
-        replacements = REPLACEMENT_VALUES.copy()
-        replacements["FUNCTION_NAME"] = resource_name
-        replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
-        replacements["LAMBDA_ROLE"] = resources.BasicRole.arn
-        replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
-        replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "0"
-        replacements["CODE_SIGNING_CONFIG_ARN"] = ""
-        replacements["AWS_REGION"] = get_region()
-
-        # Load Lambda CR
-        resource_data = load_lambda_resource(
-            "function",
-            additional_replacements=replacements,
-        )
-        logging.debug(resource_data)
-
-        # Create k8s resource
-        ref = k8s.CustomResourceReference(
-            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
-            resource_name, namespace="default",
-        )
-        k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
-
-        assert cr is not None
-        assert k8s.get_resource_exists(ref)
-
-        time.sleep(CREATE_WAIT_AFTER_SECONDS)
-
-        cr = k8s.wait_resource_consumed_by_controller(ref)
 
         lambda_validator = LambdaValidator(lambda_client)
 
@@ -140,7 +58,7 @@ class TestFunction:
 
         # Patch k8s resource
         k8s.patch_custom_resource(ref, cr)
-        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+        time.sleep(Wait.Function.Update)
 
         # Check function updated fields
         function = lambda_validator.get_function(resource_name)
@@ -161,47 +79,19 @@ class TestFunction:
         _, deleted = k8s.delete_custom_resource(ref)
         assert deleted is True
 
-        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+        time.sleep(Wait.Function.Delete)
 
         # Check Lambda function doesn't exist
         assert not lambda_validator.function_exists(resource_name)
 
-    def test_reserved_concurrent_executions(self, lambda_client):
-        resource_name = random_suffix_name("lambda-function", 24)
-
-        resources = get_bootstrap_resources()
-        logging.debug(resources)
-
-        replacements = REPLACEMENT_VALUES.copy()
-        replacements["FUNCTION_NAME"] = resource_name
-        replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
-        replacements["LAMBDA_ROLE"] = resources.BasicRole.arn
-        replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
-        replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "2"
-        replacements["CODE_SIGNING_CONFIG_ARN"] = ""
-        replacements["AWS_REGION"] = get_region()
-
-        # Load Lambda CR
-        resource_data = load_lambda_resource(
-            "function",
-            additional_replacements=replacements,
-        )
-        logging.debug(resource_data)
-
-        # Create k8s resource
-        ref = k8s.CustomResourceReference(
-            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
-            resource_name, namespace="default",
-        )
-        k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
-
-        assert cr is not None
-        assert k8s.get_resource_exists(ref)
-
-        time.sleep(CREATE_WAIT_AFTER_SECONDS)
-
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+    @pytest.mark.function_overrides({
+        'package_type': 'Zip',
+        'role_type': 'basic',
+        'reserved_concurrent_executions': 2,
+    })
+    def test_reserved_concurrent_executions(self, lambda_client, function):
+        (ref, cr) = function
+        resource_name = cr["spec"]["name"]
 
         lambda_validator = LambdaValidator(lambda_client)
         # Check Lambda function exists
@@ -215,7 +105,7 @@ class TestFunction:
 
         # Patch k8s resource
         k8s.patch_custom_resource(ref, cr)
-        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+        time.sleep(Wait.Function.Update)
 
         # Check function updated fields
         reservedConcurrentExecutions = lambda_validator.get_function_concurrency(resource_name)
@@ -225,121 +115,68 @@ class TestFunction:
         _, deleted = k8s.delete_custom_resource(ref)
         assert deleted is True
 
-        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+        time.sleep(Wait.Function.Delete)
 
         # Check Lambda function doesn't exist
         assert not lambda_validator.function_exists(resource_name)
 
-    def test_function_code_signing_config(self, lambda_client, code_signing_config):
-        (_, csc_resource) = code_signing_config
-        code_signing_config_arn = csc_resource["status"]["ackResourceMetadata"]["arn"]
-        resource_name = random_suffix_name("lambda-function", 24)
-
-        resources = get_bootstrap_resources()
-
-        replacements = REPLACEMENT_VALUES.copy()
-        replacements["FUNCTION_NAME"] = resource_name
-        replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
-        replacements["LAMBDA_ROLE"] = resources.BasicRole.arn
-        replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
-        replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "2"
-        replacements["CODE_SIGNING_CONFIG_ARN"] = code_signing_config_arn
-        replacements["AWS_REGION"] = get_region()
-
-        # Load Lambda CR
-        resource_data = load_lambda_resource(
-            "function",
-            additional_replacements=replacements,
-        )
-        logging.debug(resource_data)
-
-        # Create k8s resource
-        ref = k8s.CustomResourceReference(
-            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
-            resource_name, namespace="default",
-        )
-        k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
-
-        assert cr is not None
-        assert k8s.get_resource_exists(ref)
-
-        time.sleep(CREATE_WAIT_AFTER_SECONDS)
-
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+    @pytest.mark.function_overrides({
+        'package_type': 'Zip',
+        'role_type': 'basic',
+        'create_code_signing_config': True,
+    })
+    def test_function_code_signing_config(self, lambda_client, function):
+        (ref, cr) = function
+        function_name = cr["spec"]["name"]
+        code_signing_config_arn = cr["spec"]["codeSigningConfigARN"]
 
         lambda_validator = LambdaValidator(lambda_client)
         # Check Lambda function exists
-        assert lambda_validator.function_exists(resource_name)
+        assert lambda_validator.function_exists(function_name)
 
         # Check function code signing config is correct
-        function_csc_arn = lambda_validator.get_function_code_signing_config(resource_name)
+        function_csc_arn = lambda_validator.get_function_code_signing_config(function_name)
         assert function_csc_arn == code_signing_config_arn
 
         # Delete function code signing config
         cr["spec"]["codeSigningConfigARN"] = ""
         k8s.patch_custom_resource(ref, cr)
 
-        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+        time.sleep(Wait.Function.Update)
 
-        function_csc_arn = lambda_validator.get_function_code_signing_config(resource_name)
+        function_csc_arn = lambda_validator.get_function_code_signing_config(function_name)
         assert function_csc_arn is None
 
         # Delete k8s resource
         _, deleted = k8s.delete_custom_resource(ref)
         assert deleted is True
 
-        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+        time.sleep(Wait.Function.Delete)
 
         # Check Lambda function doesn't exist
-        assert not lambda_validator.function_exists(resource_name)
+        assert not lambda_validator.function_exists(function_name)
 
-    def test_function_package_type_image(self, lambda_client):
-        resource_name = random_suffix_name("lambda-function", 24)
-
-        resources = get_bootstrap_resources()
-
-        replacements = REPLACEMENT_VALUES.copy()
-        replacements["FUNCTION_NAME"] = resource_name
-        replacements["LAMBDA_ROLE"] = resources.BasicRole.arn
-        replacements["AWS_REGION"] = get_region()
-        replacements["IMAGE_URL"] = get_testing_image_url()
-
-        # Load Lambda CR
-        resource_data = load_lambda_resource(
-            "function_package_type_image",
-            additional_replacements=replacements,
-        )
-        logging.debug(resource_data)
-
-        # Create k8s resource
-        ref = k8s.CustomResourceReference(
-            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
-            resource_name, namespace="default",
-        )
-        k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
-
-        assert cr is not None
-        assert k8s.get_resource_exists(ref)
-
-        time.sleep(CREATE_WAIT_AFTER_SECONDS)
-
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+    @pytest.mark.function_overrides({
+        'package_type': 'Image',
+        'role_type': 'basic',
+    })
+    def test_function_package_type_image(self, lambda_client, function):
+        (ref, cr) = function
+        function_name = cr["spec"]["name"]
 
         lambda_validator = LambdaValidator(lambda_client)
         # Check Lambda function exists
-        assert lambda_validator.function_exists(resource_name)
+        assert lambda_validator.function_exists(function_name)
 
         cr["spec"]["timeout"] = 10
         cr["spec"]["ephemeralStorage"] = { "size" : 512 }
 
         # Patch k8s resource
         k8s.patch_custom_resource(ref, cr)
-        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+        time.sleep(Wait.Function.Update)
 
         # Check function updated fields
-        function = lambda_validator.get_function(resource_name)
+        function = lambda_validator.get_function(function_name)
         assert function["Configuration"]["Timeout"] == 10
         assert function["Configuration"]["EphemeralStorage"]["Size"] == 512
 
@@ -347,53 +184,29 @@ class TestFunction:
         _, deleted = k8s.delete_custom_resource(ref)
         assert deleted is True
 
-        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+        time.sleep(Wait.Function.Delete)
 
         # Check Lambda function doesn't exist
-        assert not lambda_validator.function_exists(resource_name)
+        assert not lambda_validator.function_exists(function_name)
 
-    def test_function_package_type_image_with_signing_config(self, lambda_client):
-        resource_name = random_suffix_name("lambda-function", 24)
-
-        resources = get_bootstrap_resources()
-
-        replacements = REPLACEMENT_VALUES.copy()
-        replacements["FUNCTION_NAME"] = resource_name
-        replacements["LAMBDA_ROLE"] = resources.BasicRole.arn
-        replacements["AWS_REGION"] = get_region()
-        replacements["IMAGE_URL"] = get_testing_image_url()
-
-        # Load Lambda CR
-        resource_data = load_lambda_resource(
-            "function_package_type_image",
-            additional_replacements=replacements,
-        )
-        logging.debug(resource_data)
-
-        # Create k8s resource
-        ref = k8s.CustomResourceReference(
-            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
-            resource_name, namespace="default",
-        )
-        k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
-
-        assert cr is not None
-        assert k8s.get_resource_exists(ref)
-
-        time.sleep(CREATE_WAIT_AFTER_SECONDS)
-
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+    @pytest.mark.function_overrides({
+        'package_type': 'Image',
+        'role_type': 'basic',
+        'code_signing_config': "random-csc",
+    })
+    def test_function_package_type_image_with_signing_config(self, lambda_client, function):
+        (ref, cr) = function
+        function_name = cr["spec"]["name"]
 
         lambda_validator = LambdaValidator(lambda_client)
         # Check Lambda function exists
-        assert lambda_validator.function_exists(resource_name)
+        assert lambda_validator.function_exists(function_name)
 
-        # Add signing configuration
+        # Add invalid signing configuration
         cr["spec"]["codeSigningConfigARN"] = "random-csc"
         k8s.patch_custom_resource(ref, cr)
 
-        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+        time.sleep(Wait.Function.Update)
 
         cr = k8s.wait_resource_consumed_by_controller(ref)
         # assert condition
@@ -410,13 +223,13 @@ class TestFunction:
         cr["spec"]["codeSigningConfigARN"] = ""
         k8s.patch_custom_resource(ref, cr)
 
-        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+        time.sleep(Wait.Function.Update)
         
         # Delete k8s resource
         _, deleted = k8s.delete_custom_resource(ref)
         assert deleted is True
 
-        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+        time.sleep(Wait.Function.Delete)
 
         # Check Lambda function doesn't exist
-        assert not lambda_validator.function_exists(resource_name)
+        assert not lambda_validator.function_exists(function_name)

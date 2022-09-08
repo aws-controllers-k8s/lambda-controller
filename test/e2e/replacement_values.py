@@ -15,6 +15,8 @@
 Lambda-specific test variables.
 """
 
+from acktest.aws.identity import get_region
+
 REPLACEMENT_VALUES = {
-    
+    "AWS_REGION": get_region()
 }
