@@ -65,6 +65,12 @@ type AllowedPublishers struct {
 	SigningProfileVersionARNs []*string `json:"signingProfileVersionARNs,omitempty"`
 }
 
+// Specific configuration settings for an Amazon Managed Streaming for Apache
+// Kafka (Amazon MSK) event source.
+type AmazonManagedKafkaEventSourceConfig struct {
+	ConsumerGroupID *string `json:"consumerGroupID,omitempty"`
+}
+
 // The cross-origin resource sharing (CORS) (https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
 // settings for your Lambda function URL. Use CORS to grant access to your function
 // URL from any origin. You can also use CORS to control access for specific
@@ -144,8 +150,11 @@ type EphemeralStorage struct {
 // A mapping between an Amazon Web Services resource and a Lambda function.
 // For details, see CreateEventSourceMapping.
 type EventSourceMappingConfiguration struct {
-	BatchSize                  *int64 `json:"batchSize,omitempty"`
-	BisectBatchOnFunctionError *bool  `json:"bisectBatchOnFunctionError,omitempty"`
+	// Specific configuration settings for an Amazon Managed Streaming for Apache
+	// Kafka (Amazon MSK) event source.
+	AmazonManagedKafkaEventSourceConfig *AmazonManagedKafkaEventSourceConfig `json:"amazonManagedKafkaEventSourceConfig,omitempty"`
+	BatchSize                           *int64                               `json:"batchSize,omitempty"`
+	BisectBatchOnFunctionError          *bool                                `json:"bisectBatchOnFunctionError,omitempty"`
 	// A configuration object that specifies the destination of an event after Lambda
 	// processes it.
 	DestinationConfig *DestinationConfig `json:"destinationConfig,omitempty"`
@@ -162,15 +171,17 @@ type EventSourceMappingConfiguration struct {
 	ParallelizationFactor          *int64          `json:"parallelizationFactor,omitempty"`
 	Queues                         []*string       `json:"queues,omitempty"`
 	// The self-managed Apache Kafka cluster for your event source.
-	SelfManagedEventSource     *SelfManagedEventSource      `json:"selfManagedEventSource,omitempty"`
-	SourceAccessConfigurations []*SourceAccessConfiguration `json:"sourceAccessConfigurations,omitempty"`
-	StartingPosition           *string                      `json:"startingPosition,omitempty"`
-	StartingPositionTimestamp  *metav1.Time                 `json:"startingPositionTimestamp,omitempty"`
-	State                      *string                      `json:"state,omitempty"`
-	StateTransitionReason      *string                      `json:"stateTransitionReason,omitempty"`
-	Topics                     []*string                    `json:"topics,omitempty"`
-	TumblingWindowInSeconds    *int64                       `json:"tumblingWindowInSeconds,omitempty"`
-	UUID                       *string                      `json:"uuid,omitempty"`
+	SelfManagedEventSource *SelfManagedEventSource `json:"selfManagedEventSource,omitempty"`
+	// Specific configuration settings for a self-managed Apache Kafka event source.
+	SelfManagedKafkaEventSourceConfig *SelfManagedKafkaEventSourceConfig `json:"selfManagedKafkaEventSourceConfig,omitempty"`
+	SourceAccessConfigurations        []*SourceAccessConfiguration       `json:"sourceAccessConfigurations,omitempty"`
+	StartingPosition                  *string                            `json:"startingPosition,omitempty"`
+	StartingPositionTimestamp         *metav1.Time                       `json:"startingPositionTimestamp,omitempty"`
+	State                             *string                            `json:"state,omitempty"`
+	StateTransitionReason             *string                            `json:"stateTransitionReason,omitempty"`
+	Topics                            []*string                          `json:"topics,omitempty"`
+	TumblingWindowInSeconds           *int64                             `json:"tumblingWindowInSeconds,omitempty"`
+	UUID                              *string                            `json:"uuid,omitempty"`
 }
 
 // Details about the connection between a Lambda function and an Amazon EFS
@@ -360,6 +371,11 @@ type PutFunctionConcurrencyOutput struct {
 // The self-managed Apache Kafka cluster for your event source.
 type SelfManagedEventSource struct {
 	Endpoints map[string][]*string `json:"endpoints,omitempty"`
+}
+
+// Specific configuration settings for a self-managed Apache Kafka event source.
+type SelfManagedKafkaEventSourceConfig struct {
+	ConsumerGroupID *string `json:"consumerGroupID,omitempty"`
 }
 
 // To secure and define access to your event source, you can specify the authentication

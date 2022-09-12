@@ -87,6 +87,15 @@ func (rm *resourceManager) sdkFind(
 	// the original Kubernetes object we passed to the function
 	ko := r.ko.DeepCopy()
 
+	if resp.AmazonManagedKafkaEventSourceConfig != nil {
+		f0 := &svcapitypes.AmazonManagedKafkaEventSourceConfig{}
+		if resp.AmazonManagedKafkaEventSourceConfig.ConsumerGroupId != nil {
+			f0.ConsumerGroupID = resp.AmazonManagedKafkaEventSourceConfig.ConsumerGroupId
+		}
+		ko.Spec.AmazonManagedKafkaEventSourceConfig = f0
+	} else {
+		ko.Spec.AmazonManagedKafkaEventSourceConfig = nil
+	}
 	if resp.BatchSize != nil {
 		ko.Spec.BatchSize = resp.BatchSize
 	} else {
@@ -98,22 +107,22 @@ func (rm *resourceManager) sdkFind(
 		ko.Spec.BisectBatchOnFunctionError = nil
 	}
 	if resp.DestinationConfig != nil {
-		f2 := &svcapitypes.DestinationConfig{}
+		f3 := &svcapitypes.DestinationConfig{}
 		if resp.DestinationConfig.OnFailure != nil {
-			f2f0 := &svcapitypes.OnFailure{}
+			f3f0 := &svcapitypes.OnFailure{}
 			if resp.DestinationConfig.OnFailure.Destination != nil {
-				f2f0.Destination = resp.DestinationConfig.OnFailure.Destination
+				f3f0.Destination = resp.DestinationConfig.OnFailure.Destination
 			}
-			f2.OnFailure = f2f0
+			f3.OnFailure = f3f0
 		}
 		if resp.DestinationConfig.OnSuccess != nil {
-			f2f1 := &svcapitypes.OnSuccess{}
+			f3f1 := &svcapitypes.OnSuccess{}
 			if resp.DestinationConfig.OnSuccess.Destination != nil {
-				f2f1.Destination = resp.DestinationConfig.OnSuccess.Destination
+				f3f1.Destination = resp.DestinationConfig.OnSuccess.Destination
 			}
-			f2.OnSuccess = f2f1
+			f3.OnSuccess = f3f1
 		}
-		ko.Spec.DestinationConfig = f2
+		ko.Spec.DestinationConfig = f3
 	} else {
 		ko.Spec.DestinationConfig = nil
 	}
@@ -123,19 +132,19 @@ func (rm *resourceManager) sdkFind(
 		ko.Spec.EventSourceARN = nil
 	}
 	if resp.FilterCriteria != nil {
-		f4 := &svcapitypes.FilterCriteria{}
+		f5 := &svcapitypes.FilterCriteria{}
 		if resp.FilterCriteria.Filters != nil {
-			f4f0 := []*svcapitypes.Filter{}
-			for _, f4f0iter := range resp.FilterCriteria.Filters {
-				f4f0elem := &svcapitypes.Filter{}
-				if f4f0iter.Pattern != nil {
-					f4f0elem.Pattern = f4f0iter.Pattern
+			f5f0 := []*svcapitypes.Filter{}
+			for _, f5f0iter := range resp.FilterCriteria.Filters {
+				f5f0elem := &svcapitypes.Filter{}
+				if f5f0iter.Pattern != nil {
+					f5f0elem.Pattern = f5f0iter.Pattern
 				}
-				f4f0 = append(f4f0, f4f0elem)
+				f5f0 = append(f5f0, f5f0elem)
 			}
-			f4.Filters = f4f0
+			f5.Filters = f5f0
 		}
-		ko.Spec.FilterCriteria = f4
+		ko.Spec.FilterCriteria = f5
 	} else {
 		ko.Spec.FilterCriteria = nil
 	}
@@ -145,13 +154,13 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.FunctionARN = nil
 	}
 	if resp.FunctionResponseTypes != nil {
-		f6 := []*string{}
-		for _, f6iter := range resp.FunctionResponseTypes {
-			var f6elem string
-			f6elem = *f6iter
-			f6 = append(f6, &f6elem)
+		f7 := []*string{}
+		for _, f7iter := range resp.FunctionResponseTypes {
+			var f7elem string
+			f7elem = *f7iter
+			f7 = append(f7, &f7elem)
 		}
-		ko.Spec.FunctionResponseTypes = f6
+		ko.Spec.FunctionResponseTypes = f7
 	} else {
 		ko.Spec.FunctionResponseTypes = nil
 	}
@@ -186,48 +195,57 @@ func (rm *resourceManager) sdkFind(
 		ko.Spec.ParallelizationFactor = nil
 	}
 	if resp.Queues != nil {
-		f13 := []*string{}
-		for _, f13iter := range resp.Queues {
-			var f13elem string
-			f13elem = *f13iter
-			f13 = append(f13, &f13elem)
+		f14 := []*string{}
+		for _, f14iter := range resp.Queues {
+			var f14elem string
+			f14elem = *f14iter
+			f14 = append(f14, &f14elem)
 		}
-		ko.Spec.Queues = f13
+		ko.Spec.Queues = f14
 	} else {
 		ko.Spec.Queues = nil
 	}
 	if resp.SelfManagedEventSource != nil {
-		f14 := &svcapitypes.SelfManagedEventSource{}
+		f15 := &svcapitypes.SelfManagedEventSource{}
 		if resp.SelfManagedEventSource.Endpoints != nil {
-			f14f0 := map[string][]*string{}
-			for f14f0key, f14f0valiter := range resp.SelfManagedEventSource.Endpoints {
-				f14f0val := []*string{}
-				for _, f14f0valiter := range f14f0valiter {
-					var f14f0valelem string
-					f14f0valelem = *f14f0valiter
-					f14f0val = append(f14f0val, &f14f0valelem)
+			f15f0 := map[string][]*string{}
+			for f15f0key, f15f0valiter := range resp.SelfManagedEventSource.Endpoints {
+				f15f0val := []*string{}
+				for _, f15f0valiter := range f15f0valiter {
+					var f15f0valelem string
+					f15f0valelem = *f15f0valiter
+					f15f0val = append(f15f0val, &f15f0valelem)
 				}
-				f14f0[f14f0key] = f14f0val
+				f15f0[f15f0key] = f15f0val
 			}
-			f14.Endpoints = f14f0
+			f15.Endpoints = f15f0
 		}
-		ko.Spec.SelfManagedEventSource = f14
+		ko.Spec.SelfManagedEventSource = f15
 	} else {
 		ko.Spec.SelfManagedEventSource = nil
 	}
-	if resp.SourceAccessConfigurations != nil {
-		f15 := []*svcapitypes.SourceAccessConfiguration{}
-		for _, f15iter := range resp.SourceAccessConfigurations {
-			f15elem := &svcapitypes.SourceAccessConfiguration{}
-			if f15iter.Type != nil {
-				f15elem.Type = f15iter.Type
-			}
-			if f15iter.URI != nil {
-				f15elem.URI = f15iter.URI
-			}
-			f15 = append(f15, f15elem)
+	if resp.SelfManagedKafkaEventSourceConfig != nil {
+		f16 := &svcapitypes.SelfManagedKafkaEventSourceConfig{}
+		if resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId != nil {
+			f16.ConsumerGroupID = resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId
 		}
-		ko.Spec.SourceAccessConfigurations = f15
+		ko.Spec.SelfManagedKafkaEventSourceConfig = f16
+	} else {
+		ko.Spec.SelfManagedKafkaEventSourceConfig = nil
+	}
+	if resp.SourceAccessConfigurations != nil {
+		f17 := []*svcapitypes.SourceAccessConfiguration{}
+		for _, f17iter := range resp.SourceAccessConfigurations {
+			f17elem := &svcapitypes.SourceAccessConfiguration{}
+			if f17iter.Type != nil {
+				f17elem.Type = f17iter.Type
+			}
+			if f17iter.URI != nil {
+				f17elem.URI = f17iter.URI
+			}
+			f17 = append(f17, f17elem)
+		}
+		ko.Spec.SourceAccessConfigurations = f17
 	} else {
 		ko.Spec.SourceAccessConfigurations = nil
 	}
@@ -252,13 +270,13 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.StateTransitionReason = nil
 	}
 	if resp.Topics != nil {
-		f20 := []*string{}
-		for _, f20iter := range resp.Topics {
-			var f20elem string
-			f20elem = *f20iter
-			f20 = append(f20, &f20elem)
+		f22 := []*string{}
+		for _, f22iter := range resp.Topics {
+			var f22elem string
+			f22elem = *f22iter
+			f22 = append(f22, &f22elem)
 		}
-		ko.Spec.Topics = f20
+		ko.Spec.Topics = f22
 	} else {
 		ko.Spec.Topics = nil
 	}
@@ -329,6 +347,15 @@ func (rm *resourceManager) sdkCreate(
 	// the original Kubernetes object we passed to the function
 	ko := desired.ko.DeepCopy()
 
+	if resp.AmazonManagedKafkaEventSourceConfig != nil {
+		f0 := &svcapitypes.AmazonManagedKafkaEventSourceConfig{}
+		if resp.AmazonManagedKafkaEventSourceConfig.ConsumerGroupId != nil {
+			f0.ConsumerGroupID = resp.AmazonManagedKafkaEventSourceConfig.ConsumerGroupId
+		}
+		ko.Spec.AmazonManagedKafkaEventSourceConfig = f0
+	} else {
+		ko.Spec.AmazonManagedKafkaEventSourceConfig = nil
+	}
 	if resp.BatchSize != nil {
 		ko.Spec.BatchSize = resp.BatchSize
 	} else {
@@ -340,22 +367,22 @@ func (rm *resourceManager) sdkCreate(
 		ko.Spec.BisectBatchOnFunctionError = nil
 	}
 	if resp.DestinationConfig != nil {
-		f2 := &svcapitypes.DestinationConfig{}
+		f3 := &svcapitypes.DestinationConfig{}
 		if resp.DestinationConfig.OnFailure != nil {
-			f2f0 := &svcapitypes.OnFailure{}
+			f3f0 := &svcapitypes.OnFailure{}
 			if resp.DestinationConfig.OnFailure.Destination != nil {
-				f2f0.Destination = resp.DestinationConfig.OnFailure.Destination
+				f3f0.Destination = resp.DestinationConfig.OnFailure.Destination
 			}
-			f2.OnFailure = f2f0
+			f3.OnFailure = f3f0
 		}
 		if resp.DestinationConfig.OnSuccess != nil {
-			f2f1 := &svcapitypes.OnSuccess{}
+			f3f1 := &svcapitypes.OnSuccess{}
 			if resp.DestinationConfig.OnSuccess.Destination != nil {
-				f2f1.Destination = resp.DestinationConfig.OnSuccess.Destination
+				f3f1.Destination = resp.DestinationConfig.OnSuccess.Destination
 			}
-			f2.OnSuccess = f2f1
+			f3.OnSuccess = f3f1
 		}
-		ko.Spec.DestinationConfig = f2
+		ko.Spec.DestinationConfig = f3
 	} else {
 		ko.Spec.DestinationConfig = nil
 	}
@@ -365,19 +392,19 @@ func (rm *resourceManager) sdkCreate(
 		ko.Spec.EventSourceARN = nil
 	}
 	if resp.FilterCriteria != nil {
-		f4 := &svcapitypes.FilterCriteria{}
+		f5 := &svcapitypes.FilterCriteria{}
 		if resp.FilterCriteria.Filters != nil {
-			f4f0 := []*svcapitypes.Filter{}
-			for _, f4f0iter := range resp.FilterCriteria.Filters {
-				f4f0elem := &svcapitypes.Filter{}
-				if f4f0iter.Pattern != nil {
-					f4f0elem.Pattern = f4f0iter.Pattern
+			f5f0 := []*svcapitypes.Filter{}
+			for _, f5f0iter := range resp.FilterCriteria.Filters {
+				f5f0elem := &svcapitypes.Filter{}
+				if f5f0iter.Pattern != nil {
+					f5f0elem.Pattern = f5f0iter.Pattern
 				}
-				f4f0 = append(f4f0, f4f0elem)
+				f5f0 = append(f5f0, f5f0elem)
 			}
-			f4.Filters = f4f0
+			f5.Filters = f5f0
 		}
-		ko.Spec.FilterCriteria = f4
+		ko.Spec.FilterCriteria = f5
 	} else {
 		ko.Spec.FilterCriteria = nil
 	}
@@ -387,13 +414,13 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.FunctionARN = nil
 	}
 	if resp.FunctionResponseTypes != nil {
-		f6 := []*string{}
-		for _, f6iter := range resp.FunctionResponseTypes {
-			var f6elem string
-			f6elem = *f6iter
-			f6 = append(f6, &f6elem)
+		f7 := []*string{}
+		for _, f7iter := range resp.FunctionResponseTypes {
+			var f7elem string
+			f7elem = *f7iter
+			f7 = append(f7, &f7elem)
 		}
-		ko.Spec.FunctionResponseTypes = f6
+		ko.Spec.FunctionResponseTypes = f7
 	} else {
 		ko.Spec.FunctionResponseTypes = nil
 	}
@@ -428,48 +455,57 @@ func (rm *resourceManager) sdkCreate(
 		ko.Spec.ParallelizationFactor = nil
 	}
 	if resp.Queues != nil {
-		f13 := []*string{}
-		for _, f13iter := range resp.Queues {
-			var f13elem string
-			f13elem = *f13iter
-			f13 = append(f13, &f13elem)
+		f14 := []*string{}
+		for _, f14iter := range resp.Queues {
+			var f14elem string
+			f14elem = *f14iter
+			f14 = append(f14, &f14elem)
 		}
-		ko.Spec.Queues = f13
+		ko.Spec.Queues = f14
 	} else {
 		ko.Spec.Queues = nil
 	}
 	if resp.SelfManagedEventSource != nil {
-		f14 := &svcapitypes.SelfManagedEventSource{}
+		f15 := &svcapitypes.SelfManagedEventSource{}
 		if resp.SelfManagedEventSource.Endpoints != nil {
-			f14f0 := map[string][]*string{}
-			for f14f0key, f14f0valiter := range resp.SelfManagedEventSource.Endpoints {
-				f14f0val := []*string{}
-				for _, f14f0valiter := range f14f0valiter {
-					var f14f0valelem string
-					f14f0valelem = *f14f0valiter
-					f14f0val = append(f14f0val, &f14f0valelem)
+			f15f0 := map[string][]*string{}
+			for f15f0key, f15f0valiter := range resp.SelfManagedEventSource.Endpoints {
+				f15f0val := []*string{}
+				for _, f15f0valiter := range f15f0valiter {
+					var f15f0valelem string
+					f15f0valelem = *f15f0valiter
+					f15f0val = append(f15f0val, &f15f0valelem)
 				}
-				f14f0[f14f0key] = f14f0val
+				f15f0[f15f0key] = f15f0val
 			}
-			f14.Endpoints = f14f0
+			f15.Endpoints = f15f0
 		}
-		ko.Spec.SelfManagedEventSource = f14
+		ko.Spec.SelfManagedEventSource = f15
 	} else {
 		ko.Spec.SelfManagedEventSource = nil
 	}
-	if resp.SourceAccessConfigurations != nil {
-		f15 := []*svcapitypes.SourceAccessConfiguration{}
-		for _, f15iter := range resp.SourceAccessConfigurations {
-			f15elem := &svcapitypes.SourceAccessConfiguration{}
-			if f15iter.Type != nil {
-				f15elem.Type = f15iter.Type
-			}
-			if f15iter.URI != nil {
-				f15elem.URI = f15iter.URI
-			}
-			f15 = append(f15, f15elem)
+	if resp.SelfManagedKafkaEventSourceConfig != nil {
+		f16 := &svcapitypes.SelfManagedKafkaEventSourceConfig{}
+		if resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId != nil {
+			f16.ConsumerGroupID = resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId
 		}
-		ko.Spec.SourceAccessConfigurations = f15
+		ko.Spec.SelfManagedKafkaEventSourceConfig = f16
+	} else {
+		ko.Spec.SelfManagedKafkaEventSourceConfig = nil
+	}
+	if resp.SourceAccessConfigurations != nil {
+		f17 := []*svcapitypes.SourceAccessConfiguration{}
+		for _, f17iter := range resp.SourceAccessConfigurations {
+			f17elem := &svcapitypes.SourceAccessConfiguration{}
+			if f17iter.Type != nil {
+				f17elem.Type = f17iter.Type
+			}
+			if f17iter.URI != nil {
+				f17elem.URI = f17iter.URI
+			}
+			f17 = append(f17, f17elem)
+		}
+		ko.Spec.SourceAccessConfigurations = f17
 	} else {
 		ko.Spec.SourceAccessConfigurations = nil
 	}
@@ -494,13 +530,13 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.StateTransitionReason = nil
 	}
 	if resp.Topics != nil {
-		f20 := []*string{}
-		for _, f20iter := range resp.Topics {
-			var f20elem string
-			f20elem = *f20iter
-			f20 = append(f20, &f20elem)
+		f22 := []*string{}
+		for _, f22iter := range resp.Topics {
+			var f22elem string
+			f22elem = *f22iter
+			f22 = append(f22, &f22elem)
 		}
-		ko.Spec.Topics = f20
+		ko.Spec.Topics = f22
 	} else {
 		ko.Spec.Topics = nil
 	}
@@ -527,6 +563,13 @@ func (rm *resourceManager) newCreateRequestPayload(
 ) (*svcsdk.CreateEventSourceMappingInput, error) {
 	res := &svcsdk.CreateEventSourceMappingInput{}
 
+	if r.ko.Spec.AmazonManagedKafkaEventSourceConfig != nil {
+		f0 := &svcsdk.AmazonManagedKafkaEventSourceConfig{}
+		if r.ko.Spec.AmazonManagedKafkaEventSourceConfig.ConsumerGroupID != nil {
+			f0.SetConsumerGroupId(*r.ko.Spec.AmazonManagedKafkaEventSourceConfig.ConsumerGroupID)
+		}
+		res.SetAmazonManagedKafkaEventSourceConfig(f0)
+	}
 	if r.ko.Spec.BatchSize != nil {
 		res.SetBatchSize(*r.ko.Spec.BatchSize)
 	}
@@ -534,22 +577,22 @@ func (rm *resourceManager) newCreateRequestPayload(
 		res.SetBisectBatchOnFunctionError(*r.ko.Spec.BisectBatchOnFunctionError)
 	}
 	if r.ko.Spec.DestinationConfig != nil {
-		f2 := &svcsdk.DestinationConfig{}
+		f3 := &svcsdk.DestinationConfig{}
 		if r.ko.Spec.DestinationConfig.OnFailure != nil {
-			f2f0 := &svcsdk.OnFailure{}
+			f3f0 := &svcsdk.OnFailure{}
 			if r.ko.Spec.DestinationConfig.OnFailure.Destination != nil {
-				f2f0.SetDestination(*r.ko.Spec.DestinationConfig.OnFailure.Destination)
+				f3f0.SetDestination(*r.ko.Spec.DestinationConfig.OnFailure.Destination)
 			}
-			f2.SetOnFailure(f2f0)
+			f3.SetOnFailure(f3f0)
 		}
 		if r.ko.Spec.DestinationConfig.OnSuccess != nil {
-			f2f1 := &svcsdk.OnSuccess{}
+			f3f1 := &svcsdk.OnSuccess{}
 			if r.ko.Spec.DestinationConfig.OnSuccess.Destination != nil {
-				f2f1.SetDestination(*r.ko.Spec.DestinationConfig.OnSuccess.Destination)
+				f3f1.SetDestination(*r.ko.Spec.DestinationConfig.OnSuccess.Destination)
 			}
-			f2.SetOnSuccess(f2f1)
+			f3.SetOnSuccess(f3f1)
 		}
-		res.SetDestinationConfig(f2)
+		res.SetDestinationConfig(f3)
 	}
 	if r.ko.Spec.Enabled != nil {
 		res.SetEnabled(*r.ko.Spec.Enabled)
@@ -558,31 +601,31 @@ func (rm *resourceManager) newCreateRequestPayload(
 		res.SetEventSourceArn(*r.ko.Spec.EventSourceARN)
 	}
 	if r.ko.Spec.FilterCriteria != nil {
-		f5 := &svcsdk.FilterCriteria{}
+		f6 := &svcsdk.FilterCriteria{}
 		if r.ko.Spec.FilterCriteria.Filters != nil {
-			f5f0 := []*svcsdk.Filter{}
-			for _, f5f0iter := range r.ko.Spec.FilterCriteria.Filters {
-				f5f0elem := &svcsdk.Filter{}
-				if f5f0iter.Pattern != nil {
-					f5f0elem.SetPattern(*f5f0iter.Pattern)
+			f6f0 := []*svcsdk.Filter{}
+			for _, f6f0iter := range r.ko.Spec.FilterCriteria.Filters {
+				f6f0elem := &svcsdk.Filter{}
+				if f6f0iter.Pattern != nil {
+					f6f0elem.SetPattern(*f6f0iter.Pattern)
 				}
-				f5f0 = append(f5f0, f5f0elem)
+				f6f0 = append(f6f0, f6f0elem)
 			}
-			f5.SetFilters(f5f0)
+			f6.SetFilters(f6f0)
 		}
-		res.SetFilterCriteria(f5)
+		res.SetFilterCriteria(f6)
 	}
 	if r.ko.Spec.FunctionName != nil {
 		res.SetFunctionName(*r.ko.Spec.FunctionName)
 	}
 	if r.ko.Spec.FunctionResponseTypes != nil {
-		f7 := []*string{}
-		for _, f7iter := range r.ko.Spec.FunctionResponseTypes {
-			var f7elem string
-			f7elem = *f7iter
-			f7 = append(f7, &f7elem)
+		f8 := []*string{}
+		for _, f8iter := range r.ko.Spec.FunctionResponseTypes {
+			var f8elem string
+			f8elem = *f8iter
+			f8 = append(f8, &f8elem)
 		}
-		res.SetFunctionResponseTypes(f7)
+		res.SetFunctionResponseTypes(f8)
 	}
 	if r.ko.Spec.MaximumBatchingWindowInSeconds != nil {
 		res.SetMaximumBatchingWindowInSeconds(*r.ko.Spec.MaximumBatchingWindowInSeconds)
@@ -597,44 +640,51 @@ func (rm *resourceManager) newCreateRequestPayload(
 		res.SetParallelizationFactor(*r.ko.Spec.ParallelizationFactor)
 	}
 	if r.ko.Spec.Queues != nil {
-		f12 := []*string{}
-		for _, f12iter := range r.ko.Spec.Queues {
-			var f12elem string
-			f12elem = *f12iter
-			f12 = append(f12, &f12elem)
+		f13 := []*string{}
+		for _, f13iter := range r.ko.Spec.Queues {
+			var f13elem string
+			f13elem = *f13iter
+			f13 = append(f13, &f13elem)
 		}
-		res.SetQueues(f12)
+		res.SetQueues(f13)
 	}
 	if r.ko.Spec.SelfManagedEventSource != nil {
-		f13 := &svcsdk.SelfManagedEventSource{}
+		f14 := &svcsdk.SelfManagedEventSource{}
 		if r.ko.Spec.SelfManagedEventSource.Endpoints != nil {
-			f13f0 := map[string][]*string{}
-			for f13f0key, f13f0valiter := range r.ko.Spec.SelfManagedEventSource.Endpoints {
-				f13f0val := []*string{}
-				for _, f13f0valiter := range f13f0valiter {
-					var f13f0valelem string
-					f13f0valelem = *f13f0valiter
-					f13f0val = append(f13f0val, &f13f0valelem)
+			f14f0 := map[string][]*string{}
+			for f14f0key, f14f0valiter := range r.ko.Spec.SelfManagedEventSource.Endpoints {
+				f14f0val := []*string{}
+				for _, f14f0valiter := range f14f0valiter {
+					var f14f0valelem string
+					f14f0valelem = *f14f0valiter
+					f14f0val = append(f14f0val, &f14f0valelem)
 				}
-				f13f0[f13f0key] = f13f0val
+				f14f0[f14f0key] = f14f0val
 			}
-			f13.SetEndpoints(f13f0)
+			f14.SetEndpoints(f14f0)
 		}
-		res.SetSelfManagedEventSource(f13)
+		res.SetSelfManagedEventSource(f14)
+	}
+	if r.ko.Spec.SelfManagedKafkaEventSourceConfig != nil {
+		f15 := &svcsdk.SelfManagedKafkaEventSourceConfig{}
+		if r.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID != nil {
+			f15.SetConsumerGroupId(*r.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID)
+		}
+		res.SetSelfManagedKafkaEventSourceConfig(f15)
 	}
 	if r.ko.Spec.SourceAccessConfigurations != nil {
-		f14 := []*svcsdk.SourceAccessConfiguration{}
-		for _, f14iter := range r.ko.Spec.SourceAccessConfigurations {
-			f14elem := &svcsdk.SourceAccessConfiguration{}
-			if f14iter.Type != nil {
-				f14elem.SetType(*f14iter.Type)
+		f16 := []*svcsdk.SourceAccessConfiguration{}
+		for _, f16iter := range r.ko.Spec.SourceAccessConfigurations {
+			f16elem := &svcsdk.SourceAccessConfiguration{}
+			if f16iter.Type != nil {
+				f16elem.SetType(*f16iter.Type)
 			}
-			if f14iter.URI != nil {
-				f14elem.SetURI(*f14iter.URI)
+			if f16iter.URI != nil {
+				f16elem.SetURI(*f16iter.URI)
 			}
-			f14 = append(f14, f14elem)
+			f16 = append(f16, f16elem)
 		}
-		res.SetSourceAccessConfigurations(f14)
+		res.SetSourceAccessConfigurations(f16)
 	}
 	if r.ko.Spec.StartingPosition != nil {
 		res.SetStartingPosition(*r.ko.Spec.StartingPosition)
@@ -643,13 +693,13 @@ func (rm *resourceManager) newCreateRequestPayload(
 		res.SetStartingPositionTimestamp(r.ko.Spec.StartingPositionTimestamp.Time)
 	}
 	if r.ko.Spec.Topics != nil {
-		f17 := []*string{}
-		for _, f17iter := range r.ko.Spec.Topics {
-			var f17elem string
-			f17elem = *f17iter
-			f17 = append(f17, &f17elem)
+		f19 := []*string{}
+		for _, f19iter := range r.ko.Spec.Topics {
+			var f19elem string
+			f19elem = *f19iter
+			f19 = append(f19, &f19elem)
 		}
-		res.SetTopics(f17)
+		res.SetTopics(f19)
 	}
 	if r.ko.Spec.TumblingWindowInSeconds != nil {
 		res.SetTumblingWindowInSeconds(*r.ko.Spec.TumblingWindowInSeconds)
@@ -696,6 +746,15 @@ func (rm *resourceManager) sdkUpdate(
 	// the original Kubernetes object we passed to the function
 	ko := desired.ko.DeepCopy()
 
+	if resp.AmazonManagedKafkaEventSourceConfig != nil {
+		f0 := &svcapitypes.AmazonManagedKafkaEventSourceConfig{}
+		if resp.AmazonManagedKafkaEventSourceConfig.ConsumerGroupId != nil {
+			f0.ConsumerGroupID = resp.AmazonManagedKafkaEventSourceConfig.ConsumerGroupId
+		}
+		ko.Spec.AmazonManagedKafkaEventSourceConfig = f0
+	} else {
+		ko.Spec.AmazonManagedKafkaEventSourceConfig = nil
+	}
 	if resp.BatchSize != nil {
 		ko.Spec.BatchSize = resp.BatchSize
 	} else {
@@ -707,22 +766,22 @@ func (rm *resourceManager) sdkUpdate(
 		ko.Spec.BisectBatchOnFunctionError = nil
 	}
 	if resp.DestinationConfig != nil {
-		f2 := &svcapitypes.DestinationConfig{}
+		f3 := &svcapitypes.DestinationConfig{}
 		if resp.DestinationConfig.OnFailure != nil {
-			f2f0 := &svcapitypes.OnFailure{}
+			f3f0 := &svcapitypes.OnFailure{}
 			if resp.DestinationConfig.OnFailure.Destination != nil {
-				f2f0.Destination = resp.DestinationConfig.OnFailure.Destination
+				f3f0.Destination = resp.DestinationConfig.OnFailure.Destination
 			}
-			f2.OnFailure = f2f0
+			f3.OnFailure = f3f0
 		}
 		if resp.DestinationConfig.OnSuccess != nil {
-			f2f1 := &svcapitypes.OnSuccess{}
+			f3f1 := &svcapitypes.OnSuccess{}
 			if resp.DestinationConfig.OnSuccess.Destination != nil {
-				f2f1.Destination = resp.DestinationConfig.OnSuccess.Destination
+				f3f1.Destination = resp.DestinationConfig.OnSuccess.Destination
 			}
-			f2.OnSuccess = f2f1
+			f3.OnSuccess = f3f1
 		}
-		ko.Spec.DestinationConfig = f2
+		ko.Spec.DestinationConfig = f3
 	} else {
 		ko.Spec.DestinationConfig = nil
 	}
@@ -732,19 +791,19 @@ func (rm *resourceManager) sdkUpdate(
 		ko.Spec.EventSourceARN = nil
 	}
 	if resp.FilterCriteria != nil {
-		f4 := &svcapitypes.FilterCriteria{}
+		f5 := &svcapitypes.FilterCriteria{}
 		if resp.FilterCriteria.Filters != nil {
-			f4f0 := []*svcapitypes.Filter{}
-			for _, f4f0iter := range resp.FilterCriteria.Filters {
-				f4f0elem := &svcapitypes.Filter{}
-				if f4f0iter.Pattern != nil {
-					f4f0elem.Pattern = f4f0iter.Pattern
+			f5f0 := []*svcapitypes.Filter{}
+			for _, f5f0iter := range resp.FilterCriteria.Filters {
+				f5f0elem := &svcapitypes.Filter{}
+				if f5f0iter.Pattern != nil {
+					f5f0elem.Pattern = f5f0iter.Pattern
 				}
-				f4f0 = append(f4f0, f4f0elem)
+				f5f0 = append(f5f0, f5f0elem)
 			}
-			f4.Filters = f4f0
+			f5.Filters = f5f0
 		}
-		ko.Spec.FilterCriteria = f4
+		ko.Spec.FilterCriteria = f5
 	} else {
 		ko.Spec.FilterCriteria = nil
 	}
@@ -754,13 +813,13 @@ func (rm *resourceManager) sdkUpdate(
 		ko.Status.FunctionARN = nil
 	}
 	if resp.FunctionResponseTypes != nil {
-		f6 := []*string{}
-		for _, f6iter := range resp.FunctionResponseTypes {
-			var f6elem string
-			f6elem = *f6iter
-			f6 = append(f6, &f6elem)
+		f7 := []*string{}
+		for _, f7iter := range resp.FunctionResponseTypes {
+			var f7elem string
+			f7elem = *f7iter
+			f7 = append(f7, &f7elem)
 		}
-		ko.Spec.FunctionResponseTypes = f6
+		ko.Spec.FunctionResponseTypes = f7
 	} else {
 		ko.Spec.FunctionResponseTypes = nil
 	}
@@ -795,48 +854,57 @@ func (rm *resourceManager) sdkUpdate(
 		ko.Spec.ParallelizationFactor = nil
 	}
 	if resp.Queues != nil {
-		f13 := []*string{}
-		for _, f13iter := range resp.Queues {
-			var f13elem string
-			f13elem = *f13iter
-			f13 = append(f13, &f13elem)
+		f14 := []*string{}
+		for _, f14iter := range resp.Queues {
+			var f14elem string
+			f14elem = *f14iter
+			f14 = append(f14, &f14elem)
 		}
-		ko.Spec.Queues = f13
+		ko.Spec.Queues = f14
 	} else {
 		ko.Spec.Queues = nil
 	}
 	if resp.SelfManagedEventSource != nil {
-		f14 := &svcapitypes.SelfManagedEventSource{}
+		f15 := &svcapitypes.SelfManagedEventSource{}
 		if resp.SelfManagedEventSource.Endpoints != nil {
-			f14f0 := map[string][]*string{}
-			for f14f0key, f14f0valiter := range resp.SelfManagedEventSource.Endpoints {
-				f14f0val := []*string{}
-				for _, f14f0valiter := range f14f0valiter {
-					var f14f0valelem string
-					f14f0valelem = *f14f0valiter
-					f14f0val = append(f14f0val, &f14f0valelem)
+			f15f0 := map[string][]*string{}
+			for f15f0key, f15f0valiter := range resp.SelfManagedEventSource.Endpoints {
+				f15f0val := []*string{}
+				for _, f15f0valiter := range f15f0valiter {
+					var f15f0valelem string
+					f15f0valelem = *f15f0valiter
+					f15f0val = append(f15f0val, &f15f0valelem)
 				}
-				f14f0[f14f0key] = f14f0val
+				f15f0[f15f0key] = f15f0val
 			}
-			f14.Endpoints = f14f0
+			f15.Endpoints = f15f0
 		}
-		ko.Spec.SelfManagedEventSource = f14
+		ko.Spec.SelfManagedEventSource = f15
 	} else {
 		ko.Spec.SelfManagedEventSource = nil
 	}
-	if resp.SourceAccessConfigurations != nil {
-		f15 := []*svcapitypes.SourceAccessConfiguration{}
-		for _, f15iter := range resp.SourceAccessConfigurations {
-			f15elem := &svcapitypes.SourceAccessConfiguration{}
-			if f15iter.Type != nil {
-				f15elem.Type = f15iter.Type
-			}
-			if f15iter.URI != nil {
-				f15elem.URI = f15iter.URI
-			}
-			f15 = append(f15, f15elem)
+	if resp.SelfManagedKafkaEventSourceConfig != nil {
+		f16 := &svcapitypes.SelfManagedKafkaEventSourceConfig{}
+		if resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId != nil {
+			f16.ConsumerGroupID = resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId
 		}
-		ko.Spec.SourceAccessConfigurations = f15
+		ko.Spec.SelfManagedKafkaEventSourceConfig = f16
+	} else {
+		ko.Spec.SelfManagedKafkaEventSourceConfig = nil
+	}
+	if resp.SourceAccessConfigurations != nil {
+		f17 := []*svcapitypes.SourceAccessConfiguration{}
+		for _, f17iter := range resp.SourceAccessConfigurations {
+			f17elem := &svcapitypes.SourceAccessConfiguration{}
+			if f17iter.Type != nil {
+				f17elem.Type = f17iter.Type
+			}
+			if f17iter.URI != nil {
+				f17elem.URI = f17iter.URI
+			}
+			f17 = append(f17, f17elem)
+		}
+		ko.Spec.SourceAccessConfigurations = f17
 	} else {
 		ko.Spec.SourceAccessConfigurations = nil
 	}
@@ -861,13 +929,13 @@ func (rm *resourceManager) sdkUpdate(
 		ko.Status.StateTransitionReason = nil
 	}
 	if resp.Topics != nil {
-		f20 := []*string{}
-		for _, f20iter := range resp.Topics {
-			var f20elem string
-			f20elem = *f20iter
-			f20 = append(f20, &f20elem)
+		f22 := []*string{}
+		for _, f22iter := range resp.Topics {
+			var f22elem string
+			f22elem = *f22iter
+			f22 = append(f22, &f22elem)
 		}
-		ko.Spec.Topics = f20
+		ko.Spec.Topics = f22
 	} else {
 		ko.Spec.Topics = nil
 	}

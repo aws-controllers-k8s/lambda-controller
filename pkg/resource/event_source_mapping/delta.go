@@ -42,6 +42,17 @@ func newResourceDelta(
 	}
 	customPreCompare(delta, a, b)
 
+	if ackcompare.HasNilDifference(a.ko.Spec.AmazonManagedKafkaEventSourceConfig, b.ko.Spec.AmazonManagedKafkaEventSourceConfig) {
+		delta.Add("Spec.AmazonManagedKafkaEventSourceConfig", a.ko.Spec.AmazonManagedKafkaEventSourceConfig, b.ko.Spec.AmazonManagedKafkaEventSourceConfig)
+	} else if a.ko.Spec.AmazonManagedKafkaEventSourceConfig != nil && b.ko.Spec.AmazonManagedKafkaEventSourceConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.AmazonManagedKafkaEventSourceConfig.ConsumerGroupID, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.ConsumerGroupID) {
+			delta.Add("Spec.AmazonManagedKafkaEventSourceConfig.ConsumerGroupID", a.ko.Spec.AmazonManagedKafkaEventSourceConfig.ConsumerGroupID, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.ConsumerGroupID)
+		} else if a.ko.Spec.AmazonManagedKafkaEventSourceConfig.ConsumerGroupID != nil && b.ko.Spec.AmazonManagedKafkaEventSourceConfig.ConsumerGroupID != nil {
+			if *a.ko.Spec.AmazonManagedKafkaEventSourceConfig.ConsumerGroupID != *b.ko.Spec.AmazonManagedKafkaEventSourceConfig.ConsumerGroupID {
+				delta.Add("Spec.AmazonManagedKafkaEventSourceConfig.ConsumerGroupID", a.ko.Spec.AmazonManagedKafkaEventSourceConfig.ConsumerGroupID, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.ConsumerGroupID)
+			}
+		}
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.BatchSize, b.ko.Spec.BatchSize) {
 		delta.Add("Spec.BatchSize", a.ko.Spec.BatchSize, b.ko.Spec.BatchSize)
 	} else if a.ko.Spec.BatchSize != nil && b.ko.Spec.BatchSize != nil {
@@ -148,6 +159,17 @@ func newResourceDelta(
 		} else if a.ko.Spec.SelfManagedEventSource.Endpoints != nil && b.ko.Spec.SelfManagedEventSource.Endpoints != nil {
 			if !reflect.DeepEqual(a.ko.Spec.SelfManagedEventSource.Endpoints, b.ko.Spec.SelfManagedEventSource.Endpoints) {
 				delta.Add("Spec.SelfManagedEventSource.Endpoints", a.ko.Spec.SelfManagedEventSource.Endpoints, b.ko.Spec.SelfManagedEventSource.Endpoints)
+			}
+		}
+	}
+	if ackcompare.HasNilDifference(a.ko.Spec.SelfManagedKafkaEventSourceConfig, b.ko.Spec.SelfManagedKafkaEventSourceConfig) {
+		delta.Add("Spec.SelfManagedKafkaEventSourceConfig", a.ko.Spec.SelfManagedKafkaEventSourceConfig, b.ko.Spec.SelfManagedKafkaEventSourceConfig)
+	} else if a.ko.Spec.SelfManagedKafkaEventSourceConfig != nil && b.ko.Spec.SelfManagedKafkaEventSourceConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID, b.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID) {
+			delta.Add("Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID", a.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID, b.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID)
+		} else if a.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID != nil && b.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID != nil {
+			if *a.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID != *b.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID {
+				delta.Add("Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID", a.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID, b.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID)
 			}
 		}
 	}
