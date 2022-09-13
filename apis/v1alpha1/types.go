@@ -28,6 +28,13 @@ var (
 	_ = ackv1alpha1.AWSAccountID("")
 )
 
+// The action required to resolve a broker issue when the broker is in a CRITICAL_ACTION_REQUIRED
+// state.
+type ActionRequired struct {
+	ActionRequiredCode *string `json:"actionRequiredCode,omitempty"`
+	ActionRequiredInfo *string `json:"actionRequiredInfo,omitempty"`
+}
+
 // Name of the availability zone.
 type AvailabilityZone struct {
 	Name *string `json:"name,omitempty"`

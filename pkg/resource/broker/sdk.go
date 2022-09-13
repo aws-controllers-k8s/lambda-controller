@@ -110,27 +110,27 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.BrokerID = nil
 	}
 	if resp.BrokerInstances != nil {
-		f4 := []*svcapitypes.BrokerInstance{}
-		for _, f4iter := range resp.BrokerInstances {
-			f4elem := &svcapitypes.BrokerInstance{}
-			if f4iter.ConsoleURL != nil {
-				f4elem.ConsoleURL = f4iter.ConsoleURL
+		f5 := []*svcapitypes.BrokerInstance{}
+		for _, f5iter := range resp.BrokerInstances {
+			f5elem := &svcapitypes.BrokerInstance{}
+			if f5iter.ConsoleURL != nil {
+				f5elem.ConsoleURL = f5iter.ConsoleURL
 			}
-			if f4iter.Endpoints != nil {
-				f4elemf1 := []*string{}
-				for _, f4elemf1iter := range f4iter.Endpoints {
-					var f4elemf1elem string
-					f4elemf1elem = *f4elemf1iter
-					f4elemf1 = append(f4elemf1, &f4elemf1elem)
+			if f5iter.Endpoints != nil {
+				f5elemf1 := []*string{}
+				for _, f5elemf1iter := range f5iter.Endpoints {
+					var f5elemf1elem string
+					f5elemf1elem = *f5elemf1iter
+					f5elemf1 = append(f5elemf1, &f5elemf1elem)
 				}
-				f4elem.Endpoints = f4elemf1
+				f5elem.Endpoints = f5elemf1
 			}
-			if f4iter.IpAddress != nil {
-				f4elem.IPAddress = f4iter.IpAddress
+			if f5iter.IpAddress != nil {
+				f5elem.IPAddress = f5iter.IpAddress
 			}
-			f4 = append(f4, f4elem)
+			f5 = append(f5, f5elem)
 		}
-		ko.Status.BrokerInstances = f4
+		ko.Status.BrokerInstances = f5
 	} else {
 		ko.Status.BrokerInstances = nil
 	}
@@ -145,14 +145,14 @@ func (rm *resourceManager) sdkFind(
 		ko.Spec.DeploymentMode = nil
 	}
 	if resp.EncryptionOptions != nil {
-		f10 := &svcapitypes.EncryptionOptions{}
+		f11 := &svcapitypes.EncryptionOptions{}
 		if resp.EncryptionOptions.KmsKeyId != nil {
-			f10.KMSKeyID = resp.EncryptionOptions.KmsKeyId
+			f11.KMSKeyID = resp.EncryptionOptions.KmsKeyId
 		}
 		if resp.EncryptionOptions.UseAwsOwnedKey != nil {
-			f10.UseAWSOwnedKey = resp.EncryptionOptions.UseAwsOwnedKey
+			f11.UseAWSOwnedKey = resp.EncryptionOptions.UseAwsOwnedKey
 		}
-		ko.Spec.EncryptionOptions = f10
+		ko.Spec.EncryptionOptions = f11
 	} else {
 		ko.Spec.EncryptionOptions = nil
 	}
@@ -172,71 +172,71 @@ func (rm *resourceManager) sdkFind(
 		ko.Spec.HostInstanceType = nil
 	}
 	if resp.LdapServerMetadata != nil {
-		f14 := &svcapitypes.LDAPServerMetadataInput{}
+		f15 := &svcapitypes.LDAPServerMetadataInput{}
 		if resp.LdapServerMetadata.Hosts != nil {
-			f14f0 := []*string{}
-			for _, f14f0iter := range resp.LdapServerMetadata.Hosts {
-				var f14f0elem string
-				f14f0elem = *f14f0iter
-				f14f0 = append(f14f0, &f14f0elem)
+			f15f0 := []*string{}
+			for _, f15f0iter := range resp.LdapServerMetadata.Hosts {
+				var f15f0elem string
+				f15f0elem = *f15f0iter
+				f15f0 = append(f15f0, &f15f0elem)
 			}
-			f14.Hosts = f14f0
+			f15.Hosts = f15f0
 		}
 		if resp.LdapServerMetadata.RoleBase != nil {
-			f14.RoleBase = resp.LdapServerMetadata.RoleBase
+			f15.RoleBase = resp.LdapServerMetadata.RoleBase
 		}
 		if resp.LdapServerMetadata.RoleName != nil {
-			f14.RoleName = resp.LdapServerMetadata.RoleName
+			f15.RoleName = resp.LdapServerMetadata.RoleName
 		}
 		if resp.LdapServerMetadata.RoleSearchMatching != nil {
-			f14.RoleSearchMatching = resp.LdapServerMetadata.RoleSearchMatching
+			f15.RoleSearchMatching = resp.LdapServerMetadata.RoleSearchMatching
 		}
 		if resp.LdapServerMetadata.RoleSearchSubtree != nil {
-			f14.RoleSearchSubtree = resp.LdapServerMetadata.RoleSearchSubtree
+			f15.RoleSearchSubtree = resp.LdapServerMetadata.RoleSearchSubtree
 		}
 		if resp.LdapServerMetadata.ServiceAccountUsername != nil {
-			f14.ServiceAccountUsername = resp.LdapServerMetadata.ServiceAccountUsername
+			f15.ServiceAccountUsername = resp.LdapServerMetadata.ServiceAccountUsername
 		}
 		if resp.LdapServerMetadata.UserBase != nil {
-			f14.UserBase = resp.LdapServerMetadata.UserBase
+			f15.UserBase = resp.LdapServerMetadata.UserBase
 		}
 		if resp.LdapServerMetadata.UserRoleName != nil {
-			f14.UserRoleName = resp.LdapServerMetadata.UserRoleName
+			f15.UserRoleName = resp.LdapServerMetadata.UserRoleName
 		}
 		if resp.LdapServerMetadata.UserSearchMatching != nil {
-			f14.UserSearchMatching = resp.LdapServerMetadata.UserSearchMatching
+			f15.UserSearchMatching = resp.LdapServerMetadata.UserSearchMatching
 		}
 		if resp.LdapServerMetadata.UserSearchSubtree != nil {
-			f14.UserSearchSubtree = resp.LdapServerMetadata.UserSearchSubtree
+			f15.UserSearchSubtree = resp.LdapServerMetadata.UserSearchSubtree
 		}
-		ko.Spec.LDAPServerMetadata = f14
+		ko.Spec.LDAPServerMetadata = f15
 	} else {
 		ko.Spec.LDAPServerMetadata = nil
 	}
 	if resp.Logs != nil {
-		f15 := &svcapitypes.Logs{}
+		f16 := &svcapitypes.Logs{}
 		if resp.Logs.Audit != nil {
-			f15.Audit = resp.Logs.Audit
+			f16.Audit = resp.Logs.Audit
 		}
 		if resp.Logs.General != nil {
-			f15.General = resp.Logs.General
+			f16.General = resp.Logs.General
 		}
-		ko.Spec.Logs = f15
+		ko.Spec.Logs = f16
 	} else {
 		ko.Spec.Logs = nil
 	}
 	if resp.MaintenanceWindowStartTime != nil {
-		f16 := &svcapitypes.WeeklyStartTime{}
+		f17 := &svcapitypes.WeeklyStartTime{}
 		if resp.MaintenanceWindowStartTime.DayOfWeek != nil {
-			f16.DayOfWeek = resp.MaintenanceWindowStartTime.DayOfWeek
+			f17.DayOfWeek = resp.MaintenanceWindowStartTime.DayOfWeek
 		}
 		if resp.MaintenanceWindowStartTime.TimeOfDay != nil {
-			f16.TimeOfDay = resp.MaintenanceWindowStartTime.TimeOfDay
+			f17.TimeOfDay = resp.MaintenanceWindowStartTime.TimeOfDay
 		}
 		if resp.MaintenanceWindowStartTime.TimeZone != nil {
-			f16.TimeZone = resp.MaintenanceWindowStartTime.TimeZone
+			f17.TimeZone = resp.MaintenanceWindowStartTime.TimeZone
 		}
-		ko.Spec.MaintenanceWindowStartTime = f16
+		ko.Spec.MaintenanceWindowStartTime = f17
 	} else {
 		ko.Spec.MaintenanceWindowStartTime = nil
 	}
@@ -246,13 +246,13 @@ func (rm *resourceManager) sdkFind(
 		ko.Spec.PubliclyAccessible = nil
 	}
 	if resp.SecurityGroups != nil {
-		f23 := []*string{}
-		for _, f23iter := range resp.SecurityGroups {
-			var f23elem string
-			f23elem = *f23iter
-			f23 = append(f23, &f23elem)
+		f24 := []*string{}
+		for _, f24iter := range resp.SecurityGroups {
+			var f24elem string
+			f24elem = *f24iter
+			f24 = append(f24, &f24elem)
 		}
-		ko.Spec.SecurityGroups = f23
+		ko.Spec.SecurityGroups = f24
 	} else {
 		ko.Spec.SecurityGroups = nil
 	}
@@ -262,37 +262,37 @@ func (rm *resourceManager) sdkFind(
 		ko.Spec.StorageType = nil
 	}
 	if resp.SubnetIds != nil {
-		f25 := []*string{}
-		for _, f25iter := range resp.SubnetIds {
-			var f25elem string
-			f25elem = *f25iter
-			f25 = append(f25, &f25elem)
+		f26 := []*string{}
+		for _, f26iter := range resp.SubnetIds {
+			var f26elem string
+			f26elem = *f26iter
+			f26 = append(f26, &f26elem)
 		}
-		ko.Spec.SubnetIDs = f25
+		ko.Spec.SubnetIDs = f26
 	} else {
 		ko.Spec.SubnetIDs = nil
 	}
 	if resp.Tags != nil {
-		f26 := map[string]*string{}
-		for f26key, f26valiter := range resp.Tags {
-			var f26val string
-			f26val = *f26valiter
-			f26[f26key] = &f26val
+		f27 := map[string]*string{}
+		for f27key, f27valiter := range resp.Tags {
+			var f27val string
+			f27val = *f27valiter
+			f27[f27key] = &f27val
 		}
-		ko.Spec.Tags = f26
+		ko.Spec.Tags = f27
 	} else {
 		ko.Spec.Tags = nil
 	}
 	if resp.Users != nil {
-		f27 := []*svcapitypes.User{}
-		for _, f27iter := range resp.Users {
-			f27elem := &svcapitypes.User{}
-			if f27iter.Username != nil {
-				f27elem.Username = f27iter.Username
+		f28 := []*svcapitypes.User{}
+		for _, f28iter := range resp.Users {
+			f28elem := &svcapitypes.User{}
+			if f28iter.Username != nil {
+				f28elem.Username = f28iter.Username
 			}
-			f27 = append(f27, f27elem)
+			f28 = append(f28, f28elem)
 		}
-		ko.Spec.Users = f27
+		ko.Spec.Users = f28
 	} else {
 		ko.Spec.Users = nil
 	}
