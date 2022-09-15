@@ -38,8 +38,8 @@ type AliasSpec struct {
 	//
 	// The length constraint applies only to the full ARN. If you specify only the
 	// function name, it is limited to 64 characters in length.
-	// +kubebuilder:validation:Required
-	FunctionName *string `json:"functionName"`
+	FunctionName *string                                  `json:"functionName,omitempty"`
+	FunctionRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"functionRef,omitempty"`
 	// The function version that the alias invokes.
 	// +kubebuilder:validation:Required
 	FunctionVersion *string `json:"functionVersion"`

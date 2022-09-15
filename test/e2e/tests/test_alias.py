@@ -136,3 +136,62 @@ class TestAlias:
 
         # Check alias doesn't exist
         assert not lambda_validator.alias_exists(resource_name, lambda_function_name)
+
+    def test_smoke_ref(self, lambda_client, lambda_function):
+        (_, function_resource) = lambda_function
+        function_resource_name = function_resource["metadata"]["name"]
+
+        resource_name = random_suffix_name("lambda-alias", 24)
+
+        replacements = REPLACEMENT_VALUES.copy()
+        replacements["AWS_REGION"] = get_region()
+        replacements["ALIAS_NAME"] = resource_name
+        replacements["FUNCTION_REF_NAME"] = function_resource_name
+        replacements["FUNCTION_VERSION"] = "$LATEST"
+
+        # Load alias CR
+        resource_data = load_lambda_resource(
+            "alias-ref",
+            additional_replacements=replacements,
+        )
+        logging.debug(resource_data)
+
+        # Create k8s resource
+        ref = k8s.CustomResourceReference(
+            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            resource_name, namespace="default",
+        )
+        k8s.create_custom_resource(ref, resource_data)
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        assert cr is not None
+        assert k8s.get_resource_exists(ref)
+
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+        lambda_validator = LambdaValidator(lambda_client)
+        # Check alias exists
+        assert lambda_validator.alias_exists(resource_name, function_resource_name)
+
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+        
+        # Update cr
+        cr["spec"]["description"] = ""
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        # Check alias description
+        alias = lambda_validator.get_alias(resource_name, function_resource_name)
+        assert alias is not None
+        assert alias["Description"] == ""
+
+        # Delete k8s resource
+        _, deleted = k8s.delete_custom_resource(ref)
+        assert deleted
+
+        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+
+        # Check alias doesn't exist
+        assert not lambda_validator.alias_exists(resource_name, function_resource_name)

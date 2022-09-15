@@ -1,10 +1,9 @@
-
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.7.0
+    controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
   name: aliases.lambda.services.k8s.aws
 spec:
@@ -40,11 +39,24 @@ spec:
                 type: string
               functionName:
                 description: "The name of the Lambda function. \n Name formats \n
-                  \   * Function name - MyFunction. \n    * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:MyFunction.
-                  \n    * Partial ARN - 123456789012:function:MyFunction. \n The length
+                  * Function name - MyFunction. \n * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:MyFunction.
+                  \n * Partial ARN - 123456789012:function:MyFunction. \n The length
                   constraint applies only to the full ARN. If you specify only the
                   function name, it is limited to 64 characters in length."
                 type: string
+              functionRef:
+                description: 'AWSResourceReferenceWrapper provides a wrapper around
+                  *AWSResourceReference type to provide more user friendly syntax
+                  for references using ''from'' field Ex: APIIDRef: from: name: my-api'
+                properties:
+                  from:
+                    description: AWSResourceReference provides all the values necessary
+                      to reference another k8s resource for finding the identifier(Id/ARN/Name)
+                    properties:
+                      name:
+                        type: string
+                    type: object
+                type: object
               functionVersion:
                 description: The function version that the alias invokes.
                 type: string
@@ -61,7 +73,6 @@ spec:
                     type: object
                 type: object
             required:
-            - functionName
             - functionVersion
             - name
             type: object
@@ -139,9 +150,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []

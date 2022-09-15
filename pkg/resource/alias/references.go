@@ -17,8 +17,15 @@ package alias
 
 import (
 	"context"
+	"fmt"
+
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	ackv1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
+	ackcondition "github.com/aws-controllers-k8s/runtime/pkg/condition"
+	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	acktypes "github.com/aws-controllers-k8s/runtime/pkg/types"
 
 	svcapitypes "github.com/aws-controllers-k8s/lambda-controller/apis/v1alpha1"
@@ -36,17 +43,95 @@ func (rm *resourceManager) ResolveReferences(
 	apiReader client.Reader,
 	res acktypes.AWSResource,
 ) (acktypes.AWSResource, error) {
-	return res, nil
+	namespace := res.MetaObject().GetNamespace()
+	ko := rm.concreteResource(res).ko.DeepCopy()
+	err := validateReferenceFields(ko)
+	if err == nil {
+		err = resolveReferenceForFunctionName(ctx, apiReader, namespace, ko)
+	}
+
+	// If there was an error while resolving any reference, reset all the
+	// resolved values so that they do not get persisted inside etcd
+	if err != nil {
+		ko = rm.concreteResource(res).ko.DeepCopy()
+	}
+	if hasNonNilReferences(ko) {
+		return ackcondition.WithReferencesResolvedCondition(&resource{ko}, err)
+	}
+	return &resource{ko}, err
 }
 
 // validateReferenceFields validates the reference field and corresponding
 // identifier field.
 func validateReferenceFields(ko *svcapitypes.Alias) error {
+	if ko.Spec.FunctionRef != nil && ko.Spec.FunctionName != nil {
+		return ackerr.ResourceReferenceAndIDNotSupportedFor("FunctionName", "FunctionRef")
+	}
+	if ko.Spec.FunctionRef == nil && ko.Spec.FunctionName == nil {
+		return ackerr.ResourceReferenceOrIDRequiredFor("FunctionName", "FunctionRef")
+	}
 	return nil
 }
 
 // hasNonNilReferences returns true if resource contains a reference to another
 // resource
 func hasNonNilReferences(ko *svcapitypes.Alias) bool {
-	return false
+	return false || (ko.Spec.FunctionRef != nil)
+}
+
+// resolveReferenceForFunctionName reads the resource referenced
+// from FunctionRef field and sets the FunctionName
+// from referenced resource
+func resolveReferenceForFunctionName(
+	ctx context.Context,
+	apiReader client.Reader,
+	namespace string,
+	ko *svcapitypes.Alias,
+) error {
+	if ko.Spec.FunctionRef != nil &&
+		ko.Spec.FunctionRef.From != nil {
+		arr := ko.Spec.FunctionRef.From
+		if arr == nil || arr.Name == nil || *arr.Name == "" {
+			return fmt.Errorf("provided resource reference is nil or empty")
+		}
+		namespacedName := types.NamespacedName{
+			Namespace: namespace,
+			Name:      *arr.Name,
+		}
+		obj := svcapitypes.Function{}
+		err := apiReader.Get(ctx, namespacedName, &obj)
+		if err != nil {
+			return err
+		}
+		var refResourceSynced, refResourceTerminal bool
+		for _, cond := range obj.Status.Conditions {
+			if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+				cond.Status == corev1.ConditionTrue {
+				refResourceSynced = true
+			}
+			if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
+				cond.Status == corev1.ConditionTrue {
+				refResourceTerminal = true
+			}
+		}
+		if refResourceTerminal {
+			return ackerr.ResourceReferenceTerminalFor(
+				"Function",
+				namespace, *arr.Name)
+		}
+		if !refResourceSynced {
+			return ackerr.ResourceReferenceNotSyncedFor(
+				"Function",
+				namespace, *arr.Name)
+		}
+		if obj.Spec.Name == nil {
+			return ackerr.ResourceReferenceMissingTargetFieldFor(
+				"Function",
+				namespace, *arr.Name,
+				"Spec.Name")
+		}
+		referencedValue := string(*obj.Spec.Name)
+		ko.Spec.FunctionName = &referencedValue
+	}
+	return nil
 }
