@@ -93,4 +93,7 @@ resources:
       ignore: true
     fields:
       FunctionName:
+        references:
+          resource: Function
+          path: Spec.Name
         is_primary_key: true
