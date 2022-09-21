@@ -1,0 +1,12 @@
+apiVersion: lambda.services.k8s.aws/v1alpha1
+kind: FunctionURLConfig
+metadata:
+  name: $FUNCTION_URL_CONFIG_NAME
+  annotations:
+    services.k8s.aws/region: $AWS_REGION
+spec:
+  name: $FUNCTION_URL_CONFIG_NAME
+  functionRef:
+    from:
+      name: $FUNCTION_REF_NAME
+  authType: $AUTH_TYPE

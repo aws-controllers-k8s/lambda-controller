@@ -154,3 +154,71 @@ class TestFunctionURLConfig:
 
         # Check FunctionURLConfig doesn't exist
         assert not lambda_validator.function_url_config_exists(lambda_function_name)
+    
+    def test_smoke_ref(self, lambda_client, lambda_function):
+        (_, function_resource) = lambda_function
+        function_resource_name = function_resource["metadata"]["name"]
+
+        resource_name = random_suffix_name("functionurlconfig", 24)
+
+        replacements = REPLACEMENT_VALUES.copy()
+        replacements["AWS_REGION"] = get_region()
+        replacements["FUNCTION_URL_CONFIG_NAME"] = resource_name
+        replacements["FUNCTION_REF_NAME"] = function_resource_name
+        replacements["AUTH_TYPE"] = "NONE"
+
+        # Load FunctionURLConfig CR
+        resource_data = load_lambda_resource(
+            "function_url_config_ref",
+            additional_replacements=replacements,
+        )
+        logging.debug(resource_data)
+
+        # Create k8s resource
+        ref = k8s.CustomResourceReference(
+            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            resource_name, namespace="default",
+        )
+        k8s.create_custom_resource(ref, resource_data)
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        assert cr is not None
+        assert k8s.get_resource_exists(ref)
+
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+        # Check FunctionURLConfig exists
+        lambda_validator = LambdaValidator(lambda_client)
+
+        # Check function url config exists
+        function_url_config = lambda_validator.get_function_url_config(function_resource_name)
+        assert function_url_config is not None
+        assert function_url_config["AuthType"] == "NONE"
+
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        # Update cr
+        cr["spec"]["cors"] = {
+            "maxAge": 10,
+            "allowOrigins": ["https://*"],
+        }
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        # Check FunctionURLConfig MaxAge and AllowOrigins array
+        function_url_config = lambda_validator.get_function_url_config(function_resource_name)
+        assert function_url_config is not None
+        assert function_url_config["Cors"] is not None
+        assert function_url_config["Cors"]["MaxAge"] == 10
+        assert function_url_config["Cors"]["AllowOrigins"] == ["https://*"]
+
+        # Delete k8s resource
+        _, deleted = k8s.delete_custom_resource(ref)
+        assert deleted
+
+        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+
+        # Check FunctionURLConfig doesn't exist
+        assert not lambda_validator.function_url_config_exists(function_resource_name)
