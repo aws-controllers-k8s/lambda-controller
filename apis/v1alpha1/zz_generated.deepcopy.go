@@ -984,6 +984,11 @@ func (in *EventSourceMappingSpec) DeepCopyInto(out *EventSourceMappingSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.FunctionRef != nil {
+		in, out := &in.FunctionRef, &out.FunctionRef
+		*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.FunctionResponseTypes != nil {
 		in, out := &in.FunctionResponseTypes, &out.FunctionResponseTypes
 		*out = make([]*string, len(*in))
