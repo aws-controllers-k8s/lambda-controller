@@ -1,7 +1,13 @@
 	if resp.Code != nil {
-		// We need to keep the desired .Code s3Bucket s3Key and s3ObjectVersion 
+		// We need to keep the desired .Code s3Bucket s3Key and s3ObjectVersion
 		// part of the function's spec. So instead of setting Spec.Code to nil
 		// we only set ImageURI
+		//
+		// When adopting a Function resource, Spec.Code field should be manually
+		// initialised before injecting ImageURI.
+		if ko.Spec.Code == nil {
+			ko.Spec.Code = &svcapitypes.FunctionCode{}
+		}
 		if resp.Code.ImageUri != nil {
 			ko.Spec.Code.ImageURI = resp.Code.ImageUri
 		}
