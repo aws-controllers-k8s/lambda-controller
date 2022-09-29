@@ -164,6 +164,93 @@ class TestEventSourceMapping:
 
         # Check ESM doesn't exist
         assert not lambda_validator.event_source_mapping_exists(esm_uuid)
+    
+    def test_smoke_sqs_queue_stream_ref(self, lambda_client, lambda_function):
+        (_, function_resource) = lambda_function
+        function_resource_name = function_resource["metadata"]["name"]
+
+        resource_name = random_suffix_name("lambda-esm", 24)
+        resources = get_bootstrap_resources()
+
+        replacements = REPLACEMENT_VALUES.copy()
+        replacements["AWS_REGION"] = get_region()
+        replacements["EVENT_SOURCE_MAPPING_NAME"] = resource_name
+        replacements["BATCH_SIZE"] = "10"
+        replacements["FUNCTION_REF_NAME"] = function_resource_name
+        replacements["EVENT_SOURCE_ARN"] = resources.ESMQueue.arn
+        replacements["MAXIMUM_BATCHING_WINDOW_IN_SECONDS"] = "1"
+
+        # Load ESM CR
+        resource_data = load_lambda_resource(
+            "event_source_mapping_sqs_ref",
+            additional_replacements=replacements,
+        )
+        logging.debug(resource_data)
+
+        # Create k8s resource
+        ref = k8s.CustomResourceReference(
+            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            resource_name, namespace="default",
+        )
+        k8s.create_custom_resource(ref, resource_data)
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        assert cr is not None
+        assert k8s.get_resource_exists(ref)
+
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+        esm_uuid = cr['status']['uuid']
+
+        lambda_validator = LambdaValidator(lambda_client)
+        # Check ESM exists
+        assert lambda_validator.event_source_mapping_exists(esm_uuid)
+
+        # Update cr
+        cr["spec"]["batchSize"] = 20
+        cr["spec"]["filterCriteria"] = {
+            "filters": [
+                {
+                    "pattern": "{\"controller-version\":[\"v1\"]}"
+                },
+            ]
+        }
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        # Check ESM batch size & filters
+        esm = lambda_validator.get_event_source_mapping(esm_uuid)
+        assert esm is not None
+        assert esm["BatchSize"] == 20
+        assert esm["FilterCriteria"]["Filters"] == [
+            {
+                "Pattern": "{\"controller-version\":[\"v1\"]}"
+            },
+        ]
+
+        # Delete the filterCriteria field
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr["spec"]["filterCriteria"] = None
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        # Check filters have been deleted
+        esm = lambda_validator.get_event_source_mapping(esm_uuid)
+        assert esm is not None
+        assert "FilterCriteria" not in esm
+
+        # Delete k8s resource
+        _, deleted = k8s.delete_custom_resource(ref)
+        assert deleted
+
+        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+
+        # Check ESM doesn't exist
+        assert not lambda_validator.event_source_mapping_exists(esm_uuid)
 
     def test_smoke_dynamodb_table_stream(self, lambda_client, lambda_function):
         (_, function_resource) = lambda_function

@@ -79,8 +79,8 @@ type EventSourceMappingSpec struct {
 	//
 	// The length constraint applies only to the full ARN. If you specify only the
 	// function name, it's limited to 64 characters in length.
-	// +kubebuilder:validation:Required
-	FunctionName *string `json:"functionName"`
+	FunctionName *string                                  `json:"functionName,omitempty"`
+	FunctionRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"functionRef,omitempty"`
 	// (Streams and Amazon SQS) A list of current response type enums applied to
 	// the event source mapping.
 	FunctionResponseTypes []*string `json:"functionResponseTypes,omitempty"`

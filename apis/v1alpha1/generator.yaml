@@ -80,6 +80,9 @@ resources:
       UUID:
         is_primary_key: true
       FunctionName:
+        references:
+          resource: Function
+          path: Spec.Name
         is_required: true
       FilterCriteria:
         compare:

@@ -103,6 +103,9 @@ func newResourceDelta(
 			delta.Add("Spec.FunctionName", a.ko.Spec.FunctionName, b.ko.Spec.FunctionName)
 		}
 	}
+	if !reflect.DeepEqual(a.ko.Spec.FunctionRef, b.ko.Spec.FunctionRef) {
+		delta.Add("Spec.FunctionRef", a.ko.Spec.FunctionRef, b.ko.Spec.FunctionRef)
+	}
 	if !ackcompare.SliceStringPEqual(a.ko.Spec.FunctionResponseTypes, b.ko.Spec.FunctionResponseTypes) {
 		delta.Add("Spec.FunctionResponseTypes", a.ko.Spec.FunctionResponseTypes, b.ko.Spec.FunctionResponseTypes)
 	}
