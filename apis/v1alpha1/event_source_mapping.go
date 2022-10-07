@@ -22,6 +22,9 @@ import (
 
 // EventSourceMappingSpec defines the desired state of EventSourceMapping.
 type EventSourceMappingSpec struct {
+	// Specific configuration settings for an Amazon Managed Streaming for Apache
+	// Kafka (Amazon MSK) event source.
+	AmazonManagedKafkaEventSourceConfig *AmazonManagedKafkaEventSourceConfig `json:"amazonManagedKafkaEventSourceConfig,omitempty"`
 	// The maximum number of records in each batch that Lambda pulls from your stream
 	// or queue and sends to your function. Lambda passes all of the records in
 	// the batch to the function in a single call, up to the payload limit for synchronous
@@ -36,7 +39,7 @@ type EventSourceMappingSpec struct {
 	//
 	//    * Amazon Managed Streaming for Apache Kafka - Default 100. Max 10,000.
 	//
-	//    * Self-Managed Apache Kafka - Default 100. Max 10,000.
+	//    * Self-managed Apache Kafka - Default 100. Max 10,000.
 	//
 	//    * Amazon MQ (ActiveMQ and RabbitMQ) - Default 100. Max 10,000.
 	BatchSize *int64 `json:"batchSize,omitempty"`
@@ -97,27 +100,29 @@ type EventSourceMappingSpec struct {
 	MaximumRecordAgeInSeconds *int64 `json:"maximumRecordAgeInSeconds,omitempty"`
 	// (Streams only) Discard records after the specified number of retries. The
 	// default value is infinite (-1). When set to infinite (-1), failed records
-	// will be retried until the record expires.
+	// are retried until the record expires.
 	MaximumRetryAttempts *int64 `json:"maximumRetryAttempts,omitempty"`
 	// (Streams only) The number of batches to process from each shard concurrently.
 	ParallelizationFactor *int64 `json:"parallelizationFactor,omitempty"`
 	// (MQ) The name of the Amazon MQ broker destination queue to consume.
 	Queues []*string `json:"queues,omitempty"`
-	// The Self-Managed Apache Kafka cluster to send records.
+	// The self-managed Apache Kafka cluster to receive records from.
 	SelfManagedEventSource *SelfManagedEventSource `json:"selfManagedEventSource,omitempty"`
+	// Specific configuration settings for a self-managed Apache Kafka event source.
+	SelfManagedKafkaEventSourceConfig *SelfManagedKafkaEventSourceConfig `json:"selfManagedKafkaEventSourceConfig,omitempty"`
 	// An array of authentication protocols or VPC components required to secure
 	// your event source.
 	SourceAccessConfigurations []*SourceAccessConfiguration `json:"sourceAccessConfigurations,omitempty"`
 	// The position in a stream from which to start reading. Required for Amazon
 	// Kinesis, Amazon DynamoDB, and Amazon MSK Streams sources. AT_TIMESTAMP is
-	// only supported for Amazon Kinesis streams.
+	// supported only for Amazon Kinesis streams.
 	StartingPosition *string `json:"startingPosition,omitempty"`
 	// With StartingPosition set to AT_TIMESTAMP, the time from which to start reading.
 	StartingPositionTimestamp *metav1.Time `json:"startingPositionTimestamp,omitempty"`
 	// The name of the Kafka topic.
 	Topics []*string `json:"topics,omitempty"`
 	// (Streams only) The duration in seconds of a processing window. The range
-	// is between 1 second up to 900 seconds.
+	// is between 1 second and 900 seconds.
 	TumblingWindowInSeconds *int64 `json:"tumblingWindowInSeconds,omitempty"`
 }
 

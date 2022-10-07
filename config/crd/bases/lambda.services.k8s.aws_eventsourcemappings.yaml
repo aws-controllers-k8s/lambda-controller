@@ -36,6 +36,13 @@ spec:
           spec:
             description: EventSourceMappingSpec defines the desired state of EventSourceMapping.
             properties:
+              amazonManagedKafkaEventSourceConfig:
+                description: Specific configuration settings for an Amazon Managed
+                  Streaming for Apache Kafka (Amazon MSK) event source.
+                properties:
+                  consumerGroupID:
+                    type: string
+                type: object
               batchSize:
                 description: "The maximum number of records in each batch that Lambda
                   pulls from your stream or queue and sends to your function. Lambda
@@ -140,7 +147,7 @@ spec:
               maximumRetryAttempts:
                 description: (Streams only) Discard records after the specified number
                   of retries. The default value is infinite (-1). When set to infinite
-                  (-1), failed records will be retried until the record expires.
+                  (-1), failed records are retried until the record expires.
                 format: int64
                 type: integer
               parallelizationFactor:
@@ -155,7 +162,8 @@ spec:
                   type: string
                 type: array
               selfManagedEventSource:
-                description: The Self-Managed Apache Kafka cluster to send records.
+                description: The self-managed Apache Kafka cluster to receive records
+                  from.
                 properties:
                   endpoints:
                     additionalProperties:
@@ -163,6 +171,13 @@ spec:
                         type: string
                       type: array
                     type: object
+                type: object
+              selfManagedKafkaEventSourceConfig:
+                description: Specific configuration settings for a self-managed Apache
+                  Kafka event source.
+                properties:
+                  consumerGroupID:
+                    type: string
                 type: object
               sourceAccessConfigurations:
                 description: An array of authentication protocols or VPC components
@@ -181,7 +196,7 @@ spec:
               startingPosition:
                 description: The position in a stream from which to start reading.
                   Required for Amazon Kinesis, Amazon DynamoDB, and Amazon MSK Streams
-                  sources. AT_TIMESTAMP is only supported for Amazon Kinesis streams.
+                  sources. AT_TIMESTAMP is supported only for Amazon Kinesis streams.
                 type: string
               startingPositionTimestamp:
                 description: With StartingPosition set to AT_TIMESTAMP, the time from
@@ -195,7 +210,7 @@ spec:
                 type: array
               tumblingWindowInSeconds:
                 description: (Streams only) The duration in seconds of a processing
-                  window. The range is between 1 second up to 900 seconds.
+                  window. The range is between 1 second and 900 seconds.
                 format: int64
                 type: integer
             type: object
