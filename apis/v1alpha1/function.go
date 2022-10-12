@@ -58,7 +58,8 @@ type FunctionSpec struct {
 	// The ARN of the Amazon Web Services Key Management Service (KMS) key that's
 	// used to encrypt your function's environment variables. If it's not provided,
 	// Lambda uses a default service key.
-	KMSKeyARN *string `json:"kmsKeyARN,omitempty"`
+	KMSKeyARN *string                                  `json:"kmsKeyARN,omitempty"`
+	KMSKeyRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"kmsKeyRef,omitempty"`
 	// A list of function layers (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html)
 	// to add to the function's execution environment. Specify each layer by its
 	// ARN, including the version.
