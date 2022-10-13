@@ -402,6 +402,8 @@ type TracingConfigResponse struct {
 type VPCConfig struct {
 	SecurityGroupIDs []*string `json:"securityGroupIDs,omitempty"`
 	SubnetIDs        []*string `json:"subnetIDs,omitempty"`
+	// Reference field for SubnetIDs
+	SubnetRefs []*ackv1alpha1.AWSResourceReferenceWrapper `json:"subnetRefs,omitempty"`
 }
 
 // The VPC security groups and subnets that are attached to a Lambda function.
