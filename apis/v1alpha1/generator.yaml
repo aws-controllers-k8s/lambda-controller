@@ -8,6 +8,11 @@ ignore:
 resources:
   Function:
     fields:
+      KMSKeyARN:
+        references:
+          resource: Key
+          path: Status.ACKResourceMetadata.ARN
+          service_name: kms
       Name:
         is_primary_key: true
         is_required: true
