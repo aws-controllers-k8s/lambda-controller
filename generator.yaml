@@ -8,6 +8,11 @@ ignore:
 resources:
   Function:
     fields:
+      VPCConfig.SubnetIDs:
+        references:
+          resource: VPC
+          path: Status.VPCID
+          service_name: ec2
       KMSKeyARN:
         references:
           resource: Key

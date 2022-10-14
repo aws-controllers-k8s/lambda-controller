@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	ec2apitypes "github.com/aws-controllers-k8s/ec2-controller/apis/v1alpha1"
 	kmsapitypes "github.com/aws-controllers-k8s/kms-controller/apis/v1alpha1"
 	ackv1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
 	ackcondition "github.com/aws-controllers-k8s/runtime/pkg/condition"
@@ -34,6 +35,9 @@ import (
 
 // +kubebuilder:rbac:groups=kms.services.k8s.aws,resources=keys,verbs=get;list
 // +kubebuilder:rbac:groups=kms.services.k8s.aws,resources=keys/status,verbs=get;list
+
+// +kubebuilder:rbac:groups=ec2.services.k8s.aws,resources=vpcs,verbs=get;list
+// +kubebuilder:rbac:groups=ec2.services.k8s.aws,resources=vpcs/status,verbs=get;list
 
 // ResolveReferences finds if there are any Reference field(s) present
 // inside AWSResource passed in the parameter and attempts to resolve
@@ -53,6 +57,9 @@ func (rm *resourceManager) ResolveReferences(
 	if err == nil {
 		err = resolveReferenceForKMSKeyARN(ctx, apiReader, namespace, ko)
 	}
+	if err == nil {
+		err = resolveReferenceForVPCConfig_SubnetIDs(ctx, apiReader, namespace, ko)
+	}
 
 	// If there was an error while resolving any reference, reset all the
 	// resolved values so that they do not get persisted inside etcd
@@ -71,13 +78,18 @@ func validateReferenceFields(ko *svcapitypes.Function) error {
 	if ko.Spec.KMSKeyRef != nil && ko.Spec.KMSKeyARN != nil {
 		return ackerr.ResourceReferenceAndIDNotSupportedFor("KMSKeyARN", "KMSKeyRef")
 	}
+	if ko.Spec.VPCConfig != nil {
+		if ko.Spec.VPCConfig.SubnetRefs != nil && ko.Spec.VPCConfig.SubnetIDs != nil {
+			return ackerr.ResourceReferenceAndIDNotSupportedFor("VPCConfig.SubnetIDs", "VPCConfig.SubnetRefs")
+		}
+	}
 	return nil
 }
 
 // hasNonNilReferences returns true if resource contains a reference to another
 // resource
 func hasNonNilReferences(ko *svcapitypes.Function) bool {
-	return false || (ko.Spec.KMSKeyRef != nil)
+	return false || (ko.Spec.KMSKeyRef != nil) || (ko.Spec.VPCConfig != nil && ko.Spec.VPCConfig.SubnetRefs != nil)
 }
 
 // resolveReferenceForKMSKeyARN reads the resource referenced
@@ -133,6 +145,71 @@ func resolveReferenceForKMSKeyARN(
 		}
 		referencedValue := string(*obj.Status.ACKResourceMetadata.ARN)
 		ko.Spec.KMSKeyARN = &referencedValue
+	}
+	return nil
+}
+
+// resolveReferenceForVPCConfig_SubnetIDs reads the resource referenced
+// from VPCConfig.SubnetRefs field and sets the VPCConfig.SubnetIDs
+// from referenced resource
+func resolveReferenceForVPCConfig_SubnetIDs(
+	ctx context.Context,
+	apiReader client.Reader,
+	namespace string,
+	ko *svcapitypes.Function,
+) error {
+	if ko.Spec.VPCConfig == nil {
+		return nil
+	}
+
+	if ko.Spec.VPCConfig.SubnetRefs != nil &&
+		len(ko.Spec.VPCConfig.SubnetRefs) > 0 {
+		resolvedReferences := []*string{}
+		for _, arrw := range ko.Spec.VPCConfig.SubnetRefs {
+			arr := arrw.From
+			if arr == nil || arr.Name == nil || *arr.Name == "" {
+				return fmt.Errorf("provided resource reference is nil or empty")
+			}
+			namespacedName := types.NamespacedName{
+				Namespace: namespace,
+				Name:      *arr.Name,
+			}
+			obj := ec2apitypes.VPC{}
+			err := apiReader.Get(ctx, namespacedName, &obj)
+			if err != nil {
+				return err
+			}
+			var refResourceSynced, refResourceTerminal bool
+			for _, cond := range obj.Status.Conditions {
+				if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+					cond.Status == corev1.ConditionTrue {
+					refResourceSynced = true
+				}
+				if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
+					cond.Status == corev1.ConditionTrue {
+					refResourceTerminal = true
+				}
+			}
+			if refResourceTerminal {
+				return ackerr.ResourceReferenceTerminalFor(
+					"VPC",
+					namespace, *arr.Name)
+			}
+			if !refResourceSynced {
+				return ackerr.ResourceReferenceNotSyncedFor(
+					"VPC",
+					namespace, *arr.Name)
+			}
+			if obj.Status.VPCID == nil {
+				return ackerr.ResourceReferenceMissingTargetFieldFor(
+					"VPC",
+					namespace, *arr.Name,
+					"Status.VPCID")
+			}
+			referencedValue := string(*obj.Status.VPCID)
+			resolvedReferences = append(resolvedReferences, &referencedValue)
+		}
+		ko.Spec.VPCConfig.SubnetIDs = resolvedReferences
 	}
 	return nil
 }
