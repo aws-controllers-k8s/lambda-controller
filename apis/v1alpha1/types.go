@@ -401,7 +401,9 @@ type TracingConfigResponse struct {
 // For more information, see VPC Settings (https://docs.aws.amazon.com/lambda/latest/dg/configuration-vpc.html).
 type VPCConfig struct {
 	SecurityGroupIDs []*string `json:"securityGroupIDs,omitempty"`
-	SubnetIDs        []*string `json:"subnetIDs,omitempty"`
+	// Reference field for SecurityGroupIDs
+	SecurityGroupRefs []*ackv1alpha1.AWSResourceReferenceWrapper `json:"securityGroupRefs,omitempty"`
+	SubnetIDs         []*string                                  `json:"subnetIDs,omitempty"`
 	// Reference field for SubnetIDs
 	SubnetRefs []*ackv1alpha1.AWSResourceReferenceWrapper `json:"subnetRefs,omitempty"`
 }
