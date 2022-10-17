@@ -49,14 +49,14 @@ rules:
 - apiGroups:
   - ec2.services.k8s.aws
   resources:
-  - vpcs
+  - subnets
   verbs:
   - get
   - list
 - apiGroups:
   - ec2.services.k8s.aws
   resources:
-  - vpcs/status
+  - subnets/status
   verbs:
   - get
   - list

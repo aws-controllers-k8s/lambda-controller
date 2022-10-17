@@ -10,8 +10,8 @@ resources:
     fields:
       VPCConfig.SubnetIDs:
         references:
-          resource: VPC
-          path: Status.VPCID
+          resource: Subnet
+          path: Status.SubnetID
           service_name: ec2
       KMSKeyARN:
         references:

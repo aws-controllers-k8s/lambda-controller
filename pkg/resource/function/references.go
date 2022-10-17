@@ -36,8 +36,8 @@ import (
 // +kubebuilder:rbac:groups=kms.services.k8s.aws,resources=keys,verbs=get;list
 // +kubebuilder:rbac:groups=kms.services.k8s.aws,resources=keys/status,verbs=get;list
 
-// +kubebuilder:rbac:groups=ec2.services.k8s.aws,resources=vpcs,verbs=get;list
-// +kubebuilder:rbac:groups=ec2.services.k8s.aws,resources=vpcs/status,verbs=get;list
+// +kubebuilder:rbac:groups=ec2.services.k8s.aws,resources=subnets,verbs=get;list
+// +kubebuilder:rbac:groups=ec2.services.k8s.aws,resources=subnets/status,verbs=get;list
 
 // ResolveReferences finds if there are any Reference field(s) present
 // inside AWSResource passed in the parameter and attempts to resolve
@@ -174,7 +174,7 @@ func resolveReferenceForVPCConfig_SubnetIDs(
 				Namespace: namespace,
 				Name:      *arr.Name,
 			}
-			obj := ec2apitypes.VPC{}
+			obj := ec2apitypes.Subnet{}
 			err := apiReader.Get(ctx, namespacedName, &obj)
 			if err != nil {
 				return err
@@ -192,21 +192,21 @@ func resolveReferenceForVPCConfig_SubnetIDs(
 			}
 			if refResourceTerminal {
 				return ackerr.ResourceReferenceTerminalFor(
-					"VPC",
+					"Subnet",
 					namespace, *arr.Name)
 			}
 			if !refResourceSynced {
 				return ackerr.ResourceReferenceNotSyncedFor(
-					"VPC",
+					"Subnet",
 					namespace, *arr.Name)
 			}
-			if obj.Status.VPCID == nil {
+			if obj.Status.SubnetID == nil {
 				return ackerr.ResourceReferenceMissingTargetFieldFor(
-					"VPC",
+					"Subnet",
 					namespace, *arr.Name,
-					"Status.VPCID")
+					"Status.SubnetID")
 			}
-			referencedValue := string(*obj.Status.VPCID)
+			referencedValue := string(*obj.Status.SubnetID)
 			resolvedReferences = append(resolvedReferences, &referencedValue)
 		}
 		ko.Spec.VPCConfig.SubnetIDs = resolvedReferences
