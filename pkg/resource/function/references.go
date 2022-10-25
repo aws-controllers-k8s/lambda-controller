@@ -29,9 +29,13 @@ import (
 	ackcondition "github.com/aws-controllers-k8s/runtime/pkg/condition"
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	acktypes "github.com/aws-controllers-k8s/runtime/pkg/types"
+	s3apitypes "github.com/aws-controllers-k8s/s3-controller/apis/v1alpha1"
 
 	svcapitypes "github.com/aws-controllers-k8s/lambda-controller/apis/v1alpha1"
 )
+
+// +kubebuilder:rbac:groups=s3.services.k8s.aws,resources=buckets,verbs=get;list
+// +kubebuilder:rbac:groups=s3.services.k8s.aws,resources=buckets/status,verbs=get;list
 
 // +kubebuilder:rbac:groups=kms.services.k8s.aws,resources=keys,verbs=get;list
 // +kubebuilder:rbac:groups=kms.services.k8s.aws,resources=keys/status,verbs=get;list
@@ -58,6 +62,9 @@ func (rm *resourceManager) ResolveReferences(
 	ko := rm.concreteResource(res).ko.DeepCopy()
 	err := validateReferenceFields(ko)
 	if err == nil {
+		err = resolveReferenceForCode_S3Bucket(ctx, apiReader, namespace, ko)
+	}
+	if err == nil {
 		err = resolveReferenceForKMSKeyARN(ctx, apiReader, namespace, ko)
 	}
 	if err == nil {
@@ -81,6 +88,11 @@ func (rm *resourceManager) ResolveReferences(
 // validateReferenceFields validates the reference field and corresponding
 // identifier field.
 func validateReferenceFields(ko *svcapitypes.Function) error {
+	if ko.Spec.Code != nil {
+		if ko.Spec.Code.S3BucketRef != nil && ko.Spec.Code.S3Bucket != nil {
+			return ackerr.ResourceReferenceAndIDNotSupportedFor("Code.S3Bucket", "Code.S3BucketRef")
+		}
+	}
 	if ko.Spec.KMSKeyRef != nil && ko.Spec.KMSKeyARN != nil {
 		return ackerr.ResourceReferenceAndIDNotSupportedFor("KMSKeyARN", "KMSKeyRef")
 	}
@@ -100,7 +112,68 @@ func validateReferenceFields(ko *svcapitypes.Function) error {
 // hasNonNilReferences returns true if resource contains a reference to another
 // resource
 func hasNonNilReferences(ko *svcapitypes.Function) bool {
-	return false || (ko.Spec.KMSKeyRef != nil) || (ko.Spec.VPCConfig != nil && ko.Spec.VPCConfig.SecurityGroupRefs != nil) || (ko.Spec.VPCConfig != nil && ko.Spec.VPCConfig.SubnetRefs != nil)
+	return false || (ko.Spec.Code != nil && ko.Spec.Code.S3BucketRef != nil) || (ko.Spec.KMSKeyRef != nil) || (ko.Spec.VPCConfig != nil && ko.Spec.VPCConfig.SecurityGroupRefs != nil) || (ko.Spec.VPCConfig != nil && ko.Spec.VPCConfig.SubnetRefs != nil)
+}
+
+// resolveReferenceForCode_S3Bucket reads the resource referenced
+// from Code.S3BucketRef field and sets the Code.S3Bucket
+// from referenced resource
+func resolveReferenceForCode_S3Bucket(
+	ctx context.Context,
+	apiReader client.Reader,
+	namespace string,
+	ko *svcapitypes.Function,
+) error {
+	if ko.Spec.Code == nil {
+		return nil
+	}
+	//is nested
+	if ko.Spec.Code.S3BucketRef != nil &&
+		ko.Spec.Code.S3BucketRef.From != nil {
+		arr := ko.Spec.Code.S3BucketRef.From
+		if arr == nil || arr.Name == nil || *arr.Name == "" {
+			return fmt.Errorf("provided resource reference is nil or empty")
+		}
+		namespacedName := types.NamespacedName{
+			Namespace: namespace,
+			Name:      *arr.Name,
+		}
+		obj := s3apitypes.Bucket{}
+		err := apiReader.Get(ctx, namespacedName, &obj)
+		if err != nil {
+			return err
+		}
+		var refResourceSynced, refResourceTerminal bool
+		for _, cond := range obj.Status.Conditions {
+			if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+				cond.Status == corev1.ConditionTrue {
+				refResourceSynced = true
+			}
+			if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
+				cond.Status == corev1.ConditionTrue {
+				refResourceTerminal = true
+			}
+		}
+		if refResourceTerminal {
+			return ackerr.ResourceReferenceTerminalFor(
+				"Bucket",
+				namespace, *arr.Name)
+		}
+		if !refResourceSynced {
+			return ackerr.ResourceReferenceNotSyncedFor(
+				"Bucket",
+				namespace, *arr.Name)
+		}
+		if obj.Spec.Name == nil {
+			return ackerr.ResourceReferenceMissingTargetFieldFor(
+				"Bucket",
+				namespace, *arr.Name,
+				"Spec.Name")
+		}
+		referencedValue := string(*obj.Spec.Name)
+		ko.Spec.Code.S3Bucket = &referencedValue
+	}
+	return nil
 }
 
 // resolveReferenceForKMSKeyARN reads the resource referenced

@@ -206,11 +206,13 @@ type FilterCriteria struct {
 // S3, upload a .zip file archive deployment package directly, or specify the
 // URI of a container image.
 type FunctionCode struct {
-	ImageURI        *string `json:"imageURI,omitempty"`
-	S3Bucket        *string `json:"s3Bucket,omitempty"`
-	S3Key           *string `json:"s3Key,omitempty"`
-	S3ObjectVersion *string `json:"s3ObjectVersion,omitempty"`
-	ZipFile         []byte  `json:"zipFile,omitempty"`
+	ImageURI *string `json:"imageURI,omitempty"`
+	S3Bucket *string `json:"s3Bucket,omitempty"`
+	// Reference field for S3Bucket
+	S3BucketRef     *ackv1alpha1.AWSResourceReferenceWrapper `json:"s3BucketRef,omitempty"`
+	S3Key           *string                                  `json:"s3Key,omitempty"`
+	S3ObjectVersion *string                                  `json:"s3ObjectVersion,omitempty"`
+	ZipFile         []byte                                   `json:"zipFile,omitempty"`
 }
 
 // Details about a function's deployment package.
