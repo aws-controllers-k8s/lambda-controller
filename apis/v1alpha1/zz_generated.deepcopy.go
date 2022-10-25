@@ -1300,6 +1300,11 @@ func (in *FunctionCode) DeepCopyInto(out *FunctionCode) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.S3BucketRef != nil {
+		in, out := &in.S3BucketRef, &out.S3BucketRef
+		*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.S3Key != nil {
 		in, out := &in.S3Key, &out.S3Key
 		*out = new(string)

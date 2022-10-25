@@ -26,6 +26,7 @@ import (
 	acktypes "github.com/aws-controllers-k8s/runtime/pkg/types"
 	ackrtutil "github.com/aws-controllers-k8s/runtime/pkg/util"
 	ackrtwebhook "github.com/aws-controllers-k8s/runtime/pkg/webhook"
+	s3apitypes "github.com/aws-controllers-k8s/s3-controller/apis/v1alpha1"
 	svcsdk "github.com/aws/aws-sdk-go/service/lambda"
 	flag "github.com/spf13/pflag"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -60,6 +61,7 @@ func init() {
 	_ = ackv1alpha1.AddToScheme(scheme)
 	_ = ec2apitypes.AddToScheme(scheme)
 	_ = kmsapitypes.AddToScheme(scheme)
+	_ = s3apitypes.AddToScheme(scheme)
 }
 
 func main() {

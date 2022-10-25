@@ -49,6 +49,18 @@ spec:
                     type: string
                   s3Bucket:
                     type: string
+                  s3BucketRef:
+                    description: Reference field for S3Bucket
+                    properties:
+                      from:
+                        description: AWSResourceReference provides all the values
+                          necessary to reference another k8s resource for finding
+                          the identifier(Id/ARN/Name)
+                        properties:
+                          name:
+                            type: string
+                        type: object
+                    type: object
                   s3Key:
                     type: string
                   s3ObjectVersion:

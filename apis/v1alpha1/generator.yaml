@@ -8,6 +8,11 @@ ignore:
 resources:
   Function:
     fields:
+      Code.S3Bucket:
+        references:
+          resource: Bucket
+          path: Spec.Name
+          service_name: s3
       VPCConfig.SubnetIDs:
         references:
           resource: Subnet
