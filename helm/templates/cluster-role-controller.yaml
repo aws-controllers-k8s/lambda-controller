@@ -4,11 +4,19 @@ kind: ClusterRole
 metadata:
   creationTimestamp: null
   name: ack-lambda-controller
+  labels:
+  {{- range $key, $value := .Values.role.labels }}
+    {{ $key }}: {{ $value | quote }}
+  {{- end }}
 {{ else }}
 kind: Role
 metadata:
   creationTimestamp: null
   name: ack-lambda-controller
+  labels:
+  {{- range $key, $value := .Values.role.labels }}
+    {{ $key }}: {{ $value | quote }}
+  {{- end }}
   namespace: {{ .Release.Namespace }}
 {{ end }}
 rules:
@@ -180,6 +188,20 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - mq.services.k8s.aws
+  resources:
+  - brokers
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - mq.services.k8s.aws
+  resources:
+  - brokers/status
+  verbs:
+  - get
+  - list
 - apiGroups:
   - s3.services.k8s.aws
   resources:

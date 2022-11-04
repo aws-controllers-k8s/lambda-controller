@@ -97,6 +97,11 @@ resources:
       ignore: true
   EventSourceMapping:
     fields:
+      Queues:
+        references:
+          resource: Broker
+          path: Status.BrokerID
+          service_name: mq
       UUID:
         is_primary_key: true
       FunctionName:

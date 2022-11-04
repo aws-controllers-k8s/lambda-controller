@@ -1060,6 +1060,17 @@ func (in *EventSourceMappingSpec) DeepCopyInto(out *EventSourceMappingSpec) {
 		*out = new(int64)
 		**out = **in
 	}
+	if in.QueueRefs != nil {
+		in, out := &in.QueueRefs, &out.QueueRefs
+		*out = make([]*corev1alpha1.AWSResourceReferenceWrapper, len(*in))
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+				(*in).DeepCopyInto(*out)
+			}
+		}
+	}
 	if in.Queues != nil {
 		in, out := &in.Queues, &out.Queues
 		*out = make([]*string, len(*in))

@@ -103,7 +103,8 @@ type EventSourceMappingSpec struct {
 	// are retried until the record expires.
 	MaximumRetryAttempts *int64 `json:"maximumRetryAttempts,omitempty"`
 	// (Streams only) The number of batches to process from each shard concurrently.
-	ParallelizationFactor *int64 `json:"parallelizationFactor,omitempty"`
+	ParallelizationFactor *int64                                     `json:"parallelizationFactor,omitempty"`
+	QueueRefs             []*ackv1alpha1.AWSResourceReferenceWrapper `json:"queueRefs,omitempty"`
 	// (MQ) The name of the Amazon MQ broker destination queue to consume.
 	Queues []*string `json:"queues,omitempty"`
 	// The self-managed Apache Kafka cluster to receive records from.

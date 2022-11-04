@@ -127,7 +127,6 @@ func resolveReferenceForCode_S3Bucket(
 	if ko.Spec.Code == nil {
 		return nil
 	}
-	//is nested
 	if ko.Spec.Code.S3BucketRef != nil &&
 		ko.Spec.Code.S3BucketRef.From != nil {
 		arr := ko.Spec.Code.S3BucketRef.From

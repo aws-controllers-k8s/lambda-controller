@@ -148,6 +148,9 @@ func newResourceDelta(
 			delta.Add("Spec.ParallelizationFactor", a.ko.Spec.ParallelizationFactor, b.ko.Spec.ParallelizationFactor)
 		}
 	}
+	if !reflect.DeepEqual(a.ko.Spec.QueueRefs, b.ko.Spec.QueueRefs) {
+		delta.Add("Spec.QueueRefs", a.ko.Spec.QueueRefs, b.ko.Spec.QueueRefs)
+	}
 	if !ackcompare.SliceStringPEqual(a.ko.Spec.Queues, b.ko.Spec.Queues) {
 		delta.Add("Spec.Queues", a.ko.Spec.Queues, b.ko.Spec.Queues)
 	}
