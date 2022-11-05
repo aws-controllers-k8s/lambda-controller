@@ -68,6 +68,8 @@ github.com/aws-controllers-k8s/ec2-controller v0.0.21 h1:5O7/9aED2Tl9OT0TL2rWrc1
 github.com/aws-controllers-k8s/ec2-controller v0.0.21/go.mod h1:OMsmJeJ3iQZ1sJgs3hqnjBRnJ3hmTzJUO38W5rxnB5M=
 github.com/aws-controllers-k8s/kms-controller v0.1.2 h1:9lb98jspqOpFpmIFHOJ6pRnOkC8kDEPIgTAb5QnVGZo=
 github.com/aws-controllers-k8s/kms-controller v0.1.2/go.mod h1:6CoV0UMFd03EUF9dXgOTTScGdBhJzsWn9W0dw2n0kA4=
+github.com/aws-controllers-k8s/mq-controller v0.0.22 h1:XxFSQL9yaaiiuZ6E/fh/+Y9C+3DG2c5oXWG/4ZNwd1w=
+github.com/aws-controllers-k8s/mq-controller v0.0.22/go.mod h1:p+YVFjpwlgRC+1cPeCabk1xTB1hTCU+RwYtFzrTnJmE=
 github.com/aws-controllers-k8s/runtime v0.20.0/go.mod h1:oA8ML1/LL3chPn26P6SzBNu1CUI2nekB+PTqykNs0qU=
 github.com/aws-controllers-k8s/runtime v0.20.1 h1:L/Huf1shRahx5BqJBCSS5u+vYg3f0Rotsq1jutORpdI=
 github.com/aws-controllers-k8s/runtime v0.20.1/go.mod h1:k7z4qlf6aK1Kzd4ff49wzcyhDKHjWaUpqxrwgl4uS1o=
