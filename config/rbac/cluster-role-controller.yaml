@@ -32,6 +32,20 @@ rules:
   - patch
   - watch
 - apiGroups:
+  - ec2.services.k8s.aws
+  resources:
+  - subnets
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - ec2.services.k8s.aws
+  resources:
+  - subnets/status
+  verbs:
+  - get
+  - list
+- apiGroups:
   - mq.services.k8s.aws
   resources:
   - brokers

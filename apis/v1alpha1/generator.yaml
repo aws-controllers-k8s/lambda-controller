@@ -19,6 +19,11 @@ resources:
           input_fields:
             BrokerName: Name
     fields:
+      SubnetIDs:
+        references:
+          service_name: ec2
+          resource: Subnet
+          path: Status.SubnetID
       BrokerState:
         from:
           operation: DescribeBroker

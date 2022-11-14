@@ -326,6 +326,17 @@ func (in *BrokerSpec) DeepCopyInto(out *BrokerSpec) {
 			}
 		}
 	}
+	if in.SubnetRefs != nil {
+		in, out := &in.SubnetRefs, &out.SubnetRefs
+		*out = make([]*corev1alpha1.AWSResourceReferenceWrapper, len(*in))
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+				(*in).DeepCopyInto(*out)
+			}
+		}
+	}
 	if in.Tags != nil {
 		in, out := &in.Tags, &out.Tags
 		*out = make(map[string]*string, len(*in))

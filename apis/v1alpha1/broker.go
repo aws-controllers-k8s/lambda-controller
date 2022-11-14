@@ -61,7 +61,8 @@ type BrokerSpec struct {
 
 	StorageType *string `json:"storageType,omitempty"`
 
-	SubnetIDs []*string `json:"subnetIDs,omitempty"`
+	SubnetIDs  []*string                                  `json:"subnetIDs,omitempty"`
+	SubnetRefs []*ackv1alpha1.AWSResourceReferenceWrapper `json:"subnetRefs,omitempty"`
 
 	Tags map[string]*string `json:"tags,omitempty"`
 

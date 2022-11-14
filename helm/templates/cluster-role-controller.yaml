@@ -4,11 +4,19 @@ kind: ClusterRole
 metadata:
   creationTimestamp: null
   name: ack-mq-controller
+  labels:
+  {{- range $key, $value := .Values.role.labels }}
+    {{ $key }}: {{ $value | quote }}
+  {{- end }}
 {{ else }}
 kind: Role
 metadata:
   creationTimestamp: null
   name: ack-mq-controller
+  labels:
+  {{- range $key, $value := .Values.role.labels }}
+    {{ $key }}: {{ $value | quote }}
+  {{- end }}
   namespace: {{ .Release.Namespace }}
 {{ end }}
 rules:
@@ -38,6 +46,20 @@ rules:
   - list
   - patch
   - watch
+- apiGroups:
+  - ec2.services.k8s.aws
+  resources:
+  - subnets
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - ec2.services.k8s.aws
+  resources:
+  - subnets/status
+  verbs:
+  - get
+  - list
 - apiGroups:
   - mq.services.k8s.aws
   resources:
