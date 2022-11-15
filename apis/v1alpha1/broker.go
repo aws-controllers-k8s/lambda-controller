@@ -55,7 +55,8 @@ type BrokerSpec struct {
 	Name *string `json:"name"`
 
 	// +kubebuilder:validation:Required
-	PubliclyAccessible *bool `json:"publiclyAccessible"`
+	PubliclyAccessible *bool                                      `json:"publiclyAccessible"`
+	SecurityGroupRefs  []*ackv1alpha1.AWSResourceReferenceWrapper `json:"securityGroupRefs,omitempty"`
 
 	SecurityGroups []*string `json:"securityGroups,omitempty"`
 

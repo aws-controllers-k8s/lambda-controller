@@ -19,6 +19,11 @@ resources:
           input_fields:
             BrokerName: Name
     fields:
+      securityGroups:
+        references:
+          service_name: ec2
+          resource: SecurityGroup
+          path: Status.ID
       SubnetIDs:
         references:
           service_name: ec2

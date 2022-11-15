@@ -32,6 +32,9 @@ import (
 	svcapitypes "github.com/aws-controllers-k8s/mq-controller/apis/v1alpha1"
 )
 
+// +kubebuilder:rbac:groups=ec2.services.k8s.aws,resources=securitygroups,verbs=get;list
+// +kubebuilder:rbac:groups=ec2.services.k8s.aws,resources=securitygroups/status,verbs=get;list
+
 // +kubebuilder:rbac:groups=ec2.services.k8s.aws,resources=subnets,verbs=get;list
 // +kubebuilder:rbac:groups=ec2.services.k8s.aws,resources=subnets/status,verbs=get;list
 
@@ -51,6 +54,9 @@ func (rm *resourceManager) ResolveReferences(
 	ko := rm.concreteResource(res).ko.DeepCopy()
 	err := validateReferenceFields(ko)
 	if err == nil {
+		err = resolveReferenceForSecurityGroups(ctx, apiReader, namespace, ko)
+	}
+	if err == nil {
 		err = resolveReferenceForSubnetIDs(ctx, apiReader, namespace, ko)
 	}
 
@@ -68,6 +74,9 @@ func (rm *resourceManager) ResolveReferences(
 // validateReferenceFields validates the reference field and corresponding
 // identifier field.
 func validateReferenceFields(ko *svcapitypes.Broker) error {
+	if ko.Spec.SecurityGroupRefs != nil && ko.Spec.SecurityGroups != nil {
+		return ackerr.ResourceReferenceAndIDNotSupportedFor("SecurityGroups", "SecurityGroupRefs")
+	}
 	if ko.Spec.SubnetRefs != nil && ko.Spec.SubnetIDs != nil {
 		return ackerr.ResourceReferenceAndIDNotSupportedFor("SubnetIDs", "SubnetRefs")
 	}
@@ -77,7 +86,68 @@ func validateReferenceFields(ko *svcapitypes.Broker) error {
 // hasNonNilReferences returns true if resource contains a reference to another
 // resource
 func hasNonNilReferences(ko *svcapitypes.Broker) bool {
-	return false || (ko.Spec.SubnetRefs != nil)
+	return false || (ko.Spec.SecurityGroupRefs != nil) || (ko.Spec.SubnetRefs != nil)
+}
+
+// resolveReferenceForSecurityGroups reads the resource referenced
+// from SecurityGroupRefs field and sets the SecurityGroups
+// from referenced resource
+func resolveReferenceForSecurityGroups(
+	ctx context.Context,
+	apiReader client.Reader,
+	namespace string,
+	ko *svcapitypes.Broker,
+) error {
+	if ko.Spec.SecurityGroupRefs != nil &&
+		len(ko.Spec.SecurityGroupRefs) > 0 {
+		resolvedReferences := []*string{}
+		for _, arrw := range ko.Spec.SecurityGroupRefs {
+			arr := arrw.From
+			if arr == nil || arr.Name == nil || *arr.Name == "" {
+				return fmt.Errorf("provided resource reference is nil or empty")
+			}
+			namespacedName := types.NamespacedName{
+				Namespace: namespace,
+				Name:      *arr.Name,
+			}
+			obj := ec2apitypes.SecurityGroup{}
+			err := apiReader.Get(ctx, namespacedName, &obj)
+			if err != nil {
+				return err
+			}
+			var refResourceSynced, refResourceTerminal bool
+			for _, cond := range obj.Status.Conditions {
+				if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+					cond.Status == corev1.ConditionTrue {
+					refResourceSynced = true
+				}
+				if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
+					cond.Status == corev1.ConditionTrue {
+					refResourceTerminal = true
+				}
+			}
+			if refResourceTerminal {
+				return ackerr.ResourceReferenceTerminalFor(
+					"SecurityGroup",
+					namespace, *arr.Name)
+			}
+			if !refResourceSynced {
+				return ackerr.ResourceReferenceNotSyncedFor(
+					"SecurityGroup",
+					namespace, *arr.Name)
+			}
+			if obj.Status.ID == nil {
+				return ackerr.ResourceReferenceMissingTargetFieldFor(
+					"SecurityGroup",
+					namespace, *arr.Name,
+					"Status.ID")
+			}
+			referencedValue := string(*obj.Status.ID)
+			resolvedReferences = append(resolvedReferences, &referencedValue)
+		}
+		ko.Spec.SecurityGroups = resolvedReferences
+	}
+	return nil
 }
 
 // resolveReferenceForSubnetIDs reads the resource referenced
