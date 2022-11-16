@@ -7,6 +7,10 @@ ignore:
     # FunctionUrlConfig
 resources:
   Function:
+    synced:
+      when:
+        - path: Status.State
+          in: [ "Active" ]
     fields:
       Code.S3Bucket:
         references:
