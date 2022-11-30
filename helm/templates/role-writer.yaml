@@ -19,6 +19,8 @@ rules:
 
   - functionurlconfigs
 
+  - layerversions
+
   verbs:
   - create
   - delete
@@ -35,6 +37,7 @@ rules:
   - eventsourcemappings
   - functions
   - functionurlconfigs
+  - layerversions
   verbs:
   - get
   - patch

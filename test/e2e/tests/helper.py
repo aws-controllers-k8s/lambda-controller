@@ -112,3 +112,18 @@ class LambdaValidator:
 
     def function_url_config_exists(self, function_name: str) -> bool:
         return self.get_function_url_config(function_name) is not None
+    
+    def get_layer_version(self, layer_name: str, version_number: int) -> dict:
+        try:
+            resp = self.lambda_client.get_layer_version(
+                LayerName=layer_name,
+                VersionNumber=version_number
+            )
+            return resp
+
+        except Exception as e:
+            logging.debug(e)
+            return None
+
+    def layer_version_exists(self, layer_name:str, version_number: int) -> bool:
+        return self.get_layer_version(layer_name, version_number) is not None
