@@ -5,6 +5,13 @@ ignore:
     # CodeSigningConfig
     # EventSourceMapping
     # FunctionUrlConfig
+    # LayerVersion
+operations:
+  PublishLayerVersion:
+    operation_type:
+      - Create
+      - Update
+    resource_name: LayerVersion
 resources:
   Function:
     synced:
@@ -132,3 +139,31 @@ resources:
           resource: Function
           path: Spec.Name
         is_primary_key: true
+  LayerVersion:
+    fields:
+      LayerName:
+        is_required: true
+        is_primary_key: true
+      Content:
+        is_required: true
+        compare:
+          is_ignored: true
+        set:
+          - ignore: true
+            operation: ReadOne
+    tags:
+      ignore: true
+    renames:
+      operations:
+        GetLayerVersion:
+          input_fields:
+            Version: VersionNumber
+        PublishLayerVersion:
+          input_fields:
+            Version: VersionNumber
+        DeleteLayerVersion:
+          input_fields:
+            Version: VersionNumber
+        ListLayerVersions:
+          input_fields:
+            Version: VersionNumber

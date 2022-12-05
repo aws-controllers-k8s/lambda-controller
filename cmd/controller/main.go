@@ -43,6 +43,7 @@ import (
 	_ "github.com/aws-controllers-k8s/lambda-controller/pkg/resource/event_source_mapping"
 	_ "github.com/aws-controllers-k8s/lambda-controller/pkg/resource/function"
 	_ "github.com/aws-controllers-k8s/lambda-controller/pkg/resource/function_url_config"
+	_ "github.com/aws-controllers-k8s/lambda-controller/pkg/resource/layer_version"
 
 	"github.com/aws-controllers-k8s/lambda-controller/pkg/version"
 )

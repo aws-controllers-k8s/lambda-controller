@@ -343,9 +343,21 @@ type LayerVersionContentOutput struct {
 
 // Details about a version of an Lambda layer (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html).
 type LayerVersionsListItem struct {
-	CreatedDate     *string `json:"createdDate,omitempty"`
-	Description     *string `json:"description,omitempty"`
-	LayerVersionARN *string `json:"layerVersionARN,omitempty"`
+	CompatibleArchitectures []*string `json:"compatibleArchitectures,omitempty"`
+	CompatibleRuntimes      []*string `json:"compatibleRuntimes,omitempty"`
+	CreatedDate             *string   `json:"createdDate,omitempty"`
+	Description             *string   `json:"description,omitempty"`
+	LayerVersionARN         *string   `json:"layerVersionARN,omitempty"`
+	LicenseInfo             *string   `json:"licenseInfo,omitempty"`
+	Version                 *int64    `json:"version,omitempty"`
+}
+
+// Details about an Lambda layer (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html).
+type LayersListItem struct {
+	// Details about a version of an Lambda layer (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html).
+	LatestMatchingVersion *LayerVersionsListItem `json:"latestMatchingVersion,omitempty"`
+	LayerARN              *string                `json:"layerARN,omitempty"`
+	LayerName             *string                `json:"layerName,omitempty"`
 }
 
 // A destination for events that failed processing.
