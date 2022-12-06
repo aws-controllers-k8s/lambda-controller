@@ -79,6 +79,26 @@ class TestLayerVersion:
         # Check layer version exists
         assert lambda_validator.layer_version_exists(resource_name, version_number)
 
+        # Update cr
+        new_description = "new description"
+        updates = {
+            "spec": {
+                "description": new_description
+            },
+        }
+
+        #Patch k8s resource
+        k8s.patch_custom_resource(ref, updates)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+        version_number = cr['status']['versionNumber']
+
+        #Check layer version description
+        layer_version = lambda_validator.get_layer_version(resource_name, version_number)
+        assert layer_version is not None
+        assert layer_version['Description'] == 'new description'
+
         # Delete k8s resource
         _, deleted = k8s.delete_custom_resource(ref)
         assert deleted is True
