@@ -3,7 +3,8 @@ module github.com/aws-controllers-k8s/mq-controller
 go 1.17
 
 require (
-	github.com/aws-controllers-k8s/runtime v0.20.1
+	github.com/aws-controllers-k8s/ec2-controller v0.0.21
+	github.com/aws-controllers-k8s/runtime v0.21.0
 	github.com/aws/aws-sdk-go v1.44.93
 	github.com/go-logr/logr v1.2.0
 	github.com/spf13/pflag v1.0.5
@@ -14,7 +15,6 @@ require (
 )
 
 require (
-	github.com/aws-controllers-k8s/ec2-controller v0.0.21 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.2 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
@@ -43,7 +43,6 @@ require (
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.28.0 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
-	github.com/stretchr/objx v0.2.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.19.1 // indirect
