@@ -385,6 +385,15 @@ func (rm *resourceManager) sdkFind(
 	} else {
 		ko.Spec.EphemeralStorage = nil
 	}
+	if resp.Configuration.SnapStart != nil {
+		f32 := &svcapitypes.SnapStart{}
+		if resp.Configuration.SnapStart.ApplyOn != nil {
+			f32.ApplyOn = resp.Configuration.SnapStart.ApplyOn
+		}
+		ko.Spec.SnapStart = f32
+	} else {
+		ko.Spec.SnapStart = nil
+	}
 	return &resource{ko}, nil
 }
 
@@ -641,6 +650,15 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Status.SigningProfileVersionARN = nil
 	}
+	if resp.SnapStart != nil {
+		f26 := &svcapitypes.SnapStart{}
+		if resp.SnapStart.ApplyOn != nil {
+			f26.ApplyOn = resp.SnapStart.ApplyOn
+		}
+		ko.Spec.SnapStart = f26
+	} else {
+		ko.Spec.SnapStart = nil
+	}
 	if resp.State != nil {
 		ko.Status.State = resp.State
 	} else {
@@ -662,11 +680,11 @@ func (rm *resourceManager) sdkCreate(
 		ko.Spec.Timeout = nil
 	}
 	if resp.TracingConfig != nil {
-		f30 := &svcapitypes.TracingConfig{}
+		f31 := &svcapitypes.TracingConfig{}
 		if resp.TracingConfig.Mode != nil {
-			f30.Mode = resp.TracingConfig.Mode
+			f31.Mode = resp.TracingConfig.Mode
 		}
-		ko.Spec.TracingConfig = f30
+		ko.Spec.TracingConfig = f31
 	} else {
 		ko.Spec.TracingConfig = nil
 	}
@@ -676,26 +694,26 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.Version = nil
 	}
 	if resp.VpcConfig != nil {
-		f32 := &svcapitypes.VPCConfig{}
+		f33 := &svcapitypes.VPCConfig{}
 		if resp.VpcConfig.SecurityGroupIds != nil {
-			f32f0 := []*string{}
-			for _, f32f0iter := range resp.VpcConfig.SecurityGroupIds {
-				var f32f0elem string
-				f32f0elem = *f32f0iter
-				f32f0 = append(f32f0, &f32f0elem)
+			f33f0 := []*string{}
+			for _, f33f0iter := range resp.VpcConfig.SecurityGroupIds {
+				var f33f0elem string
+				f33f0elem = *f33f0iter
+				f33f0 = append(f33f0, &f33f0elem)
 			}
-			f32.SecurityGroupIDs = f32f0
+			f33.SecurityGroupIDs = f33f0
 		}
 		if resp.VpcConfig.SubnetIds != nil {
-			f32f1 := []*string{}
-			for _, f32f1iter := range resp.VpcConfig.SubnetIds {
-				var f32f1elem string
-				f32f1elem = *f32f1iter
-				f32f1 = append(f32f1, &f32f1elem)
+			f33f1 := []*string{}
+			for _, f33f1iter := range resp.VpcConfig.SubnetIds {
+				var f33f1elem string
+				f33f1elem = *f33f1iter
+				f33f1 = append(f33f1, &f33f1elem)
 			}
-			f32.SubnetIDs = f32f1
+			f33.SubnetIDs = f33f1
 		}
-		ko.Spec.VPCConfig = f32
+		ko.Spec.VPCConfig = f33
 	} else {
 		ko.Spec.VPCConfig = nil
 	}
@@ -867,46 +885,53 @@ func (rm *resourceManager) newCreateRequestPayload(
 	if r.ko.Spec.Runtime != nil {
 		res.SetRuntime(*r.ko.Spec.Runtime)
 	}
-	if r.ko.Spec.Tags != nil {
-		f18 := map[string]*string{}
-		for f18key, f18valiter := range r.ko.Spec.Tags {
-			var f18val string
-			f18val = *f18valiter
-			f18[f18key] = &f18val
+	if r.ko.Spec.SnapStart != nil {
+		f18 := &svcsdk.SnapStart{}
+		if r.ko.Spec.SnapStart.ApplyOn != nil {
+			f18.SetApplyOn(*r.ko.Spec.SnapStart.ApplyOn)
 		}
-		res.SetTags(f18)
+		res.SetSnapStart(f18)
+	}
+	if r.ko.Spec.Tags != nil {
+		f19 := map[string]*string{}
+		for f19key, f19valiter := range r.ko.Spec.Tags {
+			var f19val string
+			f19val = *f19valiter
+			f19[f19key] = &f19val
+		}
+		res.SetTags(f19)
 	}
 	if r.ko.Spec.Timeout != nil {
 		res.SetTimeout(*r.ko.Spec.Timeout)
 	}
 	if r.ko.Spec.TracingConfig != nil {
-		f20 := &svcsdk.TracingConfig{}
+		f21 := &svcsdk.TracingConfig{}
 		if r.ko.Spec.TracingConfig.Mode != nil {
-			f20.SetMode(*r.ko.Spec.TracingConfig.Mode)
+			f21.SetMode(*r.ko.Spec.TracingConfig.Mode)
 		}
-		res.SetTracingConfig(f20)
+		res.SetTracingConfig(f21)
 	}
 	if r.ko.Spec.VPCConfig != nil {
-		f21 := &svcsdk.VpcConfig{}
+		f22 := &svcsdk.VpcConfig{}
 		if r.ko.Spec.VPCConfig.SecurityGroupIDs != nil {
-			f21f0 := []*string{}
-			for _, f21f0iter := range r.ko.Spec.VPCConfig.SecurityGroupIDs {
-				var f21f0elem string
-				f21f0elem = *f21f0iter
-				f21f0 = append(f21f0, &f21f0elem)
+			f22f0 := []*string{}
+			for _, f22f0iter := range r.ko.Spec.VPCConfig.SecurityGroupIDs {
+				var f22f0elem string
+				f22f0elem = *f22f0iter
+				f22f0 = append(f22f0, &f22f0elem)
 			}
-			f21.SetSecurityGroupIds(f21f0)
+			f22.SetSecurityGroupIds(f22f0)
 		}
 		if r.ko.Spec.VPCConfig.SubnetIDs != nil {
-			f21f1 := []*string{}
-			for _, f21f1iter := range r.ko.Spec.VPCConfig.SubnetIDs {
-				var f21f1elem string
-				f21f1elem = *f21f1iter
-				f21f1 = append(f21f1, &f21f1elem)
+			f22f1 := []*string{}
+			for _, f22f1iter := range r.ko.Spec.VPCConfig.SubnetIDs {
+				var f22f1elem string
+				f22f1elem = *f22f1iter
+				f22f1 = append(f22f1, &f22f1elem)
 			}
-			f21.SetSubnetIds(f21f1)
+			f22.SetSubnetIds(f22f1)
 		}
-		res.SetVpcConfig(f21)
+		res.SetVpcConfig(f22)
 	}
 
 	return res, nil

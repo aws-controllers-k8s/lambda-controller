@@ -154,6 +154,17 @@ func newResourceDelta(
 	if !ackcompare.SliceStringPEqual(a.ko.Spec.Queues, b.ko.Spec.Queues) {
 		delta.Add("Spec.Queues", a.ko.Spec.Queues, b.ko.Spec.Queues)
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.ScalingConfig, b.ko.Spec.ScalingConfig) {
+		delta.Add("Spec.ScalingConfig", a.ko.Spec.ScalingConfig, b.ko.Spec.ScalingConfig)
+	} else if a.ko.Spec.ScalingConfig != nil && b.ko.Spec.ScalingConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.ScalingConfig.MaximumConcurrency, b.ko.Spec.ScalingConfig.MaximumConcurrency) {
+			delta.Add("Spec.ScalingConfig.MaximumConcurrency", a.ko.Spec.ScalingConfig.MaximumConcurrency, b.ko.Spec.ScalingConfig.MaximumConcurrency)
+		} else if a.ko.Spec.ScalingConfig.MaximumConcurrency != nil && b.ko.Spec.ScalingConfig.MaximumConcurrency != nil {
+			if *a.ko.Spec.ScalingConfig.MaximumConcurrency != *b.ko.Spec.ScalingConfig.MaximumConcurrency {
+				delta.Add("Spec.ScalingConfig.MaximumConcurrency", a.ko.Spec.ScalingConfig.MaximumConcurrency, b.ko.Spec.ScalingConfig.MaximumConcurrency)
+			}
+		}
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.SelfManagedEventSource, b.ko.Spec.SelfManagedEventSource) {
 		delta.Add("Spec.SelfManagedEventSource", a.ko.Spec.SelfManagedEventSource, b.ko.Spec.SelfManagedEventSource)
 	} else if a.ko.Spec.SelfManagedEventSource != nil && b.ko.Spec.SelfManagedEventSource != nil {

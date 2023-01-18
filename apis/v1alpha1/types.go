@@ -133,16 +133,16 @@ type EnvironmentError struct {
 }
 
 // The results of an operation to update or read environment variables. If the
-// operation is successful, the response contains the environment variables.
-// If it failed, the response contains details about the error.
+// operation succeeds, the response contains the environment variables. If it
+// fails, the response contains details about the error.
 type EnvironmentResponse struct {
 	// Error messages for environment variables that couldn't be applied.
 	Error     *EnvironmentError  `json:"error,omitempty"`
 	Variables map[string]*string `json:"variables,omitempty"`
 }
 
-// The size of the function’s /tmp directory in MB. The default value is 512,
-// but can be any whole number between 512 and 10240 MB.
+// The size of the function's /tmp directory in MB. The default value is 512,
+// but it can be any whole number between 512 and 10,240 MB.
 type EphemeralStorage struct {
 	Size *int64 `json:"size,omitempty"`
 }
@@ -170,6 +170,9 @@ type EventSourceMappingConfiguration struct {
 	MaximumRetryAttempts           *int64          `json:"maximumRetryAttempts,omitempty"`
 	ParallelizationFactor          *int64          `json:"parallelizationFactor,omitempty"`
 	Queues                         []*string       `json:"queues,omitempty"`
+	// (Amazon SQS only) The scaling configuration for the event source. To remove
+	// the configuration, pass an empty value.
+	ScalingConfig *ScalingConfig `json:"scalingConfig,omitempty"`
 	// The self-managed Apache Kafka cluster for your event source.
 	SelfManagedEventSource *SelfManagedEventSource `json:"selfManagedEventSource,omitempty"`
 	// Specific configuration settings for a self-managed Apache Kafka event source.
@@ -202,7 +205,7 @@ type FilterCriteria struct {
 	Filters []*Filter `json:"filters,omitempty"`
 }
 
-// The code for the Lambda function. You can specify either an object in Amazon
+// The code for the Lambda function. You can either specify an object in Amazon
 // S3, upload a .zip file archive deployment package directly, or specify the
 // URI of a container image.
 type FunctionCode struct {
@@ -233,17 +236,17 @@ type FunctionConfiguration struct {
 	DeadLetterConfig *DeadLetterConfig `json:"deadLetterConfig,omitempty"`
 	Description      *string           `json:"description,omitempty"`
 	// The results of an operation to update or read environment variables. If the
-	// operation is successful, the response contains the environment variables.
-	// If it failed, the response contains details about the error.
+	// operation succeeds, the response contains the environment variables. If it
+	// fails, the response contains details about the error.
 	Environment *EnvironmentResponse `json:"environment,omitempty"`
-	// The size of the function’s /tmp directory in MB. The default value is 512,
-	// but can be any whole number between 512 and 10240 MB.
+	// The size of the function's /tmp directory in MB. The default value is 512,
+	// but it can be any whole number between 512 and 10,240 MB.
 	EphemeralStorage  *EphemeralStorage   `json:"ephemeralStorage,omitempty"`
 	FileSystemConfigs []*FileSystemConfig `json:"fileSystemConfigs,omitempty"`
 	FunctionARN       *string             `json:"functionARN,omitempty"`
 	FunctionName      *string             `json:"functionName,omitempty"`
 	Handler           *string             `json:"handler,omitempty"`
-	// Response to GetFunctionConfiguration request.
+	// Response to a GetFunctionConfiguration request.
 	ImageConfigResponse        *ImageConfigResponse `json:"imageConfigResponse,omitempty"`
 	KMSKeyARN                  *string              `json:"kmsKeyARN,omitempty"`
 	LastModified               *string              `json:"lastModified,omitempty"`
@@ -259,10 +262,13 @@ type FunctionConfiguration struct {
 	Runtime                    *string              `json:"runtime,omitempty"`
 	SigningJobARN              *string              `json:"signingJobARN,omitempty"`
 	SigningProfileVersionARN   *string              `json:"signingProfileVersionARN,omitempty"`
-	State                      *string              `json:"state,omitempty"`
-	StateReason                *string              `json:"stateReason,omitempty"`
-	StateReasonCode            *string              `json:"stateReasonCode,omitempty"`
-	Timeout                    *int64               `json:"timeout,omitempty"`
+	// The function's SnapStart (https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html)
+	// setting.
+	SnapStart       *SnapStartResponse `json:"snapStart,omitempty"`
+	State           *string            `json:"state,omitempty"`
+	StateReason     *string            `json:"stateReason,omitempty"`
+	StateReasonCode *string            `json:"stateReasonCode,omitempty"`
+	Timeout         *int64             `json:"timeout,omitempty"`
 	// The function's X-Ray tracing configuration.
 	TracingConfig *TracingConfigResponse `json:"tracingConfig,omitempty"`
 	Version       *string                `json:"version,omitempty"`
@@ -293,7 +299,7 @@ type FunctionURLConfig_SDK struct {
 }
 
 // Configuration values that override the container image Dockerfile settings.
-// See Container settings (https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#images-parms).
+// For more information, see Container image settings (https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#images-parms).
 type ImageConfig struct {
 	Command          []*string `json:"command,omitempty"`
 	EntryPoint       []*string `json:"entryPoint,omitempty"`
@@ -306,12 +312,12 @@ type ImageConfigError struct {
 	Message   *string `json:"message,omitempty"`
 }
 
-// Response to GetFunctionConfiguration request.
+// Response to a GetFunctionConfiguration request.
 type ImageConfigResponse struct {
 	// Error response to GetFunctionConfiguration.
 	Error *ImageConfigError `json:"error,omitempty"`
 	// Configuration values that override the container image Dockerfile settings.
-	// See Container settings (https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#images-parms).
+	// For more information, see Container image settings (https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#images-parms).
 	ImageConfig *ImageConfig `json:"imageConfig,omitempty"`
 }
 
@@ -382,6 +388,12 @@ type PutFunctionConcurrencyOutput struct {
 	ReservedConcurrentExecutions *int64 `json:"reservedConcurrentExecutions,omitempty"`
 }
 
+// (Amazon SQS only) The scaling configuration for the event source. To remove
+// the configuration, pass an empty value.
+type ScalingConfig struct {
+	MaximumConcurrency *int64 `json:"maximumConcurrency,omitempty"`
+}
+
 // The self-managed Apache Kafka cluster for your event source.
 type SelfManagedEventSource struct {
 	Endpoints map[string][]*string `json:"endpoints,omitempty"`
@@ -390,6 +402,23 @@ type SelfManagedEventSource struct {
 // Specific configuration settings for a self-managed Apache Kafka event source.
 type SelfManagedKafkaEventSourceConfig struct {
 	ConsumerGroupID *string `json:"consumerGroupID,omitempty"`
+}
+
+// The function's Lambda SnapStart setting. Set ApplyOn to PublishedVersions
+// to create a snapshot of the initialized execution environment when you publish
+// a function version.
+//
+// SnapStart is supported with the java11 runtime. For more information, see
+// Improving startup performance with Lambda SnapStart (https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html).
+type SnapStart struct {
+	ApplyOn *string `json:"applyOn,omitempty"`
+}
+
+// The function's SnapStart (https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html)
+// setting.
+type SnapStartResponse struct {
+	ApplyOn            *string `json:"applyOn,omitempty"`
+	OptimizationStatus *string `json:"optimizationStatus,omitempty"`
 }
 
 // To secure and define access to your event source, you can specify the authentication
@@ -412,7 +441,8 @@ type TracingConfigResponse struct {
 }
 
 // The VPC security groups and subnets that are attached to a Lambda function.
-// For more information, see VPC Settings (https://docs.aws.amazon.com/lambda/latest/dg/configuration-vpc.html).
+// For more information, see Configuring a Lambda function to access resources
+// in a VPC (https://docs.aws.amazon.com/lambda/latest/dg/configuration-vpc.html).
 type VPCConfig struct {
 	SecurityGroupIDs []*string `json:"securityGroupIDs,omitempty"`
 	// Reference field for SecurityGroupIDs
