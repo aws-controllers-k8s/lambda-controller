@@ -181,6 +181,17 @@ func newResourceDelta(
 			delta.Add("Spec.Runtime", a.ko.Spec.Runtime, b.ko.Spec.Runtime)
 		}
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.SnapStart, b.ko.Spec.SnapStart) {
+		delta.Add("Spec.SnapStart", a.ko.Spec.SnapStart, b.ko.Spec.SnapStart)
+	} else if a.ko.Spec.SnapStart != nil && b.ko.Spec.SnapStart != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.SnapStart.ApplyOn, b.ko.Spec.SnapStart.ApplyOn) {
+			delta.Add("Spec.SnapStart.ApplyOn", a.ko.Spec.SnapStart.ApplyOn, b.ko.Spec.SnapStart.ApplyOn)
+		} else if a.ko.Spec.SnapStart.ApplyOn != nil && b.ko.Spec.SnapStart.ApplyOn != nil {
+			if *a.ko.Spec.SnapStart.ApplyOn != *b.ko.Spec.SnapStart.ApplyOn {
+				delta.Add("Spec.SnapStart.ApplyOn", a.ko.Spec.SnapStart.ApplyOn, b.ko.Spec.SnapStart.ApplyOn)
+			}
+		}
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.Tags, b.ko.Spec.Tags) {
 		delta.Add("Spec.Tags", a.ko.Spec.Tags, b.ko.Spec.Tags)
 	} else if a.ko.Spec.Tags != nil && b.ko.Spec.Tags != nil {

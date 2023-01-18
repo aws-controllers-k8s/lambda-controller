@@ -283,3 +283,12 @@
 	} else {
 		ko.Spec.EphemeralStorage = nil
 	}
+	if resp.Configuration.SnapStart != nil {
+		f32 := &svcapitypes.SnapStart{}
+		if resp.Configuration.SnapStart.ApplyOn != nil {
+			f32.ApplyOn = resp.Configuration.SnapStart.ApplyOn
+		}
+		ko.Spec.SnapStart = f32
+	} else {
+		ko.Spec.SnapStart = nil
+	}
