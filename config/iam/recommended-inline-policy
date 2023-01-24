@@ -6,7 +6,8 @@
             "Action": [
                 "lambda:*",
                 "s3:Get*",
-                "ecr:Get*"
+                "ecr:Get*",
+                "ecr:BatchGet*"
             ],
             "Resource": "*"
         },
