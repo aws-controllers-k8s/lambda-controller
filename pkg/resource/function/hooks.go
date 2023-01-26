@@ -238,6 +238,15 @@ func (rm *resourceManager) updateFunctionConfiguration(
 		input.VpcConfig = VPCConfig
 	}
 
+	if delta.DifferentAt("Spec.EphemeralStorage") {
+		ephemeralStorage := &svcsdk.EphemeralStorage{}
+		if dspec.EphemeralStorage != nil {
+			ephemeralStorageCopy := dspec.EphemeralStorage.DeepCopy()
+			ephemeralStorage.Size = ephemeralStorageCopy.Size
+		}
+		input.EphemeralStorage = ephemeralStorage
+	}
+
 	_, err = rm.sdkapi.UpdateFunctionConfigurationWithContext(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateFunctionConfiguration", err)
 	if err != nil {
