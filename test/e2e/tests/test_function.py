@@ -334,7 +334,8 @@ class TestFunction:
         cr["spec"]["timeout"] = 10
         cr["spec"]["ephemeralStorage"] = { "size" : 512 }
         cr["spec"]["snapStart"] = { "applyOn" : "PublishedVersions" }
-
+        cr["spec"]["ephemeralStorage"] = { "size" : 1024 }
+        
         # Patch k8s resource
         k8s.patch_custom_resource(ref, cr)
         time.sleep(UPDATE_WAIT_AFTER_SECONDS)
@@ -344,6 +345,8 @@ class TestFunction:
         assert function["Configuration"]["Timeout"] == 10
         assert function["Configuration"]["EphemeralStorage"]["Size"] == 512
         assert function["Configuration"]["SnapStart"]["ApplyOn"] == "PublishedVersions"
+        assert function["Configuration"]["EphemeralStorage"]["Size"] == 1024
+
 
         # Delete k8s resource
         _, deleted = k8s.delete_custom_resource(ref)

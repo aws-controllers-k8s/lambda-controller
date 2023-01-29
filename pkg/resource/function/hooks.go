@@ -245,6 +245,15 @@ func (rm *resourceManager) updateFunctionConfiguration(
 			snapStart.ApplyOn = snapStartCopy.ApplyOn
 		}
 		input.SnapStart = snapStart
+  }
+  
+	if delta.DifferentAt("Spec.EphemeralStorage") {
+		ephemeralStorage := &svcsdk.EphemeralStorage{}
+		if dspec.EphemeralStorage != nil {
+			ephemeralStorageCopy := dspec.EphemeralStorage.DeepCopy()
+			ephemeralStorage.Size = ephemeralStorageCopy.Size
+		}
+		input.EphemeralStorage = ephemeralStorage
 	}
 
 	_, err = rm.sdkapi.UpdateFunctionConfigurationWithContext(ctx, input)
