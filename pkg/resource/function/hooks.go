@@ -247,6 +247,15 @@ func (rm *resourceManager) updateFunctionConfiguration(
 		input.EphemeralStorage = ephemeralStorage
 	}
 
+	if delta.DifferentAt(("Spec.SnapStart")) {
+		snapStart := &svcsdk.SnapStart{}
+		if dspec.SnapStart != nil {
+			snapStartCopy := dspec.SnapStart.DeepCopy()
+			snapStart.ApplyOn = snapStartCopy.ApplyOn
+		}
+		input.SnapStart = snapStart
+	}
+
 	_, err = rm.sdkapi.UpdateFunctionConfigurationWithContext(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateFunctionConfiguration", err)
 	if err != nil {

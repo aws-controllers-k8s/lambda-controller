@@ -48,12 +48,12 @@ spec:
                   pulls from your stream or queue and sends to your function. Lambda
                   passes all of the records in the batch to the function in a single
                   call, up to the payload limit for synchronous invocation (6 MB).
-                  \n * Amazon Kinesis - Default 100. Max 10,000. \n * Amazon DynamoDB
-                  Streams - Default 100. Max 10,000. \n * Amazon Simple Queue Service
-                  - Default 10. For standard queues the max is 10,000. For FIFO queues
-                  the max is 10. \n * Amazon Managed Streaming for Apache Kafka -
-                  Default 100. Max 10,000. \n * Self-managed Apache Kafka - Default
-                  100. Max 10,000. \n * Amazon MQ (ActiveMQ and RabbitMQ) - Default
+                  \n * Amazon Kinesis – Default 100. Max 10,000. \n * Amazon DynamoDB
+                  Streams – Default 100. Max 10,000. \n * Amazon Simple Queue Service
+                  – Default 10. For standard queues the max is 10,000. For FIFO queues
+                  the max is 10. \n * Amazon Managed Streaming for Apache Kafka –
+                  Default 100. Max 10,000. \n * Self-managed Apache Kafka – Default
+                  100. Max 10,000. \n * Amazon MQ (ActiveMQ and RabbitMQ) – Default
                   100. Max 10,000."
                 format: int64
                 type: integer
@@ -84,15 +84,16 @@ spec:
                 type: boolean
               eventSourceARN:
                 description: "The Amazon Resource Name (ARN) of the event source.
-                  \n * Amazon Kinesis - The ARN of the data stream or a stream consumer.
-                  \n * Amazon DynamoDB Streams - The ARN of the stream. \n * Amazon
-                  Simple Queue Service - The ARN of the queue. \n * Amazon Managed
-                  Streaming for Apache Kafka - The ARN of the cluster."
+                  \n * Amazon Kinesis – The ARN of the data stream or a stream consumer.
+                  \n * Amazon DynamoDB Streams – The ARN of the stream. \n * Amazon
+                  Simple Queue Service – The ARN of the queue. \n * Amazon Managed
+                  Streaming for Apache Kafka – The ARN of the cluster. \n * Amazon
+                  MQ – The ARN of the broker."
                 type: string
               filterCriteria:
-                description: (Streams and Amazon SQS) An object that defines the filter
-                  criteria that determine whether Lambda should process an event.
-                  For more information, see Lambda event filtering (https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html).
+                description: An object that defines the filter criteria that determine
+                  whether Lambda should process an event. For more information, see
+                  Lambda event filtering (https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html).
                 properties:
                   filters:
                     items:
@@ -106,9 +107,9 @@ spec:
                 type: object
               functionName:
                 description: "The name of the Lambda function. \n Name formats \n
-                  * Function name - MyFunction. \n * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:MyFunction.
-                  \n * Version or Alias ARN - arn:aws:lambda:us-west-2:123456789012:function:MyFunction:PROD.
-                  \n * Partial ARN - 123456789012:function:MyFunction. \n The length
+                  * Function name – MyFunction. \n * Function ARN – arn:aws:lambda:us-west-2:123456789012:function:MyFunction.
+                  \n * Version or Alias ARN – arn:aws:lambda:us-west-2:123456789012:function:MyFunction:PROD.
+                  \n * Partial ARN – 123456789012:function:MyFunction. \n The length
                   constraint applies only to the full ARN. If you specify only the
                   function name, it's limited to 64 characters in length."
                 type: string
@@ -132,11 +133,20 @@ spec:
                   type: string
                 type: array
               maximumBatchingWindowInSeconds:
-                description: "(Streams and Amazon SQS standard queues) The maximum
-                  amount of time, in seconds, that Lambda spends gathering records
-                  before invoking the function. \n Default: 0 \n Related setting:
-                  When you set BatchSize to a value greater than 10, you must set
-                  MaximumBatchingWindowInSeconds to at least 1."
+                description: "The maximum amount of time, in seconds, that Lambda
+                  spends gathering records before invoking the function. You can configure
+                  MaximumBatchingWindowInSeconds to any value from 0 seconds to 300
+                  seconds in increments of seconds. \n For streams and Amazon SQS
+                  event sources, the default batching window is 0 seconds. For Amazon
+                  MSK, Self-managed Apache Kafka, and Amazon MQ event sources, the
+                  default batching window is 500 ms. Note that because you can only
+                  change MaximumBatchingWindowInSeconds in increments of seconds,
+                  you cannot revert back to the 500 ms default batching window after
+                  you have changed it. To restore the default batching window, you
+                  must create a new event source mapping. \n Related setting: For
+                  streams and Amazon SQS event sources, when you set BatchSize to
+                  a value greater than 10, you must set MaximumBatchingWindowInSeconds
+                  to at least 1."
                 format: int64
                 type: integer
               maximumRecordAgeInSeconds:
@@ -177,6 +187,15 @@ spec:
                 items:
                   type: string
                 type: array
+              scalingConfig:
+                description: (Amazon SQS only) The scaling configuration for the event
+                  source. For more information, see Configuring maximum concurrency
+                  for Amazon SQS event sources (https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-max-concurrency).
+                properties:
+                  maximumConcurrency:
+                    format: int64
+                    type: integer
+                type: object
               selfManagedEventSource:
                 description: The self-managed Apache Kafka cluster to receive records
                   from.
