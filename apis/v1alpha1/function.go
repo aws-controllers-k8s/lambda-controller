@@ -22,6 +22,7 @@ import (
 
 // FunctionSpec defines the desired state of Function.
 type FunctionSpec struct {
+
 	// The instruction set architecture that the function supports. Enter a string
 	// array with one of the valid values (arm64 or x86_64). The default value is
 	// x86_64.
@@ -72,11 +73,11 @@ type FunctionSpec struct {
 	//
 	// Name formats
 	//
-	//    * Function name – my-function.
+	//   - Function name – my-function.
 	//
-	//    * Function ARN – arn:aws:lambda:us-west-2:123456789012:function:my-function.
+	//   - Function ARN – arn:aws:lambda:us-west-2:123456789012:function:my-function.
 	//
-	//    * Partial ARN – 123456789012:function:my-function.
+	//   - Partial ARN – 123456789012:function:my-function.
 	//
 	// The length constraint applies only to the full ARN. If you specify only the
 	// function name, it is limited to 64 characters in length.

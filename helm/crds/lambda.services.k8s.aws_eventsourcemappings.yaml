@@ -48,12 +48,12 @@ spec:
                   pulls from your stream or queue and sends to your function. Lambda
                   passes all of the records in the batch to the function in a single
                   call, up to the payload limit for synchronous invocation (6 MB).
-                  \n * Amazon Kinesis – Default 100. Max 10,000. \n * Amazon DynamoDB
-                  Streams – Default 100. Max 10,000. \n * Amazon Simple Queue Service
+                  \n - Amazon Kinesis – Default 100. Max 10,000. \n - Amazon DynamoDB
+                  Streams – Default 100. Max 10,000. \n - Amazon Simple Queue Service
                   – Default 10. For standard queues the max is 10,000. For FIFO queues
-                  the max is 10. \n * Amazon Managed Streaming for Apache Kafka –
-                  Default 100. Max 10,000. \n * Self-managed Apache Kafka – Default
-                  100. Max 10,000. \n * Amazon MQ (ActiveMQ and RabbitMQ) – Default
+                  the max is 10. \n - Amazon Managed Streaming for Apache Kafka –
+                  Default 100. Max 10,000. \n - Self-managed Apache Kafka – Default
+                  100. Max 10,000. \n - Amazon MQ (ActiveMQ and RabbitMQ) – Default
                   100. Max 10,000."
                 format: int64
                 type: integer
@@ -84,10 +84,10 @@ spec:
                 type: boolean
               eventSourceARN:
                 description: "The Amazon Resource Name (ARN) of the event source.
-                  \n * Amazon Kinesis – The ARN of the data stream or a stream consumer.
-                  \n * Amazon DynamoDB Streams – The ARN of the stream. \n * Amazon
-                  Simple Queue Service – The ARN of the queue. \n * Amazon Managed
-                  Streaming for Apache Kafka – The ARN of the cluster. \n * Amazon
+                  \n - Amazon Kinesis – The ARN of the data stream or a stream consumer.
+                  \n - Amazon DynamoDB Streams – The ARN of the stream. \n - Amazon
+                  Simple Queue Service – The ARN of the queue. \n - Amazon Managed
+                  Streaming for Apache Kafka – The ARN of the cluster. \n - Amazon
                   MQ – The ARN of the broker."
                 type: string
               filterCriteria:
@@ -107,9 +107,9 @@ spec:
                 type: object
               functionName:
                 description: "The name of the Lambda function. \n Name formats \n
-                  * Function name – MyFunction. \n * Function ARN – arn:aws:lambda:us-west-2:123456789012:function:MyFunction.
-                  \n * Version or Alias ARN – arn:aws:lambda:us-west-2:123456789012:function:MyFunction:PROD.
-                  \n * Partial ARN – 123456789012:function:MyFunction. \n The length
+                  - Function name – MyFunction. \n - Function ARN – arn:aws:lambda:us-west-2:123456789012:function:MyFunction.
+                  \n - Version or Alias ARN – arn:aws:lambda:us-west-2:123456789012:function:MyFunction:PROD.
+                  \n - Partial ARN – 123456789012:function:MyFunction. \n The length
                   constraint applies only to the full ARN. If you specify only the
                   function name, it's limited to 64 characters in length."
                 type: string
