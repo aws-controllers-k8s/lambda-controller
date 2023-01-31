@@ -44,7 +44,7 @@ def lambda_function():
         replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
         replacements["LAMBDA_ROLE"] = resources.ESMRole.arn
         replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
-        replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "0"
+        replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "10"
         replacements["CODE_SIGNING_CONFIG_ARN"] = ""
         replacements["AWS_REGION"] = get_region()
 
@@ -128,6 +128,7 @@ class TestEventSourceMapping:
                 },
             ]
         }
+        cr["spec"]["scalingConfig"] = {"maximumConcurrency": 4}
 
         # Patch k8s resource
         k8s.patch_custom_resource(ref, cr)
@@ -142,6 +143,8 @@ class TestEventSourceMapping:
                 "Pattern": "{\"controller-version\":[\"v1\"]}"
             },
         ]
+        assert esm["ScalingConfig"]["MaximumConcurrency"] == 4
+
 
         # Delete the filterCriteria field
         cr = k8s.wait_resource_consumed_by_controller(ref)
