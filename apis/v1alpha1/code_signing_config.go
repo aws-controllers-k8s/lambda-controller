@@ -24,6 +24,7 @@ import (
 //
 // Details about a Code signing configuration (https://docs.aws.amazon.com/lambda/latest/dg/configuration-codesigning.html).
 type CodeSigningConfigSpec struct {
+
 	// Signing profiles for this code signing configuration.
 	// +kubebuilder:validation:Required
 	AllowedPublishers *AllowedPublishers `json:"allowedPublishers"`
