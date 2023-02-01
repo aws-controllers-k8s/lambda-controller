@@ -5,7 +5,7 @@ metadata:
   namespace: ack-system
 spec:
   selector:
-    app.kubernetes.io/name: ack-lambda-controller
+    control-plane: controller
   ports:
     - name: metricsport
       port: 8080

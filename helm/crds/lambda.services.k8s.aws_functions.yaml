@@ -172,8 +172,8 @@ spec:
                 type: integer
               name:
                 description: "The name of the Lambda function. \n Name formats \n
-                  - Function name – my-function. \n - Function ARN – arn:aws:lambda:us-west-2:123456789012:function:my-function.
-                  \n - Partial ARN – 123456789012:function:my-function. \n The length
+                  * Function name – my-function. \n * Function ARN – arn:aws:lambda:us-west-2:123456789012:function:my-function.
+                  \n * Partial ARN – 123456789012:function:my-function. \n The length
                   constraint applies only to the full ARN. If you specify only the
                   function name, it is limited to 64 characters in length."
                 type: string
