@@ -22,7 +22,6 @@ import (
 
 // EventSourceMappingSpec defines the desired state of EventSourceMapping.
 type EventSourceMappingSpec struct {
-
 	// Specific configuration settings for an Amazon Managed Streaming for Apache
 	// Kafka (Amazon MSK) event source.
 	AmazonManagedKafkaEventSourceConfig *AmazonManagedKafkaEventSourceConfig `json:"amazonManagedKafkaEventSourceConfig,omitempty"`
@@ -31,18 +30,18 @@ type EventSourceMappingSpec struct {
 	// the batch to the function in a single call, up to the payload limit for synchronous
 	// invocation (6 MB).
 	//
-	//   - Amazon Kinesis – Default 100. Max 10,000.
+	//    * Amazon Kinesis – Default 100. Max 10,000.
 	//
-	//   - Amazon DynamoDB Streams – Default 100. Max 10,000.
+	//    * Amazon DynamoDB Streams – Default 100. Max 10,000.
 	//
-	//   - Amazon Simple Queue Service – Default 10. For standard queues the
-	//     max is 10,000. For FIFO queues the max is 10.
+	//    * Amazon Simple Queue Service – Default 10. For standard queues the
+	//    max is 10,000. For FIFO queues the max is 10.
 	//
-	//   - Amazon Managed Streaming for Apache Kafka – Default 100. Max 10,000.
+	//    * Amazon Managed Streaming for Apache Kafka – Default 100. Max 10,000.
 	//
-	//   - Self-managed Apache Kafka – Default 100. Max 10,000.
+	//    * Self-managed Apache Kafka – Default 100. Max 10,000.
 	//
-	//   - Amazon MQ (ActiveMQ and RabbitMQ) – Default 100. Max 10,000.
+	//    * Amazon MQ (ActiveMQ and RabbitMQ) – Default 100. Max 10,000.
 	BatchSize *int64 `json:"batchSize,omitempty"`
 	// (Streams only) If the function returns an error, split the batch in two and
 	// retry.
@@ -57,15 +56,15 @@ type EventSourceMappingSpec struct {
 	Enabled *bool `json:"enabled,omitempty"`
 	// The Amazon Resource Name (ARN) of the event source.
 	//
-	//   - Amazon Kinesis – The ARN of the data stream or a stream consumer.
+	//    * Amazon Kinesis – The ARN of the data stream or a stream consumer.
 	//
-	//   - Amazon DynamoDB Streams – The ARN of the stream.
+	//    * Amazon DynamoDB Streams – The ARN of the stream.
 	//
-	//   - Amazon Simple Queue Service – The ARN of the queue.
+	//    * Amazon Simple Queue Service – The ARN of the queue.
 	//
-	//   - Amazon Managed Streaming for Apache Kafka – The ARN of the cluster.
+	//    * Amazon Managed Streaming for Apache Kafka – The ARN of the cluster.
 	//
-	//   - Amazon MQ – The ARN of the broker.
+	//    * Amazon MQ – The ARN of the broker.
 	EventSourceARN *string `json:"eventSourceARN,omitempty"`
 	// An object that defines the filter criteria that determine whether Lambda
 	// should process an event. For more information, see Lambda event filtering
@@ -75,13 +74,13 @@ type EventSourceMappingSpec struct {
 	//
 	// Name formats
 	//
-	//   - Function name – MyFunction.
+	//    * Function name – MyFunction.
 	//
-	//   - Function ARN – arn:aws:lambda:us-west-2:123456789012:function:MyFunction.
+	//    * Function ARN – arn:aws:lambda:us-west-2:123456789012:function:MyFunction.
 	//
-	//   - Version or Alias ARN – arn:aws:lambda:us-west-2:123456789012:function:MyFunction:PROD.
+	//    * Version or Alias ARN – arn:aws:lambda:us-west-2:123456789012:function:MyFunction:PROD.
 	//
-	//   - Partial ARN – 123456789012:function:MyFunction.
+	//    * Partial ARN – 123456789012:function:MyFunction.
 	//
 	// The length constraint applies only to the full ARN. If you specify only the
 	// function name, it's limited to 64 characters in length.

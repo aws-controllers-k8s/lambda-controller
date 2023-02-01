@@ -1,12 +1,12 @@
 module github.com/aws-controllers-k8s/lambda-controller
 
-go 1.19
+go 1.17
 
 require (
 	github.com/aws-controllers-k8s/ec2-controller v0.0.21
 	github.com/aws-controllers-k8s/kms-controller v0.1.2
 	github.com/aws-controllers-k8s/mq-controller v0.0.22
-	github.com/aws-controllers-k8s/runtime v0.23.0
+	github.com/aws-controllers-k8s/runtime v0.21.0
 	github.com/aws-controllers-k8s/s3-controller v0.1.5
 	github.com/aws/aws-sdk-go v1.44.181
 	github.com/go-logr/logr v1.2.0
