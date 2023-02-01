@@ -67,9 +67,9 @@ spec:
                 type: string
               licenseInfo:
                 description: "The layer's software license. It can be any of the following:
-                  \n * An SPDX license identifier (https://spdx.org/licenses/). For
-                  example, MIT. \n * The URL of a license hosted on the internet.
-                  For example, https://opensource.org/licenses/MIT. \n * The full
+                  \n - An SPDX license identifier (https://spdx.org/licenses/). For
+                  example, MIT. \n - The URL of a license hosted on the internet.
+                  For example, https://opensource.org/licenses/MIT. \n - The full
                   text of the license."
                 type: string
             required:
