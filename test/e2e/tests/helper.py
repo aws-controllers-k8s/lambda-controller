@@ -127,3 +127,13 @@ class LambdaValidator:
 
     def layer_version_exists(self, layer_name:str, version_number: int) -> bool:
         return self.get_layer_version(layer_name, version_number) is not None
+
+    def list_layer_versions(self, layer_name:str) -> list:
+        try:
+            resp = self.lambda_client.list_layer_versions(
+                LayerName = layer_name
+            )
+            return resp
+        except Exception as e:
+            logging.debug(e)
+            return None

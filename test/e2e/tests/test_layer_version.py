@@ -103,6 +103,11 @@ class TestLayerVersion:
         _, deleted = k8s.delete_custom_resource(ref)
         assert deleted is True
 
+        # Check if all versions are deleted
+        layer_name = cr['spec']['layerName']
+        list = lambda_validator.list_layer_versions(layer_name)
+        assert len(list["LayerVersions"]) == 0
+
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
 
         # Check layer version doesn't exist
