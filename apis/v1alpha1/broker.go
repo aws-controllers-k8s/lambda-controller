@@ -23,50 +23,32 @@ import (
 // BrokerSpec defines the desired state of Broker.
 type BrokerSpec struct {
 	AuthenticationStrategy *string `json:"authenticationStrategy,omitempty"`
-
 	// +kubebuilder:validation:Required
-	AutoMinorVersionUpgrade *bool `json:"autoMinorVersionUpgrade"`
-
-	Configuration *ConfigurationID `json:"configuration,omitempty"`
-
-	CreatorRequestID *string `json:"creatorRequestID,omitempty"`
-
+	AutoMinorVersionUpgrade *bool            `json:"autoMinorVersionUpgrade"`
+	Configuration           *ConfigurationID `json:"configuration,omitempty"`
+	CreatorRequestID        *string          `json:"creatorRequestID,omitempty"`
 	// +kubebuilder:validation:Required
-	DeploymentMode *string `json:"deploymentMode"`
-
+	DeploymentMode    *string            `json:"deploymentMode"`
 	EncryptionOptions *EncryptionOptions `json:"encryptionOptions,omitempty"`
-
 	// +kubebuilder:validation:Required
 	EngineType *string `json:"engineType"`
-
 	// +kubebuilder:validation:Required
 	EngineVersion *string `json:"engineVersion"`
-
 	// +kubebuilder:validation:Required
-	HostInstanceType *string `json:"hostInstanceType"`
-
-	LDAPServerMetadata *LDAPServerMetadataInput `json:"ldapServerMetadata,omitempty"`
-
-	Logs *Logs `json:"logs,omitempty"`
-
-	MaintenanceWindowStartTime *WeeklyStartTime `json:"maintenanceWindowStartTime,omitempty"`
-
+	HostInstanceType           *string                  `json:"hostInstanceType"`
+	LDAPServerMetadata         *LDAPServerMetadataInput `json:"ldapServerMetadata,omitempty"`
+	Logs                       *Logs                    `json:"logs,omitempty"`
+	MaintenanceWindowStartTime *WeeklyStartTime         `json:"maintenanceWindowStartTime,omitempty"`
 	// +kubebuilder:validation:Required
 	Name *string `json:"name"`
-
 	// +kubebuilder:validation:Required
 	PubliclyAccessible *bool                                      `json:"publiclyAccessible"`
 	SecurityGroupRefs  []*ackv1alpha1.AWSResourceReferenceWrapper `json:"securityGroupRefs,omitempty"`
-
-	SecurityGroups []*string `json:"securityGroups,omitempty"`
-
-	StorageType *string `json:"storageType,omitempty"`
-
-	SubnetIDs  []*string                                  `json:"subnetIDs,omitempty"`
-	SubnetRefs []*ackv1alpha1.AWSResourceReferenceWrapper `json:"subnetRefs,omitempty"`
-
-	Tags map[string]*string `json:"tags,omitempty"`
-
+	SecurityGroups     []*string                                  `json:"securityGroups,omitempty"`
+	StorageType        *string                                    `json:"storageType,omitempty"`
+	SubnetIDs          []*string                                  `json:"subnetIDs,omitempty"`
+	SubnetRefs         []*ackv1alpha1.AWSResourceReferenceWrapper `json:"subnetRefs,omitempty"`
+	Tags               map[string]*string                         `json:"tags,omitempty"`
 	// +kubebuilder:validation:Required
 	Users []*User `json:"users"`
 }
@@ -84,13 +66,10 @@ type BrokerStatus struct {
 	// resource
 	// +kubebuilder:validation:Optional
 	Conditions []*ackv1alpha1.Condition `json:"conditions"`
-
 	// +kubebuilder:validation:Optional
 	BrokerID *string `json:"brokerID,omitempty"`
-
 	// +kubebuilder:validation:Optional
 	BrokerInstances []*BrokerInstance `json:"brokerInstances,omitempty"`
-
 	// +kubebuilder:validation:Optional
 	BrokerState *string `json:"brokerState,omitempty"`
 }
