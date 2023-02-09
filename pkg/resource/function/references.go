@@ -127,50 +127,55 @@ func resolveReferenceForCode_S3Bucket(
 	if ko.Spec.Code == nil {
 		return nil
 	}
+
 	if ko.Spec.Code.S3BucketRef != nil &&
-		ko.Spec.Code.S3BucketRef.From != nil {
-		arr := ko.Spec.Code.S3BucketRef.From
-		if arr == nil || arr.Name == nil || *arr.Name == "" {
-			return fmt.Errorf("provided resource reference is nil or empty")
-		}
-		namespacedName := types.NamespacedName{
-			Namespace: namespace,
-			Name:      *arr.Name,
-		}
-		obj := s3apitypes.Bucket{}
-		err := apiReader.Get(ctx, namespacedName, &obj)
-		if err != nil {
-			return err
-		}
-		var refResourceSynced, refResourceTerminal bool
-		for _, cond := range obj.Status.Conditions {
-			if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
-				cond.Status == corev1.ConditionTrue {
-				refResourceSynced = true
+		len(ko.Spec.Code.S3BucketRef) > 0 {
+		resolvedReferences := []*string{}
+		for _, arrw := range ko.Spec.Code.S3BucketRef {
+			arr := arrw.From
+			if arr == nil || arr.Name == nil || *arr.Name == "" {
+				return fmt.Errorf("provided resource reference is nil or empty")
 			}
-			if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
-				cond.Status == corev1.ConditionTrue {
-				refResourceTerminal = true
+			namespacedName := types.NamespacedName{
+				Namespace: namespace,
+				Name:      *arr.Name,
 			}
+			obj := s3apitypes.Bucket{}
+			err := apiReader.Get(ctx, namespacedName, &obj)
+			if err != nil {
+				return err
+			}
+			var refResourceSynced, refResourceTerminal bool
+			for _, cond := range obj.Status.Conditions {
+				if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+					cond.Status == corev1.ConditionTrue {
+					refResourceSynced = true
+				}
+				if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
+					cond.Status == corev1.ConditionTrue {
+					refResourceTerminal = true
+				}
+			}
+			if refResourceTerminal {
+				return ackerr.ResourceReferenceTerminalFor(
+					"Bucket",
+					namespace, *arr.Name)
+			}
+			if !refResourceSynced {
+				return ackerr.ResourceReferenceNotSyncedFor(
+					"Bucket",
+					namespace, *arr.Name)
+			}
+			if obj.Spec.Name == nil {
+				return ackerr.ResourceReferenceMissingTargetFieldFor(
+					"Bucket",
+					namespace, *arr.Name,
+					"Spec.Name")
+			}
+			referencedValue := string(*obj.Spec.Name)
+			resolvedReferences = append(resolvedReferences, &referencedValue)
 		}
-		if refResourceTerminal {
-			return ackerr.ResourceReferenceTerminalFor(
-				"Bucket",
-				namespace, *arr.Name)
-		}
-		if !refResourceSynced {
-			return ackerr.ResourceReferenceNotSyncedFor(
-				"Bucket",
-				namespace, *arr.Name)
-		}
-		if obj.Spec.Name == nil {
-			return ackerr.ResourceReferenceMissingTargetFieldFor(
-				"Bucket",
-				namespace, *arr.Name,
-				"Spec.Name")
-		}
-		referencedValue := string(*obj.Spec.Name)
-		ko.Spec.Code.S3Bucket = &referencedValue
+		ko.Spec.Code.S3Bucket = resolvedReferences
 	}
 	return nil
 }
