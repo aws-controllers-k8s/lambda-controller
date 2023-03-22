@@ -1671,6 +1671,11 @@ func (in *FunctionSpec) DeepCopyInto(out *FunctionSpec) {
 		*out = new(FunctionCode)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.CodeS3SHA256 != nil {
+		in, out := &in.CodeS3SHA256, &out.CodeS3SHA256
+		*out = new(string)
+		**out = **in
+	}
 	if in.CodeSigningConfigARN != nil {
 		in, out := &in.CodeSigningConfigARN, &out.CodeSigningConfigARN
 		*out = new(string)

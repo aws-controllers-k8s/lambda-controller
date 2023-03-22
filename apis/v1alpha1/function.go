@@ -29,7 +29,8 @@ type FunctionSpec struct {
 	Architectures []*string `json:"architectures,omitempty"`
 	// The code for the function.
 	// +kubebuilder:validation:Required
-	Code *FunctionCode `json:"code"`
+	Code         *FunctionCode `json:"code"`
+	CodeS3SHA256 *string       `json:"codeS3SHA256,omitempty"`
 	// To enable code signing for this function, specify the ARN of a code-signing
 	// configuration. A code-signing configuration includes a set of signing profiles,
 	// which define the trusted publishers for this function.
