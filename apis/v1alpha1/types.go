@@ -215,6 +215,7 @@ type FunctionCode struct {
 	S3BucketRef     *ackv1alpha1.AWSResourceReferenceWrapper `json:"s3BucketRef,omitempty"`
 	S3Key           *string                                  `json:"s3Key,omitempty"`
 	S3ObjectVersion *string                                  `json:"s3ObjectVersion,omitempty"`
+	S3SHA256        *string                                  `json:"s3SHA256,omitempty"`
 	ZipFile         []byte                                   `json:"zipFile,omitempty"`
 }
 

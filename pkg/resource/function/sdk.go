@@ -783,6 +783,9 @@ func (rm *resourceManager) newCreateRequestPayload(
 		if r.ko.Spec.Code.S3ObjectVersion != nil {
 			f1.SetS3ObjectVersion(*r.ko.Spec.Code.S3ObjectVersion)
 		}
+		if r.ko.Spec.Code.S3SHA256 != nil {
+			f1.SetS3SHA256(*r.ko.Spec.Code.S3SHA256)
+		}
 		if r.ko.Spec.Code.ZipFile != nil {
 			f1.SetZipFile(r.ko.Spec.Code.ZipFile)
 		}

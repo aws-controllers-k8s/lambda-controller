@@ -1353,6 +1353,11 @@ func (in *FunctionCode) DeepCopyInto(out *FunctionCode) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.S3SHA256 != nil {
+		in, out := &in.S3SHA256, &out.S3SHA256
+		*out = new(string)
+		**out = **in
+	}
 	if in.ZipFile != nil {
 		in, out := &in.ZipFile, &out.ZipFile
 		*out = make([]byte, len(*in))
@@ -1788,11 +1793,6 @@ func (in *FunctionSpec) DeepCopyInto(out *FunctionSpec) {
 	if in.Publish != nil {
 		in, out := &in.Publish, &out.Publish
 		*out = new(bool)
-		**out = **in
-	}
-	if in.ReservedConcurrentExecutions != nil {
-		in, out := &in.ReservedConcurrentExecutions, &out.ReservedConcurrentExecutions
-		*out = new(int64)
 		**out = **in
 	}
 	if in.Role != nil {

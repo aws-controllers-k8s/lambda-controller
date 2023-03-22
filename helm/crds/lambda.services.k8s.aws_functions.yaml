@@ -70,6 +70,8 @@ spec:
                     type: string
                   s3ObjectVersion:
                     type: string
+                  s3SHA256:
+                    type: string
                   zipFile:
                     format: byte
                     type: string
@@ -265,11 +267,6 @@ spec:
                 description: Set to true to publish the first version of the function
                   during creation.
                 type: boolean
-              reservedConcurrentExecutions:
-                description: The number of simultaneous executions to reserve for
-                  the function.
-                format: int64
-                type: integer
               role:
                 description: The Amazon Resource Name (ARN) of the function's execution
                   role.
