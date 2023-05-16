@@ -43,6 +43,11 @@ LAMBDA_FUNCTION_FILE_ZIP = "main.zip"
 LAMBDA_FUNCTION_FILE_PATH = f"./resources/lambda_function/{LAMBDA_FUNCTION_FILE}"
 LAMBDA_FUNCTION_FILE_PATH_ZIP = f"./resources/lambda_function/{LAMBDA_FUNCTION_FILE_ZIP}"
 
+LAMBDA_FUNCTION_UPDATED_FILE = "updated_main.py"
+LAMBDA_FUNCTION_UPDATED_FILE_ZIP = "updated_main.zip"
+LAMBDA_FUNCTION_UPDATED_FILE_PATH = f"./resources/lambda_function/{LAMBDA_FUNCTION_UPDATED_FILE}"
+LAMBDA_FUNCTION_UPDATED_FILE_PATH_ZIP = f"./resources/lambda_function/{LAMBDA_FUNCTION_UPDATED_FILE_ZIP}" 
+
 AWS_SIGNING_PLATFORM_ID = "AWSLambda-SHA384-ECDSA"
 
 def zip_function_file(src: str, dst: str):
@@ -125,6 +130,12 @@ def service_bootstrap() -> Resources:
         zip_function_file(LAMBDA_FUNCTION_FILE_PATH, LAMBDA_FUNCTION_FILE_PATH_ZIP)
         upload_function_to_bucket(
             LAMBDA_FUNCTION_FILE_PATH_ZIP,
+            resources.FunctionsBucket.name,
+        )
+
+        zip_function_file(LAMBDA_FUNCTION_UPDATED_FILE_PATH, LAMBDA_FUNCTION_UPDATED_FILE_PATH_ZIP)
+        upload_function_to_bucket(
+            LAMBDA_FUNCTION_UPDATED_FILE_PATH_ZIP,
             resources.FunctionsBucket.name,
         )
     except BootstrapFailureException as ex:

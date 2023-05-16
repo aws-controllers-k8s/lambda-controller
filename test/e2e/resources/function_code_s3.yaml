@@ -1,0 +1,18 @@
+apiVersion: lambda.services.k8s.aws/v1alpha1
+kind: Function
+metadata:
+  name: $FUNCTION_NAME
+  annotations:
+    services.k8s.aws/region: $AWS_REGION
+spec:
+  name: $FUNCTION_NAME
+  code:
+    s3Bucket: $BUCKET_NAME
+    s3Key: $LAMBDA_FILE_NAME
+  role: $LAMBDA_ROLE
+  codeS3SHA256: $HASH
+  runtime: python3.9
+  handler: main
+  description: function created by ACK lambda-controller e2e tests
+  reservedConcurrentExecutions: $RESERVED_CONCURRENT_EXECUTIONS
+  codeSigningConfigARN: "$CODE_SIGNING_CONFIG_ARN"
