@@ -26,7 +26,6 @@ import (
 	ec2apitypes "github.com/aws-controllers-k8s/ec2-controller/apis/v1alpha1"
 	kmsapitypes "github.com/aws-controllers-k8s/kms-controller/apis/v1alpha1"
 	ackv1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
-	ackcondition "github.com/aws-controllers-k8s/runtime/pkg/condition"
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	acktypes "github.com/aws-controllers-k8s/runtime/pkg/types"
 	s3apitypes "github.com/aws-controllers-k8s/s3-controller/apis/v1alpha1"
@@ -46,102 +45,136 @@ import (
 // +kubebuilder:rbac:groups=ec2.services.k8s.aws,resources=subnets,verbs=get;list
 // +kubebuilder:rbac:groups=ec2.services.k8s.aws,resources=subnets/status,verbs=get;list
 
+// ClearResolvedReferences removes any reference values that were made
+// concrete in the spec. It returns a copy of the input AWSResource which
+// contains the original *Ref values, but none of their respective concrete
+// values.
+func (rm *resourceManager) ClearResolvedReferences(res acktypes.AWSResource) acktypes.AWSResource {
+	ko := rm.concreteResource(res).ko.DeepCopy()
+
+	if ko.Spec.Code != nil {
+		if ko.Spec.Code.S3BucketRef != nil {
+			ko.Spec.Code.S3Bucket = nil
+		}
+	}
+
+	if ko.Spec.KMSKeyRef != nil {
+		ko.Spec.KMSKeyARN = nil
+	}
+
+	if ko.Spec.VPCConfig != nil {
+		if len(ko.Spec.VPCConfig.SecurityGroupRefs) > 0 {
+			ko.Spec.VPCConfig.SecurityGroupIDs = nil
+		}
+	}
+
+	if ko.Spec.VPCConfig != nil {
+		if len(ko.Spec.VPCConfig.SubnetRefs) > 0 {
+			ko.Spec.VPCConfig.SubnetIDs = nil
+		}
+	}
+
+	return &resource{ko}
+}
+
 // ResolveReferences finds if there are any Reference field(s) present
-// inside AWSResource passed in the parameter and attempts to resolve
-// those reference field(s) into target field(s).
-// It returns an AWSResource with resolved reference(s), and an error if the
-// passed AWSResource's reference field(s) cannot be resolved.
-// This method also adds/updates the ConditionTypeReferencesResolved for the
-// AWSResource.
+// inside AWSResource passed in the parameter and attempts to resolve those
+// reference field(s) into their respective target field(s). It returns a
+// copy of the input AWSResource with resolved reference(s), a boolean which
+// is set to true if the resource contains any references (regardless of if
+// they are resolved successfully) and an error if the passed AWSResource's
+// reference field(s) could not be resolved.
 func (rm *resourceManager) ResolveReferences(
 	ctx context.Context,
 	apiReader client.Reader,
 	res acktypes.AWSResource,
-) (acktypes.AWSResource, error) {
+) (acktypes.AWSResource, bool, error) {
 	namespace := res.MetaObject().GetNamespace()
-	ko := rm.concreteResource(res).ko.DeepCopy()
+	ko := rm.concreteResource(res).ko
+
+	resourceHasReferences := false
 	err := validateReferenceFields(ko)
-	if err == nil {
-		err = resolveReferenceForCode_S3Bucket(ctx, apiReader, namespace, ko)
-	}
-	if err == nil {
-		err = resolveReferenceForKMSKeyARN(ctx, apiReader, namespace, ko)
-	}
-	if err == nil {
-		err = resolveReferenceForVPCConfig_SecurityGroupIDs(ctx, apiReader, namespace, ko)
-	}
-	if err == nil {
-		err = resolveReferenceForVPCConfig_SubnetIDs(ctx, apiReader, namespace, ko)
+	if fieldHasReferences, err := rm.resolveReferenceForCode_S3Bucket(ctx, apiReader, namespace, ko); err != nil {
+		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
+	} else {
+		resourceHasReferences = resourceHasReferences || fieldHasReferences
 	}
 
-	// If there was an error while resolving any reference, reset all the
-	// resolved values so that they do not get persisted inside etcd
-	if err != nil {
-		ko = rm.concreteResource(res).ko.DeepCopy()
+	if fieldHasReferences, err := rm.resolveReferenceForKMSKeyARN(ctx, apiReader, namespace, ko); err != nil {
+		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
+	} else {
+		resourceHasReferences = resourceHasReferences || fieldHasReferences
 	}
-	if hasNonNilReferences(ko) {
-		return ackcondition.WithReferencesResolvedCondition(&resource{ko}, err)
+
+	if fieldHasReferences, err := rm.resolveReferenceForVPCConfig_SecurityGroupIDs(ctx, apiReader, namespace, ko); err != nil {
+		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
+	} else {
+		resourceHasReferences = resourceHasReferences || fieldHasReferences
 	}
-	return &resource{ko}, err
+
+	if fieldHasReferences, err := rm.resolveReferenceForVPCConfig_SubnetIDs(ctx, apiReader, namespace, ko); err != nil {
+		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
+	} else {
+		resourceHasReferences = resourceHasReferences || fieldHasReferences
+	}
+
+	return &resource{ko}, resourceHasReferences, err
 }
 
 // validateReferenceFields validates the reference field and corresponding
 // identifier field.
 func validateReferenceFields(ko *svcapitypes.Function) error {
+
 	if ko.Spec.Code != nil {
 		if ko.Spec.Code.S3BucketRef != nil && ko.Spec.Code.S3Bucket != nil {
 			return ackerr.ResourceReferenceAndIDNotSupportedFor("Code.S3Bucket", "Code.S3BucketRef")
 		}
 	}
+
 	if ko.Spec.KMSKeyRef != nil && ko.Spec.KMSKeyARN != nil {
 		return ackerr.ResourceReferenceAndIDNotSupportedFor("KMSKeyARN", "KMSKeyRef")
 	}
+
 	if ko.Spec.VPCConfig != nil {
-		if ko.Spec.VPCConfig.SecurityGroupRefs != nil && ko.Spec.VPCConfig.SecurityGroupIDs != nil {
+		if len(ko.Spec.VPCConfig.SecurityGroupRefs) > 0 && len(ko.Spec.VPCConfig.SecurityGroupIDs) > 0 {
 			return ackerr.ResourceReferenceAndIDNotSupportedFor("VPCConfig.SecurityGroupIDs", "VPCConfig.SecurityGroupRefs")
 		}
 	}
+
 	if ko.Spec.VPCConfig != nil {
-		if ko.Spec.VPCConfig.SubnetRefs != nil && ko.Spec.VPCConfig.SubnetIDs != nil {
+		if len(ko.Spec.VPCConfig.SubnetRefs) > 0 && len(ko.Spec.VPCConfig.SubnetIDs) > 0 {
 			return ackerr.ResourceReferenceAndIDNotSupportedFor("VPCConfig.SubnetIDs", "VPCConfig.SubnetRefs")
 		}
 	}
 	return nil
 }
 
-// hasNonNilReferences returns true if resource contains a reference to another
-// resource
-func hasNonNilReferences(ko *svcapitypes.Function) bool {
-	return false || (ko.Spec.Code != nil && ko.Spec.Code.S3BucketRef != nil) || (ko.Spec.KMSKeyRef != nil) || (ko.Spec.VPCConfig != nil && ko.Spec.VPCConfig.SecurityGroupRefs != nil) || (ko.Spec.VPCConfig != nil && ko.Spec.VPCConfig.SubnetRefs != nil)
-}
-
 // resolveReferenceForCode_S3Bucket reads the resource referenced
 // from Code.S3BucketRef field and sets the Code.S3Bucket
-// from referenced resource
-func resolveReferenceForCode_S3Bucket(
+// from referenced resource. Returns a boolean indicating whether a reference
+// contains references, or an error
+func (rm *resourceManager) resolveReferenceForCode_S3Bucket(
 	ctx context.Context,
 	apiReader client.Reader,
 	namespace string,
 	ko *svcapitypes.Function,
-) error {
-	if ko.Spec.Code == nil {
-		return nil
-	}
+) (hasReferences bool, err error) {
 	if ko.Spec.Code != nil {
 		if ko.Spec.Code.S3BucketRef != nil && ko.Spec.Code.S3BucketRef.From != nil {
+			hasReferences = true
 			arr := ko.Spec.Code.S3BucketRef.From
-			if arr == nil || arr.Name == nil || *arr.Name == "" {
-				return fmt.Errorf("provided resource reference is nil or empty: Code.S3BucketRef")
+			if arr.Name == nil || *arr.Name == "" {
+				return hasReferences, fmt.Errorf("provided resource reference is nil or empty: Code.S3BucketRef")
 			}
 			obj := &s3apitypes.Bucket{}
 			if err := getReferencedResourceState_Bucket(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
-				return err
+				return hasReferences, err
 			}
 			ko.Spec.Code.S3Bucket = (*string)(obj.Spec.Name)
 		}
 	}
 
-	return nil
+	return hasReferences, nil
 }
 
 // getReferencedResourceState_Bucket looks up whether a referenced resource
@@ -197,26 +230,28 @@ func getReferencedResourceState_Bucket(
 
 // resolveReferenceForKMSKeyARN reads the resource referenced
 // from KMSKeyRef field and sets the KMSKeyARN
-// from referenced resource
-func resolveReferenceForKMSKeyARN(
+// from referenced resource. Returns a boolean indicating whether a reference
+// contains references, or an error
+func (rm *resourceManager) resolveReferenceForKMSKeyARN(
 	ctx context.Context,
 	apiReader client.Reader,
 	namespace string,
 	ko *svcapitypes.Function,
-) error {
+) (hasReferences bool, err error) {
 	if ko.Spec.KMSKeyRef != nil && ko.Spec.KMSKeyRef.From != nil {
+		hasReferences = true
 		arr := ko.Spec.KMSKeyRef.From
-		if arr == nil || arr.Name == nil || *arr.Name == "" {
-			return fmt.Errorf("provided resource reference is nil or empty: KMSKeyRef")
+		if arr.Name == nil || *arr.Name == "" {
+			return hasReferences, fmt.Errorf("provided resource reference is nil or empty: KMSKeyRef")
 		}
 		obj := &kmsapitypes.Key{}
 		if err := getReferencedResourceState_Key(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
-			return err
+			return hasReferences, err
 		}
 		ko.Spec.KMSKeyARN = (*string)(obj.Status.ACKResourceMetadata.ARN)
 	}
 
-	return nil
+	return hasReferences, nil
 }
 
 // getReferencedResourceState_Key looks up whether a referenced resource
@@ -272,35 +307,35 @@ func getReferencedResourceState_Key(
 
 // resolveReferenceForVPCConfig_SecurityGroupIDs reads the resource referenced
 // from VPCConfig.SecurityGroupRefs field and sets the VPCConfig.SecurityGroupIDs
-// from referenced resource
-func resolveReferenceForVPCConfig_SecurityGroupIDs(
+// from referenced resource. Returns a boolean indicating whether a reference
+// contains references, or an error
+func (rm *resourceManager) resolveReferenceForVPCConfig_SecurityGroupIDs(
 	ctx context.Context,
 	apiReader client.Reader,
 	namespace string,
 	ko *svcapitypes.Function,
-) error {
-	if ko.Spec.VPCConfig == nil {
-		return nil
-	}
+) (hasReferences bool, err error) {
 	if ko.Spec.VPCConfig != nil {
-		if len(ko.Spec.VPCConfig.SecurityGroupRefs) > 0 {
-			resolved1 := []*string{}
-			for _, iter1 := range ko.Spec.VPCConfig.SecurityGroupRefs {
-				arr := iter1.From
-				if arr == nil || arr.Name == nil || *arr.Name == "" {
-					return fmt.Errorf("provided resource reference is nil or empty: VPCConfig.SecurityGroupRefs")
+		for _, f0iter := range ko.Spec.VPCConfig.SecurityGroupRefs {
+			if f0iter != nil && f0iter.From != nil {
+				hasReferences = true
+				arr := f0iter.From
+				if arr.Name == nil || *arr.Name == "" {
+					return hasReferences, fmt.Errorf("provided resource reference is nil or empty: VPCConfig.SecurityGroupRefs")
 				}
 				obj := &ec2apitypes.SecurityGroup{}
 				if err := getReferencedResourceState_SecurityGroup(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
-					return err
+					return hasReferences, err
 				}
-				resolved1 = append(resolved1, (*string)(obj.Status.ID))
+				if ko.Spec.VPCConfig.SecurityGroupIDs == nil {
+					ko.Spec.VPCConfig.SecurityGroupIDs = make([]*string, 0, 1)
+				}
+				ko.Spec.VPCConfig.SecurityGroupIDs = append(ko.Spec.VPCConfig.SecurityGroupIDs, (*string)(obj.Status.ID))
 			}
-			ko.Spec.VPCConfig.SecurityGroupIDs = resolved1
 		}
 	}
 
-	return nil
+	return hasReferences, nil
 }
 
 // getReferencedResourceState_SecurityGroup looks up whether a referenced resource
@@ -356,35 +391,35 @@ func getReferencedResourceState_SecurityGroup(
 
 // resolveReferenceForVPCConfig_SubnetIDs reads the resource referenced
 // from VPCConfig.SubnetRefs field and sets the VPCConfig.SubnetIDs
-// from referenced resource
-func resolveReferenceForVPCConfig_SubnetIDs(
+// from referenced resource. Returns a boolean indicating whether a reference
+// contains references, or an error
+func (rm *resourceManager) resolveReferenceForVPCConfig_SubnetIDs(
 	ctx context.Context,
 	apiReader client.Reader,
 	namespace string,
 	ko *svcapitypes.Function,
-) error {
-	if ko.Spec.VPCConfig == nil {
-		return nil
-	}
+) (hasReferences bool, err error) {
 	if ko.Spec.VPCConfig != nil {
-		if len(ko.Spec.VPCConfig.SubnetRefs) > 0 {
-			resolved1 := []*string{}
-			for _, iter1 := range ko.Spec.VPCConfig.SubnetRefs {
-				arr := iter1.From
-				if arr == nil || arr.Name == nil || *arr.Name == "" {
-					return fmt.Errorf("provided resource reference is nil or empty: VPCConfig.SubnetRefs")
+		for _, f0iter := range ko.Spec.VPCConfig.SubnetRefs {
+			if f0iter != nil && f0iter.From != nil {
+				hasReferences = true
+				arr := f0iter.From
+				if arr.Name == nil || *arr.Name == "" {
+					return hasReferences, fmt.Errorf("provided resource reference is nil or empty: VPCConfig.SubnetRefs")
 				}
 				obj := &ec2apitypes.Subnet{}
 				if err := getReferencedResourceState_Subnet(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
-					return err
+					return hasReferences, err
 				}
-				resolved1 = append(resolved1, (*string)(obj.Status.SubnetID))
+				if ko.Spec.VPCConfig.SubnetIDs == nil {
+					ko.Spec.VPCConfig.SubnetIDs = make([]*string, 0, 1)
+				}
+				ko.Spec.VPCConfig.SubnetIDs = append(ko.Spec.VPCConfig.SubnetIDs, (*string)(obj.Status.SubnetID))
 			}
-			ko.Spec.VPCConfig.SubnetIDs = resolved1
 		}
 	}
 
-	return nil
+	return hasReferences, nil
 }
 
 // getReferencedResourceState_Subnet looks up whether a referenced resource
