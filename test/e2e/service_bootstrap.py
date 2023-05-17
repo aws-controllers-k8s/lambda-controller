@@ -37,6 +37,7 @@ LAMBDA_SQS_QUEUE_EXECUTION_ROLE = 'arn:aws:iam::aws:policy/AmazonSQSFullAccess'
 
 BASIC_ROLE_POLICIES = [ LAMBDA_BASIC_EXECUTION_ARN ]
 ESM_ROLE_POLICIES = [ LAMBDA_BASIC_EXECUTION_ARN, LAMBDA_DYNAMODB_EXECUTION_ROLE, LAMBDA_SQS_QUEUE_EXECUTION_ROLE ]
+EIC_ROLE_POLICIES = [LAMBDA_BASIC_EXECUTION_ARN,  LAMBDA_SQS_QUEUE_EXECUTION_ROLE]
 
 LAMBDA_FUNCTION_FILE = "main.py"
 LAMBDA_FUNCTION_FILE_ZIP = "main.zip"
@@ -116,8 +117,19 @@ def service_bootstrap() -> Resources:
             },
         ),
         ESMQueue=Queue(
-            "ack-lambda-controller-queue"
+            "ack-lambda-controller-queue",
         ),
+        EICRole=Role(
+            "ack-lambda-controller-eic-role",
+            principal_service="lambda.amazonaws.com",
+            managed_policies=EIC_ROLE_POLICIES,
+        ),
+        EICQueueOnSuccess=Queue(
+            "ack-lambda-controller-function-queue-eic-onsuccess" 
+        ),
+        EICQueueOnFailure=Queue(
+            "ack-lambda-controller-function-queue-eic-onfailure"
+        )
     )
 
     try:

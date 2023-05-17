@@ -116,6 +116,37 @@ spec:
                       type: string
                   type: object
                 type: array
+              functionEventInvokeConfig:
+                properties:
+                  destinationConfig:
+                    description: A configuration object that specifies the destination
+                      of an event after Lambda processes it.
+                    properties:
+                      onFailure:
+                        description: A destination for events that failed processing.
+                        properties:
+                          destination:
+                            type: string
+                        type: object
+                      onSuccess:
+                        description: A destination for events that were processed
+                          successfully.
+                        properties:
+                          destination:
+                            type: string
+                        type: object
+                    type: object
+                  functionName:
+                    type: string
+                  maximumEventAgeInSeconds:
+                    format: int64
+                    type: integer
+                  maximumRetryAttempts:
+                    format: int64
+                    type: integer
+                  qualifier:
+                    type: string
+                type: object
               handler:
                 description: The name of the method within your code that Lambda calls
                   to run your function. Handler is required if the deployment package

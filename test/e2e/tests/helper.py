@@ -137,3 +137,16 @@ class LambdaValidator:
         except Exception as e:
             logging.debug(e)
             return None
+    
+    def get_function_event_invoke_config(self, function_name:str) -> dict:
+        try:
+            resp = self.lambda_client.get_function_event_invoke_config(
+                FunctionName = function_name,
+            )
+            return resp
+        except Exception as e:
+            logging.debug(e)
+            return None
+    
+    def function_event_invoke_config_exists(self, function_name: str) -> bool:
+        return self.get_function_event_invoke_config(function_name) is not None

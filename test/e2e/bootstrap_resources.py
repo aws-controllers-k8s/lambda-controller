@@ -34,6 +34,9 @@ class BootstrapResources(Resources):
     ESMRole: Role
     ESMTable: Table
     ESMQueue: Queue
+    EICRole: Role
+    EICQueueOnSuccess: Queue
+    EICQueueOnFailure: Queue
 
 _bootstrap_resources = None
 

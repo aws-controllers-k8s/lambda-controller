@@ -46,7 +46,8 @@ type FunctionSpec struct {
 	// but can be any whole number between 512 and 10,240 MB.
 	EphemeralStorage *EphemeralStorage `json:"ephemeralStorage,omitempty"`
 	// Connection settings for an Amazon EFS file system.
-	FileSystemConfigs []*FileSystemConfig `json:"fileSystemConfigs,omitempty"`
+	FileSystemConfigs         []*FileSystemConfig                `json:"fileSystemConfigs,omitempty"`
+	FunctionEventInvokeConfig *PutFunctionEventInvokeConfigInput `json:"functionEventInvokeConfig,omitempty"`
 	// The name of the method within your code that Lambda calls to run your function.
 	// Handler is required if the deployment package is a .zip file archive. The
 	// format includes the file name. It can also include namespaces and other qualifiers,
