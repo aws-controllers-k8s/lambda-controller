@@ -50,6 +50,64 @@ func newResourceDelta(
 			delta.Add("Spec.Description", a.ko.Spec.Description, b.ko.Spec.Description)
 		}
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.FunctionEventInvokeConfig, b.ko.Spec.FunctionEventInvokeConfig) {
+		delta.Add("Spec.FunctionEventInvokeConfig", a.ko.Spec.FunctionEventInvokeConfig, b.ko.Spec.FunctionEventInvokeConfig)
+	} else if a.ko.Spec.FunctionEventInvokeConfig != nil && b.ko.Spec.FunctionEventInvokeConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.FunctionEventInvokeConfig.DestinationConfig, b.ko.Spec.FunctionEventInvokeConfig.DestinationConfig) {
+			delta.Add("Spec.FunctionEventInvokeConfig.DestinationConfig", a.ko.Spec.FunctionEventInvokeConfig.DestinationConfig, b.ko.Spec.FunctionEventInvokeConfig.DestinationConfig)
+		} else if a.ko.Spec.FunctionEventInvokeConfig.DestinationConfig != nil && b.ko.Spec.FunctionEventInvokeConfig.DestinationConfig != nil {
+			if ackcompare.HasNilDifference(a.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure, b.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure) {
+				delta.Add("Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure", a.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure, b.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure)
+			} else if a.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure != nil && b.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure != nil {
+				if ackcompare.HasNilDifference(a.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination, b.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination) {
+					delta.Add("Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination", a.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination, b.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination)
+				} else if a.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination != nil && b.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination != nil {
+					if *a.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination != *b.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination {
+						delta.Add("Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination", a.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination, b.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination)
+					}
+				}
+			}
+			if ackcompare.HasNilDifference(a.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess, b.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess) {
+				delta.Add("Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess", a.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess, b.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess)
+			} else if a.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess != nil && b.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess != nil {
+				if ackcompare.HasNilDifference(a.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination, b.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination) {
+					delta.Add("Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination", a.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination, b.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination)
+				} else if a.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination != nil && b.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination != nil {
+					if *a.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination != *b.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination {
+						delta.Add("Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination", a.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination, b.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination)
+					}
+				}
+			}
+		}
+		if ackcompare.HasNilDifference(a.ko.Spec.FunctionEventInvokeConfig.FunctionName, b.ko.Spec.FunctionEventInvokeConfig.FunctionName) {
+			delta.Add("Spec.FunctionEventInvokeConfig.FunctionName", a.ko.Spec.FunctionEventInvokeConfig.FunctionName, b.ko.Spec.FunctionEventInvokeConfig.FunctionName)
+		} else if a.ko.Spec.FunctionEventInvokeConfig.FunctionName != nil && b.ko.Spec.FunctionEventInvokeConfig.FunctionName != nil {
+			if *a.ko.Spec.FunctionEventInvokeConfig.FunctionName != *b.ko.Spec.FunctionEventInvokeConfig.FunctionName {
+				delta.Add("Spec.FunctionEventInvokeConfig.FunctionName", a.ko.Spec.FunctionEventInvokeConfig.FunctionName, b.ko.Spec.FunctionEventInvokeConfig.FunctionName)
+			}
+		}
+		if ackcompare.HasNilDifference(a.ko.Spec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds, b.ko.Spec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds) {
+			delta.Add("Spec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds", a.ko.Spec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds, b.ko.Spec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds)
+		} else if a.ko.Spec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds != nil && b.ko.Spec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds != nil {
+			if *a.ko.Spec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds != *b.ko.Spec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds {
+				delta.Add("Spec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds", a.ko.Spec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds, b.ko.Spec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds)
+			}
+		}
+		if ackcompare.HasNilDifference(a.ko.Spec.FunctionEventInvokeConfig.MaximumRetryAttempts, b.ko.Spec.FunctionEventInvokeConfig.MaximumRetryAttempts) {
+			delta.Add("Spec.FunctionEventInvokeConfig.MaximumRetryAttempts", a.ko.Spec.FunctionEventInvokeConfig.MaximumRetryAttempts, b.ko.Spec.FunctionEventInvokeConfig.MaximumRetryAttempts)
+		} else if a.ko.Spec.FunctionEventInvokeConfig.MaximumRetryAttempts != nil && b.ko.Spec.FunctionEventInvokeConfig.MaximumRetryAttempts != nil {
+			if *a.ko.Spec.FunctionEventInvokeConfig.MaximumRetryAttempts != *b.ko.Spec.FunctionEventInvokeConfig.MaximumRetryAttempts {
+				delta.Add("Spec.FunctionEventInvokeConfig.MaximumRetryAttempts", a.ko.Spec.FunctionEventInvokeConfig.MaximumRetryAttempts, b.ko.Spec.FunctionEventInvokeConfig.MaximumRetryAttempts)
+			}
+		}
+		if ackcompare.HasNilDifference(a.ko.Spec.FunctionEventInvokeConfig.Qualifier, b.ko.Spec.FunctionEventInvokeConfig.Qualifier) {
+			delta.Add("Spec.FunctionEventInvokeConfig.Qualifier", a.ko.Spec.FunctionEventInvokeConfig.Qualifier, b.ko.Spec.FunctionEventInvokeConfig.Qualifier)
+		} else if a.ko.Spec.FunctionEventInvokeConfig.Qualifier != nil && b.ko.Spec.FunctionEventInvokeConfig.Qualifier != nil {
+			if *a.ko.Spec.FunctionEventInvokeConfig.Qualifier != *b.ko.Spec.FunctionEventInvokeConfig.Qualifier {
+				delta.Add("Spec.FunctionEventInvokeConfig.Qualifier", a.ko.Spec.FunctionEventInvokeConfig.Qualifier, b.ko.Spec.FunctionEventInvokeConfig.Qualifier)
+			}
+		}
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.FunctionName, b.ko.Spec.FunctionName) {
 		delta.Add("Spec.FunctionName", a.ko.Spec.FunctionName, b.ko.Spec.FunctionName)
 	} else if a.ko.Spec.FunctionName != nil && b.ko.Spec.FunctionName != nil {

@@ -27,6 +27,23 @@ type AliasSpec struct {
 
 	// A description of the alias.
 	Description *string `json:"description,omitempty"`
+	// Configures options for asynchronous invocation on an alias.
+	//
+	// - DestinationConfig
+	// A destination for events after they have been sent to a function for processing.
+	//
+	// Types of Destinations:
+	// Function - The Amazon Resource Name (ARN) of a Lambda function.
+	// Queue - The ARN of a standard SQS queue.
+	// Topic - The ARN of a standard SNS topic.
+	// Event Bus - The ARN of an Amazon EventBridge event bus.
+	//
+	// - MaximumEventAgeInSeconds
+	// The maximum age of a request that Lambda sends to a function for processing.
+	//
+	// - MaximumRetryAttempts
+	// The maximum number of times to retry when the function returns an error.
+	FunctionEventInvokeConfig *PutFunctionEventInvokeConfigInput `json:"functionEventInvokeConfig,omitempty"`
 	// The name of the Lambda function.
 	//
 	// Name formats

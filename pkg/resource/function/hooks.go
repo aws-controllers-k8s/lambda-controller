@@ -16,7 +16,6 @@ package function
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
@@ -612,7 +611,6 @@ func (rm *resourceManager) setResourceAdditionalFields(
 	if err != nil {
 		ko.Spec.FunctionEventInvokeConfig = nil
 	} else {
-		fmt.Println(ko.Spec.FunctionEventInvokeConfig.DestinationConfig)
 		if getFunctionEventInvokeConfigOutput.DestinationConfig != nil {
 			if getFunctionEventInvokeConfigOutput.DestinationConfig.OnFailure != nil {
 				if getFunctionEventInvokeConfigOutput.DestinationConfig.OnFailure.Destination != nil {

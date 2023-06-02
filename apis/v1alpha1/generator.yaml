@@ -102,6 +102,17 @@ resources:
           path: Spec.Name 
       FunctionVersion:
         is_required: true
+      FunctionEventInvokeConfig:
+        from:
+          operation: PutFunctionEventInvokeConfig
+          path: .
+    hooks:
+      sdk_update_pre_build_request:
+        template_path: hooks/alias/sdk_update_pre_build_request.go.tpl
+      sdk_read_one_post_set_output:
+        template_path: hooks/alias/sdk_read_one_post_set_output.go.tpl
+      sdk_create_post_set_output:
+        template_path: hooks/alias/sdk_create_post_set_output.go.tpl
     tags:
       ignore: true
   CodeSigningConfig:
