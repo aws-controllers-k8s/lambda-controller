@@ -279,9 +279,11 @@ type FunctionConfiguration struct {
 type FunctionEventInvokeConfig struct {
 	// A configuration object that specifies the destination of an event after Lambda
 	// processes it.
-	DestinationConfig *DestinationConfig `json:"destinationConfig,omitempty"`
-	FunctionARN       *string            `json:"functionARN,omitempty"`
-	LastModified      *metav1.Time       `json:"lastModified,omitempty"`
+	DestinationConfig        *DestinationConfig `json:"destinationConfig,omitempty"`
+	FunctionARN              *string            `json:"functionARN,omitempty"`
+	LastModified             *metav1.Time       `json:"lastModified,omitempty"`
+	MaximumEventAgeInSeconds *int64             `json:"maximumEventAgeInSeconds,omitempty"`
+	MaximumRetryAttempts     *int64             `json:"maximumRetryAttempts,omitempty"`
 }
 
 // Details about a Lambda function URL.
@@ -386,6 +388,16 @@ type ProvisionedConcurrencyConfigListItem struct {
 
 type PutFunctionConcurrencyOutput struct {
 	ReservedConcurrentExecutions *int64 `json:"reservedConcurrentExecutions,omitempty"`
+}
+
+type PutFunctionEventInvokeConfigInput struct {
+	// A configuration object that specifies the destination of an event after Lambda
+	// processes it.
+	DestinationConfig        *DestinationConfig `json:"destinationConfig,omitempty"`
+	FunctionName             *string            `json:"functionName,omitempty"`
+	MaximumEventAgeInSeconds *int64             `json:"maximumEventAgeInSeconds,omitempty"`
+	MaximumRetryAttempts     *int64             `json:"maximumRetryAttempts,omitempty"`
+	Qualifier                *string            `json:"qualifier,omitempty"`
 }
 
 // (Amazon SQS only) The scaling configuration for the event source. To remove
