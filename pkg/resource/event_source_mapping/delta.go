@@ -109,6 +109,9 @@ func newResourceDelta(
 			delta.Add("Spec.EventSourceARN", a.ko.Spec.EventSourceARN, b.ko.Spec.EventSourceARN)
 		}
 	}
+	if !reflect.DeepEqual(a.ko.Spec.EventSourceRef, b.ko.Spec.EventSourceRef) {
+		delta.Add("Spec.EventSourceRef", a.ko.Spec.EventSourceRef, b.ko.Spec.EventSourceRef)
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.FunctionName, b.ko.Spec.FunctionName) {
 		delta.Add("Spec.FunctionName", a.ko.Spec.FunctionName, b.ko.Spec.FunctionName)
 	} else if a.ko.Spec.FunctionName != nil && b.ko.Spec.FunctionName != nil {

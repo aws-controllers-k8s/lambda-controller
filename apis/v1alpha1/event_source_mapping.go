@@ -66,7 +66,8 @@ type EventSourceMappingSpec struct {
 	//   - Amazon Managed Streaming for Apache Kafka – The ARN of the cluster.
 	//
 	//   - Amazon MQ – The ARN of the broker.
-	EventSourceARN *string `json:"eventSourceARN,omitempty"`
+	EventSourceARN *string                                  `json:"eventSourceARN,omitempty"`
+	EventSourceRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"eventSourceRef,omitempty"`
 	// An object that defines the filter criteria that determine whether Lambda
 	// should process an event. For more information, see Lambda event filtering
 	// (https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html).

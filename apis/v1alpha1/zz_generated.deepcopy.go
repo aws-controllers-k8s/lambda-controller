@@ -1019,6 +1019,11 @@ func (in *EventSourceMappingSpec) DeepCopyInto(out *EventSourceMappingSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.EventSourceRef != nil {
+		in, out := &in.EventSourceRef, &out.EventSourceRef
+		*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.FilterCriteria != nil {
 		in, out := &in.FilterCriteria, &out.FilterCriteria
 		*out = new(FilterCriteria)

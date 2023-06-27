@@ -75,6 +75,20 @@ rules:
   - get
   - list
 - apiGroups:
+  - kafka.services.k8s.aws
+  resources:
+  - clusters
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - kafka.services.k8s.aws
+  resources:
+  - clusters/status
+  verbs:
+  - get
+  - list
+- apiGroups:
   - kms.services.k8s.aws
   resources:
   - keys

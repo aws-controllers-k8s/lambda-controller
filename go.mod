@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/aws-controllers-k8s/ec2-controller v0.0.21
+	github.com/aws-controllers-k8s/kafka-controller v0.0.0-20230615185632-102279061de1
 	github.com/aws-controllers-k8s/kms-controller v0.1.2
 	github.com/aws-controllers-k8s/mq-controller v0.0.22
 	github.com/aws-controllers-k8s/runtime v0.26.0
