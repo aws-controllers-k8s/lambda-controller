@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	kafkaapitypes "github.com/aws-controllers-k8s/kafka-controller/apis/v1alpha1"
 	mqapitypes "github.com/aws-controllers-k8s/mq-controller/apis/v1alpha1"
 	ackv1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
@@ -30,6 +31,9 @@ import (
 
 	svcapitypes "github.com/aws-controllers-k8s/lambda-controller/apis/v1alpha1"
 )
+
+// +kubebuilder:rbac:groups=kafka.services.k8s.aws,resources=clusters,verbs=get;list
+// +kubebuilder:rbac:groups=kafka.services.k8s.aws,resources=clusters/status,verbs=get;list
 
 // +kubebuilder:rbac:groups=mq.services.k8s.aws,resources=brokers,verbs=get;list
 // +kubebuilder:rbac:groups=mq.services.k8s.aws,resources=brokers/status,verbs=get;list
@@ -40,6 +44,10 @@ import (
 // values.
 func (rm *resourceManager) ClearResolvedReferences(res acktypes.AWSResource) acktypes.AWSResource {
 	ko := rm.concreteResource(res).ko.DeepCopy()
+
+	if ko.Spec.EventSourceRef != nil {
+		ko.Spec.EventSourceARN = nil
+	}
 
 	if ko.Spec.FunctionRef != nil {
 		ko.Spec.FunctionName = nil
@@ -69,6 +77,12 @@ func (rm *resourceManager) ResolveReferences(
 
 	resourceHasReferences := false
 	err := validateReferenceFields(ko)
+	if fieldHasReferences, err := rm.resolveReferenceForEventSourceARN(ctx, apiReader, namespace, ko); err != nil {
+		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
+	} else {
+		resourceHasReferences = resourceHasReferences || fieldHasReferences
+	}
+
 	if fieldHasReferences, err := rm.resolveReferenceForFunctionName(ctx, apiReader, namespace, ko); err != nil {
 		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
 	} else {
@@ -88,6 +102,10 @@ func (rm *resourceManager) ResolveReferences(
 // identifier field.
 func validateReferenceFields(ko *svcapitypes.EventSourceMapping) error {
 
+	if ko.Spec.EventSourceRef != nil && ko.Spec.EventSourceARN != nil {
+		return ackerr.ResourceReferenceAndIDNotSupportedFor("EventSourceARN", "EventSourceRef")
+	}
+
 	if ko.Spec.FunctionRef != nil && ko.Spec.FunctionName != nil {
 		return ackerr.ResourceReferenceAndIDNotSupportedFor("FunctionName", "FunctionRef")
 	}
@@ -97,6 +115,83 @@ func validateReferenceFields(ko *svcapitypes.EventSourceMapping) error {
 
 	if len(ko.Spec.QueueRefs) > 0 && len(ko.Spec.Queues) > 0 {
 		return ackerr.ResourceReferenceAndIDNotSupportedFor("Queues", "QueueRefs")
+	}
+	return nil
+}
+
+// resolveReferenceForEventSourceARN reads the resource referenced
+// from EventSourceRef field and sets the EventSourceARN
+// from referenced resource. Returns a boolean indicating whether a reference
+// contains references, or an error
+func (rm *resourceManager) resolveReferenceForEventSourceARN(
+	ctx context.Context,
+	apiReader client.Reader,
+	namespace string,
+	ko *svcapitypes.EventSourceMapping,
+) (hasReferences bool, err error) {
+	if ko.Spec.EventSourceRef != nil && ko.Spec.EventSourceRef.From != nil {
+		hasReferences = true
+		arr := ko.Spec.EventSourceRef.From
+		if arr.Name == nil || *arr.Name == "" {
+			return hasReferences, fmt.Errorf("provided resource reference is nil or empty: EventSourceRef")
+		}
+		obj := &kafkaapitypes.Cluster{}
+		if err := getReferencedResourceState_Cluster(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
+			return hasReferences, err
+		}
+		ko.Spec.EventSourceARN = (*string)(obj.Status.ACKResourceMetadata.ARN)
+	}
+
+	return hasReferences, nil
+}
+
+// getReferencedResourceState_Cluster looks up whether a referenced resource
+// exists and is in a ACK.ResourceSynced=True state. If the referenced resource does exist and is
+// in a Synced state, returns nil, otherwise returns `ackerr.ResourceReferenceTerminalFor` or
+// `ResourceReferenceNotSyncedFor` depending on if the resource is in a Terminal state.
+func getReferencedResourceState_Cluster(
+	ctx context.Context,
+	apiReader client.Reader,
+	obj *kafkaapitypes.Cluster,
+	name string, // the Kubernetes name of the referenced resource
+	namespace string, // the Kubernetes namespace of the referenced resource
+) error {
+	namespacedName := types.NamespacedName{
+		Namespace: namespace,
+		Name:      name,
+	}
+	err := apiReader.Get(ctx, namespacedName, obj)
+	if err != nil {
+		return err
+	}
+	var refResourceSynced, refResourceTerminal bool
+	for _, cond := range obj.Status.Conditions {
+		if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+			cond.Status == corev1.ConditionTrue {
+			refResourceSynced = true
+		}
+		if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
+			cond.Status == corev1.ConditionTrue {
+			return ackerr.ResourceReferenceTerminalFor(
+				"Cluster",
+				namespace, name)
+		}
+	}
+	if refResourceTerminal {
+		return ackerr.ResourceReferenceTerminalFor(
+			"Cluster",
+			namespace, name)
+	}
+	if !refResourceSynced {
+		return ackerr.ResourceReferenceNotSyncedFor(
+			"Cluster",
+			namespace, name)
+	}
+	if obj.Status.ACKResourceMetadata == nil || obj.Status.ACKResourceMetadata.ARN == nil {
+		return ackerr.ResourceReferenceMissingTargetFieldFor(
+			"Cluster",
+			namespace, name,
+			"Status.ACKResourceMetadata.ARN")
 	}
 	return nil
 }

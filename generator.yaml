@@ -117,6 +117,11 @@ resources:
           resource: Broker
           path: Status.BrokerID
           service_name: mq
+      EventSourceARN:
+        references:
+          resource: Cluster
+          path: Status.ACKResourceMetadata.ARN
+          service_name: kafka
       UUID:
         is_primary_key: true
       FunctionName:
