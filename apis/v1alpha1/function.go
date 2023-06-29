@@ -46,7 +46,23 @@ type FunctionSpec struct {
 	// but can be any whole number between 512 and 10,240 MB.
 	EphemeralStorage *EphemeralStorage `json:"ephemeralStorage,omitempty"`
 	// Connection settings for an Amazon EFS file system.
-	FileSystemConfigs         []*FileSystemConfig                `json:"fileSystemConfigs,omitempty"`
+	FileSystemConfigs []*FileSystemConfig `json:"fileSystemConfigs,omitempty"`
+	// Configures options for asynchronous invocation on a function.
+	//
+	// - DestinationConfig
+	// A destination for events after they have been sent to a function for processing.
+	//
+	// Types of Destinations:
+	// Function - The Amazon Resource Name (ARN) of a Lambda function.
+	// Queue - The ARN of a standard SQS queue.
+	// Topic - The ARN of a standard SNS topic.
+	// Event Bus - The ARN of an Amazon EventBridge event bus.
+	//
+	// - MaximumEventAgeInSeconds
+	// The maximum age of a request that Lambda sends to a function for processing.
+	//
+	// - MaximumRetryAttempts
+	// The maximum number of times to retry when the function returns an error.
 	FunctionEventInvokeConfig *PutFunctionEventInvokeConfigInput `json:"functionEventInvokeConfig,omitempty"`
 	// The name of the method within your code that Lambda calls to run your function.
 	// Handler is required if the deployment package is a .zip file archive. The

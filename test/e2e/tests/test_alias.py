@@ -30,9 +30,9 @@ from e2e.tests.helper import LambdaValidator
 
 RESOURCE_PLURAL = "aliases"
 
-CREATE_WAIT_AFTER_SECONDS = 10
-UPDATE_WAIT_AFTER_SECONDS = 10
-DELETE_WAIT_AFTER_SECONDS = 10
+CREATE_WAIT_AFTER_SECONDS = 30
+UPDATE_WAIT_AFTER_SECONDS = 30
+DELETE_WAIT_AFTER_SECONDS = 30
 
 @pytest.fixture(scope="module")
 def lambda_function():
@@ -42,7 +42,7 @@ def lambda_function():
         replacements = REPLACEMENT_VALUES.copy()
         replacements["FUNCTION_NAME"] = resource_name
         replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
-        replacements["LAMBDA_ROLE"] = resources.BasicRole.arn
+        replacements["LAMBDA_ROLE"] = resources.EICRole.arn
         replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
         replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "0"
         replacements["CODE_SIGNING_CONFIG_ARN"] = ""
@@ -195,3 +195,71 @@ class TestAlias:
 
         # Check alias doesn't exist
         assert not lambda_validator.alias_exists(resource_name, function_resource_name)
+
+    def test_function_event_invoke_config(self, lambda_client, lambda_function):
+        (_, function_resource) = lambda_function
+        lambda_function_name = function_resource["spec"]["name"]
+
+        resource_name = random_suffix_name("lambda-alias", 24)
+
+        resources = get_bootstrap_resources()
+        logging.debug(resources)
+
+        replacements = REPLACEMENT_VALUES.copy()
+        replacements["AWS_REGION"] = get_region()
+        replacements["ALIAS_NAME"] = resource_name
+        replacements["FUNCTION_VERSION"] = "$LATEST"
+        replacements["FUNCTION_NAME"] = lambda_function_name
+        replacements["MAXIMUM_EVENT_AGE_IN_SECONDS"] = "100"
+        replacements["MAXIMUM_RETRY_ATTEMPTS"] = "1"
+        replacements["ON_SUCCESS_DESTINATION"] = resources.EICQueueOnSuccess.arn
+        replacements["ON_FAILURE_DESTINATION"] = resources.EICQueueOnFailure.arn
+
+        # Load alias CR
+        resource_data = load_lambda_resource(
+            "alias_event_invoke_config",
+            additional_replacements=replacements,
+        )
+        logging.debug(resource_data)
+
+        # Create k8s resource
+        ref = k8s.CustomResourceReference(
+            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            resource_name, namespace="default",
+        )
+        k8s.create_custom_resource(ref, resource_data)
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        assert cr is not None
+        assert k8s.get_resource_exists(ref)
+
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        lambda_validator = LambdaValidator(lambda_client)
+
+         # Check alias exists
+        assert lambda_validator.alias_exists(resource_name, lambda_function_name)
+        
+        # Update cr
+        cr["spec"]["functionEventInvokeConfig"]["maximumEventAgeInSeconds"] = 200
+        cr["spec"]["functionEventInvokeConfig"]["maximumRetryAttempts"] = 2
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        #Check function_event_invoke_config update fields
+        function_event_invoke_config = lambda_validator.get_function_event_invoke_config_alias(lambda_function_name,resource_name)
+        assert function_event_invoke_config["MaximumEventAgeInSeconds"] == 200
+        assert function_event_invoke_config["MaximumRetryAttempts"] == 2
+
+        # Delete k8s resource
+        _, deleted = k8s.delete_custom_resource(ref)
+        assert deleted
+
+        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+
+        # Check alias doesn't exist
+        assert not lambda_validator.alias_exists(resource_name, lambda_function_name)

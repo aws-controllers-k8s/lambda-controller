@@ -134,6 +134,9 @@ func (rm *resourceManager) sdkFind(
 	}
 
 	rm.setStatusDefaults(ko)
+	if err := rm.setResourceAdditionalFields(ctx, ko); err != nil {
+		return nil, err
+	}
 	return &resource{ko}, nil
 }
 
@@ -236,6 +239,12 @@ func (rm *resourceManager) sdkCreate(
 	}
 
 	rm.setStatusDefaults(ko)
+	if ko.Spec.FunctionEventInvokeConfig != nil {
+		_, err = rm.syncEventInvokeConfig(ctx, desired)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return &resource{ko}, nil
 }
 
@@ -289,6 +298,15 @@ func (rm *resourceManager) sdkUpdate(
 	defer func() {
 		exit(err)
 	}()
+	if delta.DifferentAt("Spec.FunctionEventInvokeConfig") {
+		_, err = rm.syncEventInvokeConfig(ctx, desired)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if !delta.DifferentExcept("Spec.FunctionEventInvokeConfig") {
+		return desired, nil
+	}
 	input, err := rm.newUpdateRequestPayload(ctx, desired, delta)
 	if err != nil {
 		return nil, err

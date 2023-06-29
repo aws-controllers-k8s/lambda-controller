@@ -148,5 +148,16 @@ class LambdaValidator:
             logging.debug(e)
             return None
     
+    def get_function_event_invoke_config_alias(self, function_name:str, qualifier:str) -> dict:
+        try:
+            resp = self.lambda_client.get_function_event_invoke_config(
+                FunctionName = function_name,
+                Qualifier = qualifier
+            )
+            return resp
+        except Exception as e:
+            logging.debug(e)
+            return None
+    
     def function_event_invoke_config_exists(self, function_name: str) -> bool:
         return self.get_function_event_invoke_config(function_name) is not None
