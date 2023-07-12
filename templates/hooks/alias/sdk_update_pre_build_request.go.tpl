@@ -4,6 +4,12 @@ if delta.DifferentAt("Spec.FunctionEventInvokeConfig"){
         return nil, err
     }
 }
-if !delta.DifferentExcept("Spec.FunctionEventInvokeConfig"){
+if delta.DifferentAt("Spec.ProvisionedConcurrencyConfig"){
+    err = rm.updateProvisionedConcurrency(ctx, desired)
+    if err != nil {
+        return nil, err
+    }
+}
+if !delta.DifferentExcept("Spec.ProvisionedConcurrencyConfig","Spec.FunctionEventInvokeConfig"){
     return desired, nil
 }

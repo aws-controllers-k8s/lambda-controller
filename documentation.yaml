@@ -39,3 +39,11 @@ resources:
           
           - MaximumRetryAttempts
               The maximum number of times to retry when the function returns an error.
+      
+      ProvisionedConcurrencyConfig:
+        prepend: |
+          Configures provisioned concurrency to a function's alias
+
+          - ProvisionedConcurrentExecutions
+              The amount of provisioned concurrency to allocate for the version or alias.
+              Minimum value of 1 is required

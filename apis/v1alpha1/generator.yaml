@@ -108,6 +108,10 @@ resources:
         from:
           operation: PutFunctionEventInvokeConfig
           path: .
+      ProvisionedConcurrencyConfig:
+        from:
+          operation: PutProvisionedConcurrencyConfig
+          path: .
     hooks:
       sdk_update_pre_build_request:
         template_path: hooks/alias/sdk_update_pre_build_request.go.tpl

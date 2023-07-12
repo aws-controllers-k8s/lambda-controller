@@ -623,7 +623,11 @@ func (rm *resourceManager) setResourceAdditionalFields(
 	)
 	rm.metrics.RecordAPICall("GET", "GetFunctionEventInvokeConfig", err)
 	if err != nil {
-		ko.Spec.FunctionEventInvokeConfig = nil
+		if awserr, ok := ackerr.AWSError(err); ok && (awserr.Code() == "EventInvokeConfigNotFoundException" || awserr.Code() == "ResourceNotFoundException") {
+			ko.Spec.FunctionEventInvokeConfig = nil
+		} else {
+			return err
+		}
 	} else {
 		if getFunctionEventInvokeConfigOutput.DestinationConfig != nil {
 			if getFunctionEventInvokeConfigOutput.DestinationConfig.OnFailure != nil {

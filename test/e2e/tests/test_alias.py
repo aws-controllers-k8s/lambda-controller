@@ -44,7 +44,7 @@ def lambda_function():
         replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
         replacements["LAMBDA_ROLE"] = resources.EICRole.arn
         replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
-        replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "0"
+        replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "3"
         replacements["CODE_SIGNING_CONFIG_ARN"] = ""
         replacements["AWS_REGION"] = get_region()
 
@@ -196,6 +196,75 @@ class TestAlias:
         # Check alias doesn't exist
         assert not lambda_validator.alias_exists(resource_name, function_resource_name)
 
+    def test_provisioned_concurrency_config(self, lambda_client, lambda_function):
+        (_, function_resource) = lambda_function
+        lambda_function_name = function_resource["spec"]["name"]
+
+        resource_name = random_suffix_name("lambda-alias", 24)
+
+        resources = get_bootstrap_resources()
+        logging.debug(resources)
+
+        resp = lambda_client.publish_version(
+                FunctionName = lambda_function_name
+        )
+        version = resp['Version']
+    
+        replacements = REPLACEMENT_VALUES.copy()
+        replacements["AWS_REGION"] = get_region()
+        replacements["ALIAS_NAME"] = resource_name
+        replacements["FUNCTION_NAME"] = lambda_function_name
+        replacements["FUNCTION_VERSION"] = f"\'{version}\'"
+        replacements["PROVISIONED_CONCURRENT_EXECUTIONS"] = "1"
+
+        # Load alias CR
+        resource_data = load_lambda_resource(
+            "alias_provisioned_concurrency",
+            additional_replacements=replacements,
+        )
+        logging.debug(resource_data)
+
+        # Create k8s resource
+        ref = k8s.CustomResourceReference(
+            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            resource_name, namespace="default",
+        )
+
+        k8s.create_custom_resource(ref, resource_data)
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        assert cr is not None
+        assert k8s.get_resource_exists(ref)
+
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        lambda_validator = LambdaValidator(lambda_client)
+
+         # Check alias exists
+        assert lambda_validator.alias_exists(resource_name, lambda_function_name)
+        
+        # Update cr
+        cr["spec"]["provisionedConcurrencyConfig"]["provisionedConcurrentExecutions"] = 2
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        #Check function_event_invoke_config update fields
+        provisioned_concurrency_config = lambda_validator.get_provisioned_concurrency_config(lambda_function_name,resource_name)
+        assert provisioned_concurrency_config["RequestedProvisionedConcurrentExecutions"] == 2
+
+        # Delete k8s resource
+        _, deleted = k8s.delete_custom_resource(ref)
+        assert deleted
+
+        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+
+        # Check alias doesn't exist
+        assert not lambda_validator.alias_exists(resource_name, lambda_function_name)
+    
     def test_function_event_invoke_config(self, lambda_client, lambda_function):
         (_, function_resource) = lambda_function
         lambda_function_name = function_resource["spec"]["name"]

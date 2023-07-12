@@ -104,6 +104,19 @@ spec:
               name:
                 description: The name of the alias.
                 type: string
+              provisionedConcurrencyConfig:
+                description: "Configures provisioned concurrency to a function's alias
+                  \n - ProvisionedConcurrentExecutions The amount of provisioned concurrency
+                  to allocate for the version or alias. Minimum value of 1 is required"
+                properties:
+                  functionName:
+                    type: string
+                  provisionedConcurrentExecutions:
+                    format: int64
+                    type: integer
+                  qualifier:
+                    type: string
+                type: object
               routingConfig:
                 description: The routing configuration (https://docs.aws.amazon.com/lambda/latest/dg/configuration-aliases.html#configuring-alias-routing)
                   of the alias.
