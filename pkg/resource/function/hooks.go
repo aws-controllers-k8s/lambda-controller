@@ -16,6 +16,7 @@ package function
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
@@ -29,14 +30,19 @@ import (
 )
 
 var (
-	ErrFunctionPending      = errors.New("Function in 'Pending' state, cannot be modified or deleted")
-	ErrCannotSetFunctionCSC = errors.New("cannot set function code signing config when package type is Image")
+	ErrFunctionPending         = errors.New("Function in 'Pending' state, cannot be modified or deleted")
+	ErrSourceImageDoesNotExist = errors.New("Source image does not exist")
+	ErrCannotSetFunctionCSC    = errors.New("cannot set function code signing config when package type is Image")
 )
 
 var (
 	requeueWaitWhilePending = ackrequeue.NeededAfter(
 		ErrFunctionPending,
 		5*time.Second,
+	)
+	requeueWaitWhileSourceImageDoesNotExist = ackrequeue.NeededAfter(
+		ErrSourceImageDoesNotExist,
+		1*time.Minute,
 	)
 )
 
@@ -105,7 +111,11 @@ func (rm *resourceManager) customUpdateFunction(
 	case delta.DifferentAt("Spec.Code"):
 		err = rm.updateFunctionCode(ctx, desired, delta)
 		if err != nil {
-			return nil, err
+			if strings.Contains(err.Error(), "Provide a valid source image.") {
+				return nil, requeueWaitWhileSourceImageDoesNotExist
+			} else {
+				return nil, err
+			}
 		}
 	case delta.DifferentExcept(
 		"Spec.Code",
