@@ -7,7 +7,10 @@
                 "lambda:*",
                 "s3:Get*",
                 "ecr:Get*",
-                "ecr:BatchGet*"
+                "ecr:BatchGet*",
+                "ec2:DescribeSecurityGroups",
+                "ec2:DescribeSubnets",
+                "ec2:DescribeVpcs"
             ],
             "Resource": "*"
         },
