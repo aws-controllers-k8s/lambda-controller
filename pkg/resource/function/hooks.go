@@ -30,8 +30,8 @@ import (
 )
 
 var (
-	ErrFunctionPending         = errors.New("Function in 'Pending' state, cannot be modified or deleted")
-	ErrSourceImageDoesNotExist = errors.New("Source image does not exist")
+	ErrFunctionPending         = errors.New("function in 'Pending' state, cannot be modified or deleted")
+	ErrSourceImageDoesNotExist = errors.New("source image does not exist")
 	ErrCannotSetFunctionCSC    = errors.New("cannot set function code signing config when package type is Image")
 )
 
@@ -111,6 +111,10 @@ func (rm *resourceManager) customUpdateFunction(
 	case delta.DifferentAt("Spec.Code"):
 		err = rm.updateFunctionCode(ctx, desired, delta)
 		if err != nil {
+			// If the source image is not available, we get an error like this:
+			// "InvalidParameterValueException: Source image 1234567890.dkr.ecr.us-east-2.amazonaws.com/my-lambda:my-tag does not exist. Provide a valid source image."
+			// Because this may be recoverable (i.e. the image may be pushed once a build completes),
+			// we requeue the function for reconciliation after one minute.
 			if strings.Contains(err.Error(), "Provide a valid source image.") {
 				return nil, requeueWaitWhileSourceImageDoesNotExist
 			} else {
