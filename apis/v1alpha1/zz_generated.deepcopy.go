@@ -1793,6 +1793,11 @@ func (in *FunctionSpec) DeepCopyInto(out *FunctionSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.RoleRef != nil {
+		in, out := &in.RoleRef, &out.RoleRef
+		*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Runtime != nil {
 		in, out := &in.Runtime, &out.Runtime
 		*out = new(string)
