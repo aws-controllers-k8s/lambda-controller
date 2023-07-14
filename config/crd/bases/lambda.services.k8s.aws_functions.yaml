@@ -235,6 +235,19 @@ spec:
                 description: The Amazon Resource Name (ARN) of the function's execution
                   role.
                 type: string
+              roleRef:
+                description: "AWSResourceReferenceWrapper provides a wrapper around
+                  *AWSResourceReference type to provide more user friendly syntax
+                  for references using 'from' field Ex: APIIDRef: \n from: name: my-api"
+                properties:
+                  from:
+                    description: AWSResourceReference provides all the values necessary
+                      to reference another k8s resource for finding the identifier(Id/ARN/Name)
+                    properties:
+                      name:
+                        type: string
+                    type: object
+                type: object
               runtime:
                 description: The identifier of the function's runtime (https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html).
                   Runtime is required if the deployment package is a .zip file archive.
@@ -321,7 +334,6 @@ spec:
             required:
             - code
             - name
-            - role
             type: object
           status:
             description: FunctionStatus defines the observed state of Function
