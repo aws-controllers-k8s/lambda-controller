@@ -68,7 +68,7 @@ resources:
           path: Configuration.Layers
       FunctionEventInvokeConfig:
         from:
-          operation: PutFunctionEventInvokeConfig 
+          operation: PutFunctionEventInvokeConfig
           path: .
     renames:
       operations:
@@ -89,6 +89,8 @@ resources:
         code: customPreCompare(delta, a, b)
       sdk_read_one_post_set_output:
         template_path: hooks/function/sdk_read_one_post_set_output.go.tpl
+      sdk_create_post_request:
+        template_path: hooks/function/sdk_create_post_request.go.tpl
       sdk_create_post_build_request:
         template_path: hooks/function/sdk_create_post_build_request.go.tpl
       sdk_create_post_set_output:
@@ -104,7 +106,7 @@ resources:
         is_required: true
         references:
           resource: Function
-          path: Spec.Name 
+          path: Spec.Name
       FunctionVersion:
         is_required: true
       FunctionEventInvokeConfig:

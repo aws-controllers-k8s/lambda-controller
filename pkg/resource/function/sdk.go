@@ -447,6 +447,10 @@ func (rm *resourceManager) sdkCreate(
 	var resp *svcsdk.FunctionConfiguration
 	_ = resp
 	resp, err = rm.sdkapi.CreateFunctionWithContext(ctx, input)
+	if err != nil && strings.Contains(err.Error(), "The role defined for the function cannot be assumed by Lambda") {
+		return nil, requeueWaitWhileRoleCannotBeAssumed
+	}
+
 	rm.metrics.RecordAPICall("CREATE", "CreateFunction", err)
 	if err != nil {
 		return nil, err
