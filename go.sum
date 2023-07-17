@@ -40,6 +40,8 @@ github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4/go.mod h1:ybxpYRF
 github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d/go.mod h1:rBZYJk541a8SKzHPHnH3zbiI+7dagKZ0cgpgrD7Fyho=
 github.com/aws-controllers-k8s/ec2-controller v0.0.21 h1:5O7/9aED2Tl9OT0TL2rWrc1Ix5V1UxYEgDKAhvFhPJQ=
 github.com/aws-controllers-k8s/ec2-controller v0.0.21/go.mod h1:OMsmJeJ3iQZ1sJgs3hqnjBRnJ3hmTzJUO38W5rxnB5M=
+github.com/aws-controllers-k8s/iam-controller v1.2.3 h1:Vzz7/qxhcfkPrqn64Oi0tbvHetyiEto3gQuvpCSpECA=
+github.com/aws-controllers-k8s/iam-controller v1.2.3/go.mod h1:c7WaFwq2tIJjwpZhnuCYQ2ISzzMUJLTisPv92lim8sk=
 github.com/aws-controllers-k8s/kafka-controller v0.0.0-20230615185632-102279061de1 h1:NvmtIsm6fVoGUOvMfevONJETf+PtRWAiD3XzZBtQ2WA=
 github.com/aws-controllers-k8s/kafka-controller v0.0.0-20230615185632-102279061de1/go.mod h1:BHW00DFtXtugpsyn0nN0YdP32xmCN5p3lIJYP+Y0iVY=
 github.com/aws-controllers-k8s/kms-controller v0.1.2 h1:9lb98jspqOpFpmIFHOJ6pRnOkC8kDEPIgTAb5QnVGZo=

@@ -108,8 +108,8 @@ type FunctionSpec struct {
 	// The number of simultaneous executions to reserve for the function.
 	ReservedConcurrentExecutions *int64 `json:"reservedConcurrentExecutions,omitempty"`
 	// The Amazon Resource Name (ARN) of the function's execution role.
-	// +kubebuilder:validation:Required
-	Role *string `json:"role"`
+	Role    *string                                  `json:"role,omitempty"`
+	RoleRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"roleRef,omitempty"`
 	// The identifier of the function's runtime (https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html).
 	// Runtime is required if the deployment package is a .zip file archive.
 	Runtime *string `json:"runtime,omitempty"`

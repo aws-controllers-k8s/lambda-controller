@@ -19,6 +19,7 @@ import (
 	"os"
 
 	ec2apitypes "github.com/aws-controllers-k8s/ec2-controller/apis/v1alpha1"
+	iamapitypes "github.com/aws-controllers-k8s/iam-controller/apis/v1alpha1"
 	kafkaapitypes "github.com/aws-controllers-k8s/kafka-controller/apis/v1alpha1"
 	kmsapitypes "github.com/aws-controllers-k8s/kms-controller/apis/v1alpha1"
 	mqapitypes "github.com/aws-controllers-k8s/mq-controller/apis/v1alpha1"
@@ -64,6 +65,7 @@ func init() {
 	_ = svctypes.AddToScheme(scheme)
 	_ = ackv1alpha1.AddToScheme(scheme)
 	_ = ec2apitypes.AddToScheme(scheme)
+	_ = iamapitypes.AddToScheme(scheme)
 	_ = kafkaapitypes.AddToScheme(scheme)
 	_ = kmsapitypes.AddToScheme(scheme)
 	_ = mqapitypes.AddToScheme(scheme)

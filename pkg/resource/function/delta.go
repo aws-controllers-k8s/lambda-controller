@@ -234,6 +234,9 @@ func newResourceDelta(
 			delta.Add("Spec.Role", a.ko.Spec.Role, b.ko.Spec.Role)
 		}
 	}
+	if !reflect.DeepEqual(a.ko.Spec.RoleRef, b.ko.Spec.RoleRef) {
+		delta.Add("Spec.RoleRef", a.ko.Spec.RoleRef, b.ko.Spec.RoleRef)
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.Runtime, b.ko.Spec.Runtime) {
 		delta.Add("Spec.Runtime", a.ko.Spec.Runtime, b.ko.Spec.Runtime)
 	} else if a.ko.Spec.Runtime != nil && b.ko.Spec.Runtime != nil {

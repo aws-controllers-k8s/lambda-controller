@@ -4,7 +4,7 @@
 
 image:
   repository: public.ecr.aws/aws-controllers-k8s/lambda-controller
-  tag: 1.1.1
+  tag: 1.2.0
   pullPolicy: IfNotPresent
   pullSecrets: []
 
@@ -52,7 +52,7 @@ deployment:
 # If "installScope: cluster" then these labels will be applied to ClusterRole
 role:
   labels: {}
-  
+
 metrics:
   service:
     # Set to true to automatically create a Kubernetes Service resource for the
@@ -80,7 +80,7 @@ aws:
     # Secret stringData key that contains the credentials
     secretKey: "credentials"
     # Profile used for AWS credentials
-    profile: "default"  
+    profile: "default"
 
 # log level for the controller
 log:
