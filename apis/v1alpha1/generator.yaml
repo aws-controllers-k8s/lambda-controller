@@ -63,7 +63,7 @@ resources:
           path: Configuration.Layers
       FunctionEventInvokeConfig:
         from:
-          operation: PutFunctionEventInvokeConfig 
+          operation: PutFunctionEventInvokeConfig
           path: .
     renames:
       operations:
@@ -76,9 +76,6 @@ resources:
         GetFunction:
           input_fields:
             FunctionName: Name
-    exceptions:
-      terminal_codes:
-        - InvalidParameterValueException
     hooks:
       delta_pre_compare:
         code: customPreCompare(delta, a, b)
@@ -99,7 +96,7 @@ resources:
         is_required: true
         references:
           resource: Function
-          path: Spec.Name 
+          path: Spec.Name
       FunctionVersion:
         is_required: true
       FunctionEventInvokeConfig:
