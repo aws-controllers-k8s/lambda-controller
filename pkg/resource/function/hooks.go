@@ -31,7 +31,7 @@ import (
 
 var (
 	ErrFunctionPending         = errors.New("function in 'Pending' state, cannot be modified or deleted")
-	ErrRoleCannotBeAssumed     = errors.New("The role defined for the function cannot be assumed by Lambda.")
+	ErrRoleCannotBeAssumed     = errors.New("the role defined for the function cannot be assumed by Lambda.")
 	ErrSourceImageDoesNotExist = errors.New("source image does not exist")
 	ErrCannotSetFunctionCSC    = errors.New("cannot set function code signing config when package type is Image")
 )
