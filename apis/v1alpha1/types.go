@@ -381,9 +381,10 @@ type OnSuccess struct {
 // Details about the provisioned concurrency configuration for a function alias
 // or version.
 type ProvisionedConcurrencyConfigListItem struct {
-	FunctionARN  *string `json:"functionARN,omitempty"`
-	LastModified *string `json:"lastModified,omitempty"`
-	StatusReason *string `json:"statusReason,omitempty"`
+	FunctionARN                              *string `json:"functionARN,omitempty"`
+	LastModified                             *string `json:"lastModified,omitempty"`
+	RequestedProvisionedConcurrentExecutions *int64  `json:"requestedProvisionedConcurrentExecutions,omitempty"`
+	StatusReason                             *string `json:"statusReason,omitempty"`
 }
 
 type PutFunctionConcurrencyOutput struct {
@@ -398,6 +399,12 @@ type PutFunctionEventInvokeConfigInput struct {
 	MaximumEventAgeInSeconds *int64             `json:"maximumEventAgeInSeconds,omitempty"`
 	MaximumRetryAttempts     *int64             `json:"maximumRetryAttempts,omitempty"`
 	Qualifier                *string            `json:"qualifier,omitempty"`
+}
+
+type PutProvisionedConcurrencyConfigInput struct {
+	FunctionName                    *string `json:"functionName,omitempty"`
+	ProvisionedConcurrentExecutions *int64  `json:"provisionedConcurrentExecutions,omitempty"`
+	Qualifier                       *string `json:"qualifier,omitempty"`
 }
 
 // (Amazon SQS only) The scaling configuration for the event source. To remove

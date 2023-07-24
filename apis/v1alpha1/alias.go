@@ -64,6 +64,12 @@ type AliasSpec struct {
 	// The name of the alias.
 	// +kubebuilder:validation:Required
 	Name *string `json:"name"`
+	// Configures provisioned concurrency to a function's alias
+	//
+	// - ProvisionedConcurrentExecutions
+	// The amount of provisioned concurrency to allocate for the version or alias.
+	// Minimum value of 1 is required
+	ProvisionedConcurrencyConfig *PutProvisionedConcurrencyConfigInput `json:"provisionedConcurrencyConfig,omitempty"`
 	// The routing configuration (https://docs.aws.amazon.com/lambda/latest/dg/configuration-aliases.html#configuring-alias-routing)
 	// of the alias.
 	RoutingConfig *AliasRoutingConfiguration `json:"routingConfig,omitempty"`

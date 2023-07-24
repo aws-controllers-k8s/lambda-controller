@@ -16,6 +16,7 @@ package alias
 import (
 	"context"
 
+	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
 	"github.com/aws/aws-sdk-go/aws"
 	svcsdk "github.com/aws/aws-sdk-go/service/lambda"
@@ -70,14 +71,71 @@ func (rm *resourceManager) syncEventInvokeConfig(
 	return r, nil
 }
 
-func (rm *resourceManager) setResourceAdditionalFields(
+func (rm *resourceManager) updateProvisionedConcurrency(
+	ctx context.Context,
+	desired *resource,
+) error {
+	var err error
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.updateProvisionedConcurrency")
+	defer exit(err)
+
+	dspec := desired.ko.Spec
+	input := &svcsdk.PutProvisionedConcurrencyConfigInput{
+		FunctionName: aws.String(*dspec.FunctionName),
+		Qualifier:    aws.String(*dspec.Name),
+	}
+
+	if desired.ko.Spec.ProvisionedConcurrencyConfig != nil {
+		if desired.ko.Spec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions != nil {
+			input.ProvisionedConcurrentExecutions = aws.Int64(*desired.ko.Spec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions)
+		} else {
+			input.ProvisionedConcurrentExecutions = aws.Int64(0)
+		}
+	} else {
+		input.ProvisionedConcurrentExecutions = aws.Int64(0)
+	}
+
+	_, err = rm.sdkapi.PutProvisionedConcurrencyConfigWithContext(ctx, input)
+	rm.metrics.RecordAPICall("UPDATE", "UpdateProvisionedConcurrency", err)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (rm *resourceManager) getProvisionedConcurrencyConfig(
 	ctx context.Context,
 	ko *svcapitypes.Alias,
 ) (err error) {
-	rlog := ackrtlog.FromContext(ctx)
-	exit := rlog.Trace("rm.setResourceAdditionalFields")
-	defer exit(err)
 
+	var getProvisionedConcurrencyConfigOutput *svcsdk.GetProvisionedConcurrencyConfigOutput
+	getProvisionedConcurrencyConfigOutput, err = rm.sdkapi.GetProvisionedConcurrencyConfigWithContext(
+		ctx,
+		&svcsdk.GetProvisionedConcurrencyConfigInput{
+			FunctionName: ko.Spec.FunctionName,
+			Qualifier:    ko.Spec.Name,
+		},
+	)
+	rm.metrics.RecordAPICall("GET", "GetProvisionedConcurrencyConfig", err)
+
+	if err != nil {
+		if awserr, ok := ackerr.AWSError(err); ok && (awserr.Code() == "ProvisionedConcurrencyConfigNotFoundException" || awserr.Code() == "ResourceNotFoundException") {
+			ko.Spec.ProvisionedConcurrencyConfig = nil
+		} else {
+			return err
+		}
+	} else {
+		ko.Spec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions = getProvisionedConcurrencyConfigOutput.RequestedProvisionedConcurrentExecutions
+	}
+
+	return nil
+}
+
+func (rm *resourceManager) getFunctionEventInvokeConfig(
+	ctx context.Context,
+	ko *svcapitypes.Alias,
+) (err error) {
 	var getFunctionEventInvokeConfigOutput *svcsdk.GetFunctionEventInvokeConfigOutput
 	getFunctionEventInvokeConfigOutput, err = rm.sdkapi.GetFunctionEventInvokeConfigWithContext(
 		ctx,
@@ -88,8 +146,13 @@ func (rm *resourceManager) setResourceAdditionalFields(
 	)
 
 	rm.metrics.RecordAPICall("GET", "GetFunctionEventInvokeConfig", err)
+
 	if err != nil {
-		ko.Spec.FunctionEventInvokeConfig = nil
+		if awserr, ok := ackerr.AWSError(err); ok && (awserr.Code() == "EventInvokeConfigNotFoundException" || awserr.Code() == "ResourceNotFoundException") {
+			ko.Spec.FunctionEventInvokeConfig = nil
+		} else {
+			return err
+		}
 	} else {
 		if getFunctionEventInvokeConfigOutput.DestinationConfig != nil {
 			if getFunctionEventInvokeConfigOutput.DestinationConfig.OnFailure != nil {
@@ -116,5 +179,27 @@ func (rm *resourceManager) setResourceAdditionalFields(
 			ko.Spec.FunctionEventInvokeConfig.MaximumRetryAttempts = nil
 		}
 	}
+
+	return nil
+}
+
+func (rm *resourceManager) setResourceAdditionalFields(
+	ctx context.Context,
+	ko *svcapitypes.Alias,
+) (err error) {
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.setResourceAdditionalFields")
+	defer exit(err)
+
+	eic_err := rm.getFunctionEventInvokeConfig(ctx, ko)
+	if eic_err != nil {
+		return eic_err
+	}
+
+	pc_err := rm.getProvisionedConcurrencyConfig(ctx, ko)
+	if pc_err != nil {
+		return pc_err
+	}
+
 	return nil
 }

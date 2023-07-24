@@ -245,6 +245,13 @@ func (rm *resourceManager) sdkCreate(
 			return nil, err
 		}
 	}
+
+	if ko.Spec.ProvisionedConcurrencyConfig != nil {
+		err = rm.updateProvisionedConcurrency(ctx, desired)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return &resource{ko}, nil
 }
 
@@ -304,7 +311,13 @@ func (rm *resourceManager) sdkUpdate(
 			return nil, err
 		}
 	}
-	if !delta.DifferentExcept("Spec.FunctionEventInvokeConfig") {
+	if delta.DifferentAt("Spec.ProvisionedConcurrencyConfig") {
+		err = rm.updateProvisionedConcurrency(ctx, desired)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if !delta.DifferentExcept("Spec.ProvisionedConcurrencyConfig", "Spec.FunctionEventInvokeConfig") {
 		return desired, nil
 	}
 	input, err := rm.newUpdateRequestPayload(ctx, desired, delta)
