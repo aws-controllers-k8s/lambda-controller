@@ -71,6 +71,8 @@ func (rm *resourceManager) syncEventInvokeConfig(
 	return r, nil
 }
 
+// updateProvisionedConcurrency calls `PutProvisionedConcurrencyConfig` to update the fields
+// or `DeleteProvisionedConcurrencyConfig` if users removes the fields
 func (rm *resourceManager) updateProvisionedConcurrency(
 	ctx context.Context,
 	desired *resource,
@@ -80,20 +82,26 @@ func (rm *resourceManager) updateProvisionedConcurrency(
 	exit := rlog.Trace("rm.updateProvisionedConcurrency")
 	defer exit(err)
 
-	dspec := desired.ko.Spec
-	input := &svcsdk.PutProvisionedConcurrencyConfigInput{
-		FunctionName: aws.String(*dspec.FunctionName),
-		Qualifier:    aws.String(*dspec.Name),
+	// Check if the user deleted the 'ProvisionedConcurrency' configuration
+	// If yes, delete ProvisionedConcurrencyConfig
+	if desired.ko.Spec.ProvisionedConcurrencyConfig == nil || desired.ko.Spec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions == nil {
+		input_delete := &svcsdk.DeleteProvisionedConcurrencyConfigInput{
+			FunctionName: aws.String(*desired.ko.Spec.FunctionName),
+			Qualifier:    aws.String(*desired.ko.Spec.Name),
+		}
+		_, err = rm.sdkapi.DeleteProvisionedConcurrencyConfigWithContext(ctx, input_delete)
+		rm.metrics.RecordAPICall("DELETE", "DeleteProvisionedConcurrency", err)
+		if err != nil {
+			return err
+		}
+		return nil
 	}
 
-	if desired.ko.Spec.ProvisionedConcurrencyConfig != nil {
-		if desired.ko.Spec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions != nil {
-			input.ProvisionedConcurrentExecutions = aws.Int64(*desired.ko.Spec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions)
-		} else {
-			input.ProvisionedConcurrentExecutions = aws.Int64(0)
-		}
-	} else {
-		input.ProvisionedConcurrentExecutions = aws.Int64(0)
+	dspec := desired.ko.Spec
+	input := &svcsdk.PutProvisionedConcurrencyConfigInput{
+		FunctionName:                    aws.String(*dspec.FunctionName),
+		Qualifier:                       aws.String(*dspec.Name),
+		ProvisionedConcurrentExecutions: aws.Int64(*dspec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions),
 	}
 
 	_, err = rm.sdkapi.PutProvisionedConcurrencyConfigWithContext(ctx, input)
@@ -104,10 +112,15 @@ func (rm *resourceManager) updateProvisionedConcurrency(
 	return nil
 }
 
-func (rm *resourceManager) getProvisionedConcurrencyConfig(
+// setProvisionedConcurrencyConfig sets the Provisioned Concurrency
+// for the Function's Alias
+func (rm *resourceManager) setProvisionedConcurrencyConfig(
 	ctx context.Context,
 	ko *svcapitypes.Alias,
 ) (err error) {
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.setProvisionedConcurrencyConfig")
+	defer exit(err)
 
 	var getProvisionedConcurrencyConfigOutput *svcsdk.GetProvisionedConcurrencyConfigOutput
 	getProvisionedConcurrencyConfigOutput, err = rm.sdkapi.GetProvisionedConcurrencyConfigWithContext(
@@ -126,12 +139,17 @@ func (rm *resourceManager) getProvisionedConcurrencyConfig(
 			return err
 		}
 	} else {
-		ko.Spec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions = getProvisionedConcurrencyConfigOutput.RequestedProvisionedConcurrentExecutions
+		// creating ProvisionedConcurrency object to store the values returned from `Get` call
+		cloudProvisionedConcurrency := &svcapitypes.PutProvisionedConcurrencyConfigInput{}
+		cloudProvisionedConcurrency.ProvisionedConcurrentExecutions = getProvisionedConcurrencyConfigOutput.RequestedProvisionedConcurrentExecutions
+		ko.Spec.ProvisionedConcurrencyConfig = cloudProvisionedConcurrency
 	}
 
 	return nil
 }
 
+// getFunctionEventInvokeConfig will describe the fields that are
+// custom to the Alias resource
 func (rm *resourceManager) getFunctionEventInvokeConfig(
 	ctx context.Context,
 	ko *svcapitypes.Alias,
@@ -183,6 +201,8 @@ func (rm *resourceManager) getFunctionEventInvokeConfig(
 	return nil
 }
 
+// setResourceAdditionalFields will describe the fields that are not return by the
+// getFunctionConfiguration API call
 func (rm *resourceManager) setResourceAdditionalFields(
 	ctx context.Context,
 	ko *svcapitypes.Alias,
@@ -191,14 +211,16 @@ func (rm *resourceManager) setResourceAdditionalFields(
 	exit := rlog.Trace("rm.setResourceAdditionalFields")
 	defer exit(err)
 
+	// To set Asynchronous Invocations for the function's alias
 	eic_err := rm.getFunctionEventInvokeConfig(ctx, ko)
 	if eic_err != nil {
 		return eic_err
 	}
 
-	pc_err := rm.getProvisionedConcurrencyConfig(ctx, ko)
-	if pc_err != nil {
-		return pc_err
+	// To set Provisioned Concurrency for the function's alias
+	err = rm.setProvisionedConcurrencyConfig(ctx, ko)
+	if err != nil {
+		return err
 	}
 
 	return nil
