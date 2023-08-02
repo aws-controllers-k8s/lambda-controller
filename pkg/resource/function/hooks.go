@@ -86,7 +86,7 @@ func (rm *resourceManager) customUpdateFunction(
 		}
 	}
 	if delta.DifferentAt("Spec.FunctionEventInvokeConfig") {
-		err = rm.updateFunctionEventInvokeConfig(ctx, desired)
+		err = rm.syncFunctionEventInvokeConfig(ctx, desired)
 		if err != nil {
 			return nil, err
 		}
@@ -491,7 +491,9 @@ func (rm *resourceManager) updateFunctionConcurrency(
 	return nil
 }
 
-func (rm *resourceManager) updateFunctionEventInvokeConfig(
+// syncFunctionEventInvokeConfig calls `PutFunctionEventInvokeConfig` to update the fields
+// or `DeleteFunctionEventInvokeConfig` is users removes the fields
+func (rm *resourceManager) syncFunctionEventInvokeConfig(
 	ctx context.Context,
 	desired *resource,
 ) error {
@@ -551,7 +553,7 @@ func (rm *resourceManager) updateFunctionEventInvokeConfig(
 }
 
 // updateFunctionCodeSigningConfig calls PutFunctionCodeSigningConfig to update
-// it code signing configuration
+// the code signing configuration
 func (rm *resourceManager) updateFunctionCodeSigningConfig(
 	ctx context.Context,
 	desired *resource,
@@ -580,7 +582,7 @@ func (rm *resourceManager) updateFunctionCodeSigningConfig(
 }
 
 // deleteFunctionCodeSigningConfig calls deleteFunctionCodeSigningConfig to update
-// it code signing configuration
+// the code signing configuration
 func (rm *resourceManager) deleteFunctionCodeSigningConfig(
 	ctx context.Context,
 	desired *resource,
@@ -603,11 +605,16 @@ func (rm *resourceManager) deleteFunctionCodeSigningConfig(
 	return nil
 }
 
-// getFunctionConcurrency will describe the fields that are not return by GetFunctionConcurrency calls
-func (rm *resourceManager) getFunctionConcurrency(
+// setFunctionConcurrency sets the concurrency fields
+// for the Function resource
+func (rm *resourceManager) setFunctionConcurrency(
 	ctx context.Context,
 	ko *svcapitypes.Function,
 ) (err error) {
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.setFunctionConcurrency")
+	defer exit(err)
+
 	var getFunctionConcurrencyOutput *svcsdk.GetFunctionConcurrencyOutput
 	getFunctionConcurrencyOutput, err = rm.sdkapi.GetFunctionConcurrencyWithContext(
 		ctx,
@@ -624,12 +631,16 @@ func (rm *resourceManager) getFunctionConcurrency(
 	return nil
 }
 
-// getFunctionCodeSigningConfig will describe the code signing
+// setFunctionCodeSigningConfig sets the code signing
 // fields for the Function resource
-func (rm *resourceManager) getFunctionCodeSigningConfig(
+func (rm *resourceManager) setFunctionCodeSigningConfig(
 	ctx context.Context,
 	ko *svcapitypes.Function,
 ) (err error) {
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.setFunctionCodeSigningConfig")
+	defer exit(err)
+
 	var getFunctionCodeSigningConfigOutput *svcsdk.GetFunctionCodeSigningConfigOutput
 	getFunctionCodeSigningConfigOutput, err = rm.sdkapi.GetFunctionCodeSigningConfigWithContext(
 		ctx,
@@ -649,62 +660,30 @@ func (rm *resourceManager) getFunctionCodeSigningConfig(
 func (rm *resourceManager) setFunctionEventInvokeConfigFromResponse(
 	ko *svcapitypes.Function,
 	getFunctionEventInvokeConfigOutput *svcsdk.GetFunctionEventInvokeConfigOutput,
-	apiError error,
-) (err error) {
+) {
+	// creating FunctionEventInvokeConfig object to store the values returned from `Get` call
+	cloudFunctionEventInvokeConfig := &svcapitypes.PutFunctionEventInvokeConfigInput{}
+	cloudFunctionEventInvokeConfig.DestinationConfig = &svcapitypes.DestinationConfig{}
+	cloudFunctionEventInvokeConfig.DestinationConfig.OnFailure = &svcapitypes.OnFailure{}
+	cloudFunctionEventInvokeConfig.DestinationConfig.OnSuccess = &svcapitypes.OnSuccess{}
+	cloudFunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination = getFunctionEventInvokeConfigOutput.DestinationConfig.OnFailure.Destination
+	cloudFunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination = getFunctionEventInvokeConfigOutput.DestinationConfig.OnSuccess.Destination
+	cloudFunctionEventInvokeConfig.MaximumEventAgeInSeconds = getFunctionEventInvokeConfigOutput.MaximumEventAgeInSeconds
+	cloudFunctionEventInvokeConfig.MaximumRetryAttempts = getFunctionEventInvokeConfigOutput.MaximumRetryAttempts
+	ko.Spec.FunctionEventInvokeConfig = cloudFunctionEventInvokeConfig
 
-	if apiError != nil {
-		if awserr, ok := ackerr.AWSError(apiError); ok && (awserr.Code() == "EventInvokeConfigNotFoundException" || awserr.Code() == "ResourceNotFoundException") {
-			ko.Spec.FunctionEventInvokeConfig = nil
-		} else {
-			return apiError
-		}
-	} else {
-		if ko.Spec.FunctionEventInvokeConfig != nil {
-			if getFunctionEventInvokeConfigOutput.DestinationConfig != nil {
-				if getFunctionEventInvokeConfigOutput.DestinationConfig.OnFailure != nil {
-					if getFunctionEventInvokeConfigOutput.DestinationConfig.OnFailure.Destination != nil {
-						ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination = getFunctionEventInvokeConfigOutput.DestinationConfig.OnFailure.Destination
-					}
-				}
-				if getFunctionEventInvokeConfigOutput.DestinationConfig.OnSuccess != nil {
-					if getFunctionEventInvokeConfigOutput.DestinationConfig.OnSuccess.Destination != nil {
-						ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination = getFunctionEventInvokeConfigOutput.DestinationConfig.OnSuccess.Destination
-					}
-				}
-			} else {
-				ko.Spec.FunctionEventInvokeConfig.DestinationConfig = nil
-			}
-			if getFunctionEventInvokeConfigOutput.MaximumEventAgeInSeconds != nil {
-				ko.Spec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds = getFunctionEventInvokeConfigOutput.MaximumEventAgeInSeconds
-			} else {
-				ko.Spec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds = nil
-			}
-			if getFunctionEventInvokeConfigOutput.DestinationConfig != nil {
-				ko.Spec.FunctionEventInvokeConfig.MaximumRetryAttempts = getFunctionEventInvokeConfigOutput.MaximumRetryAttempts
-			} else {
-				ko.Spec.FunctionEventInvokeConfig.MaximumRetryAttempts = nil
-			}
-		} else {
-			cloudFunctionEventInvokeConfig := &svcapitypes.PutFunctionEventInvokeConfigInput{}
-			cloudFunctionEventInvokeConfig.DestinationConfig = &svcapitypes.DestinationConfig{}
-			cloudFunctionEventInvokeConfig.DestinationConfig.OnFailure = &svcapitypes.OnFailure{}
-			cloudFunctionEventInvokeConfig.DestinationConfig.OnSuccess = &svcapitypes.OnSuccess{}
-			cloudFunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination = getFunctionEventInvokeConfigOutput.DestinationConfig.OnFailure.Destination
-			cloudFunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination = getFunctionEventInvokeConfigOutput.DestinationConfig.OnSuccess.Destination
-			cloudFunctionEventInvokeConfig.MaximumEventAgeInSeconds = getFunctionEventInvokeConfigOutput.MaximumEventAgeInSeconds
-			cloudFunctionEventInvokeConfig.MaximumRetryAttempts = getFunctionEventInvokeConfigOutput.MaximumRetryAttempts
-			ko.Spec.FunctionEventInvokeConfig = cloudFunctionEventInvokeConfig
-		}
-	}
-	return nil
 }
 
-// getFunctionEventInvokeConfig will describe the fields that are
-// custom to the Function resource
-func (rm *resourceManager) getFunctionEventInvokeConfig(
+// setFunctionEventInvokeConfig sets the fields to set asynchronous invocation
+// for Function resource
+func (rm *resourceManager) setFunctionEventInvokeConfig(
 	ctx context.Context,
 	ko *svcapitypes.Function,
 ) (err error) {
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.setFunctionEventInvokeConfig")
+	defer exit(err)
+
 	var getFunctionEventInvokeConfigOutput *svcsdk.GetFunctionEventInvokeConfigOutput
 	getFunctionEventInvokeConfigOutput, err = rm.sdkapi.GetFunctionEventInvokeConfigWithContext(
 		ctx,
@@ -714,9 +693,14 @@ func (rm *resourceManager) getFunctionEventInvokeConfig(
 	)
 	rm.metrics.RecordAPICall("GET", "GetFunctionEventInvokeConfig", err)
 
-	err = rm.setFunctionEventInvokeConfigFromResponse(ko, getFunctionEventInvokeConfigOutput, err)
 	if err != nil {
-		return err
+		if awserr, ok := ackerr.AWSError(err); ok && (awserr.Code() == "EventInvokeConfigNotFoundException" || awserr.Code() == "ResourceNotFoundException") {
+			ko.Spec.FunctionEventInvokeConfig = nil
+		} else {
+			return err
+		}
+	} else {
+		rm.setFunctionEventInvokeConfigFromResponse(ko, getFunctionEventInvokeConfigOutput)
 	}
 
 	return nil
@@ -733,20 +717,20 @@ func (rm *resourceManager) setResourceAdditionalFields(
 	defer exit(err)
 
 	// To set Function Concurrency for the function
-	err = rm.getFunctionConcurrency(ctx, ko)
+	err = rm.setFunctionConcurrency(ctx, ko)
 	if err != nil {
 		return err
 	}
 
 	// To set Asynchronous Invocations for the function
-	err = rm.getFunctionEventInvokeConfig(ctx, ko)
+	err = rm.setFunctionEventInvokeConfig(ctx, ko)
 	if err != nil {
 		return err
 	}
 
 	// To set Code Signing Config based on the PackageType for the function
 	if ko.Spec.PackageType != nil && *ko.Spec.PackageType == "Zip" {
-		err = rm.getFunctionCodeSigningConfig(ctx, ko)
+		err = rm.setFunctionCodeSigningConfig(ctx, ko)
 		if err != nil {
 			return err
 		}

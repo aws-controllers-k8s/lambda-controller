@@ -24,6 +24,8 @@ import (
 	svcapitypes "github.com/aws-controllers-k8s/lambda-controller/apis/v1alpha1"
 )
 
+// syncEventInvokeConfig calls `PutFunctionEventInvokeConfig` to update the fields
+// or `DeleteFunctionEventInvokeConfig` if users removes the fields
 func (rm *resourceManager) syncEventInvokeConfig(
 	ctx context.Context,
 	r *resource,
@@ -32,42 +34,55 @@ func (rm *resourceManager) syncEventInvokeConfig(
 	exit := rlog.Trace("rm.syncEventInvokeConfig")
 	defer exit(err)
 
+	// Check if the user deleted the 'FunctionEventInvokeConfig' configuration
+	// If yes, delete FunctionEventInvokeConfig
+	if r.ko.Spec.FunctionEventInvokeConfig == nil {
+		input_delete := &svcsdk.DeleteFunctionEventInvokeConfigInput{
+			FunctionName: aws.String(*r.ko.Spec.FunctionName),
+			Qualifier:    aws.String(*r.ko.Spec.Name),
+		}
+		_, err = rm.sdkapi.DeleteFunctionEventInvokeConfigWithContext(ctx, input_delete)
+		rm.metrics.RecordAPICall("DELETE", "DeleteFunctionEventInvokeConfig", err)
+		if err != nil {
+			return nil, err
+		}
+		return r, nil
+	}
+
 	dspec := r.ko.Spec
 	input := &svcsdk.PutFunctionEventInvokeConfigInput{
 		FunctionName: aws.String(*dspec.FunctionName),
 		Qualifier:    aws.String(*dspec.Name),
 	}
 
-	if r.ko.Spec.FunctionEventInvokeConfig != nil {
-		if r.ko.Spec.FunctionEventInvokeConfig.DestinationConfig != nil {
-			destinations := &svcsdk.DestinationConfig{}
-			if r.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure != nil {
-				destinations.OnFailure = &svcsdk.OnFailure{}
-				if r.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination != nil {
-					destinations.OnFailure.Destination = aws.String(*r.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination)
-				}
+	if dspec.FunctionEventInvokeConfig.DestinationConfig != nil {
+		destinations := &svcsdk.DestinationConfig{}
+		if dspec.FunctionEventInvokeConfig.DestinationConfig.OnFailure != nil {
+			destinations.OnFailure = &svcsdk.OnFailure{}
+			if dspec.FunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination != nil {
+				destinations.OnFailure.Destination = aws.String(*dspec.FunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination)
 			}
-			if r.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess != nil {
-				destinations.OnSuccess = &svcsdk.OnSuccess{}
-				if r.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination != nil {
-					destinations.OnSuccess.Destination = aws.String(*r.ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination)
-				}
+		}
+		if dspec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess != nil {
+			destinations.OnSuccess = &svcsdk.OnSuccess{}
+			if dspec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination != nil {
+				destinations.OnSuccess.Destination = aws.String(*dspec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination)
 			}
-			input.DestinationConfig = destinations
 		}
-		if r.ko.Spec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds != nil {
-			input.MaximumEventAgeInSeconds = aws.Int64(*r.ko.Spec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds)
-		}
-		if r.ko.Spec.FunctionEventInvokeConfig.MaximumRetryAttempts != nil {
-			input.MaximumRetryAttempts = aws.Int64(*r.ko.Spec.FunctionEventInvokeConfig.MaximumRetryAttempts)
-		}
+		input.DestinationConfig = destinations
 	}
+	if dspec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds != nil {
+		input.MaximumEventAgeInSeconds = aws.Int64(*dspec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds)
+	}
+	if dspec.FunctionEventInvokeConfig.MaximumRetryAttempts != nil {
+		input.MaximumRetryAttempts = aws.Int64(*dspec.FunctionEventInvokeConfig.MaximumRetryAttempts)
+	}
+
 	_, err = rm.sdkapi.PutFunctionEventInvokeConfigWithContext(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "SyncEventInvokeConfig", err)
 	if err != nil {
 		return nil, err
 	}
-
 	return r, nil
 }
 
@@ -148,12 +163,33 @@ func (rm *resourceManager) setProvisionedConcurrencyConfig(
 	return nil
 }
 
-// getFunctionEventInvokeConfig will describe the fields that are
-// custom to the Alias resource
-func (rm *resourceManager) getFunctionEventInvokeConfig(
+func (rm *resourceManager) setFunctionEventInvokeConfigFromResponse(
+	ko *svcapitypes.Alias,
+	getFunctionEventInvokeConfigOutput *svcsdk.GetFunctionEventInvokeConfigOutput,
+) {
+	// creating FunctionEventInvokeConfig object to store the values returned from `Get` call
+	cloudFunctionEventInvokeConfig := &svcapitypes.PutFunctionEventInvokeConfigInput{}
+	cloudFunctionEventInvokeConfig.DestinationConfig = &svcapitypes.DestinationConfig{}
+	cloudFunctionEventInvokeConfig.DestinationConfig.OnFailure = &svcapitypes.OnFailure{}
+	cloudFunctionEventInvokeConfig.DestinationConfig.OnSuccess = &svcapitypes.OnSuccess{}
+	cloudFunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination = getFunctionEventInvokeConfigOutput.DestinationConfig.OnFailure.Destination
+	cloudFunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination = getFunctionEventInvokeConfigOutput.DestinationConfig.OnSuccess.Destination
+	cloudFunctionEventInvokeConfig.MaximumEventAgeInSeconds = getFunctionEventInvokeConfigOutput.MaximumEventAgeInSeconds
+	cloudFunctionEventInvokeConfig.MaximumRetryAttempts = getFunctionEventInvokeConfigOutput.MaximumRetryAttempts
+	ko.Spec.FunctionEventInvokeConfig = cloudFunctionEventInvokeConfig
+
+}
+
+// setFunctionEventInvokeConfig sets the fields to set asynchronous invocation
+// for Function's Alias
+func (rm *resourceManager) setFunctionEventInvokeConfig(
 	ctx context.Context,
 	ko *svcapitypes.Alias,
 ) (err error) {
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.setFunctionEventInvokeConfig")
+	defer exit(err)
+
 	var getFunctionEventInvokeConfigOutput *svcsdk.GetFunctionEventInvokeConfigOutput
 	getFunctionEventInvokeConfigOutput, err = rm.sdkapi.GetFunctionEventInvokeConfigWithContext(
 		ctx,
@@ -162,7 +198,6 @@ func (rm *resourceManager) getFunctionEventInvokeConfig(
 			Qualifier:    ko.Spec.Name,
 		},
 	)
-
 	rm.metrics.RecordAPICall("GET", "GetFunctionEventInvokeConfig", err)
 
 	if err != nil {
@@ -172,30 +207,7 @@ func (rm *resourceManager) getFunctionEventInvokeConfig(
 			return err
 		}
 	} else {
-		if getFunctionEventInvokeConfigOutput.DestinationConfig != nil {
-			if getFunctionEventInvokeConfigOutput.DestinationConfig.OnFailure != nil {
-				if getFunctionEventInvokeConfigOutput.DestinationConfig.OnFailure.Destination != nil {
-					ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination = getFunctionEventInvokeConfigOutput.DestinationConfig.OnFailure.Destination
-				}
-			}
-			if getFunctionEventInvokeConfigOutput.DestinationConfig.OnSuccess != nil {
-				if getFunctionEventInvokeConfigOutput.DestinationConfig.OnSuccess.Destination != nil {
-					ko.Spec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination = getFunctionEventInvokeConfigOutput.DestinationConfig.OnSuccess.Destination
-				}
-			}
-		} else {
-			ko.Spec.FunctionEventInvokeConfig.DestinationConfig = nil
-		}
-		if getFunctionEventInvokeConfigOutput.MaximumEventAgeInSeconds != nil {
-			ko.Spec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds = getFunctionEventInvokeConfigOutput.MaximumEventAgeInSeconds
-		} else {
-			ko.Spec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds = nil
-		}
-		if getFunctionEventInvokeConfigOutput.DestinationConfig != nil {
-			ko.Spec.FunctionEventInvokeConfig.MaximumRetryAttempts = getFunctionEventInvokeConfigOutput.MaximumRetryAttempts
-		} else {
-			ko.Spec.FunctionEventInvokeConfig.MaximumRetryAttempts = nil
-		}
+		rm.setFunctionEventInvokeConfigFromResponse(ko, getFunctionEventInvokeConfigOutput)
 	}
 
 	return nil
@@ -212,9 +224,9 @@ func (rm *resourceManager) setResourceAdditionalFields(
 	defer exit(err)
 
 	// To set Asynchronous Invocations for the function's alias
-	eic_err := rm.getFunctionEventInvokeConfig(ctx, ko)
-	if eic_err != nil {
-		return eic_err
+	err = rm.setFunctionEventInvokeConfig(ctx, ko)
+	if err != nil {
+		return err
 	}
 
 	// To set Provisioned Concurrency for the function's alias
