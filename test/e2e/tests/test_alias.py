@@ -245,16 +245,27 @@ class TestAlias:
          # Check alias exists
         assert lambda_validator.alias_exists(resource_name, lambda_function_name)
         
-        # Update cr
+        # Update provisioned_concurrency
         cr["spec"]["provisionedConcurrencyConfig"]["provisionedConcurrentExecutions"] = 2
 
         # Patch k8s resource
         k8s.patch_custom_resource(ref, cr)
         time.sleep(UPDATE_WAIT_AFTER_SECONDS)
 
-        #Check function_event_invoke_config update fields
+        #Check provisioned_concurrency_config update fields
         provisioned_concurrency_config = lambda_validator.get_provisioned_concurrency_config(lambda_function_name,resource_name)
         assert provisioned_concurrency_config["RequestedProvisionedConcurrentExecutions"] == 2
+
+        # Delete provisioned_concurrency from alias
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr["spec"]["provisionedConcurrencyConfig"] = None
+
+        # Patch k8s resource     
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        #Check provisioned_concurrency_config is deleted
+        assert not lambda_validator.get_provisioned_concurrency_config(lambda_function_name, resource_name)
 
         # Delete k8s resource
         _, deleted = k8s.delete_custom_resource(ref)
