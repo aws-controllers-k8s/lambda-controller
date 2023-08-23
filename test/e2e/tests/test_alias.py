@@ -335,6 +335,17 @@ class TestAlias:
         assert function_event_invoke_config["MaximumEventAgeInSeconds"] == 200
         assert function_event_invoke_config["MaximumRetryAttempts"] == 2
 
+        # Delete FunctionEventInvokeConfig
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr["spec"]["functionEventInvokeConfig"] =  None
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        # Check if FunctionEventInvokeConfig is deleted
+        assert not lambda_validator.get_function_event_invoke_config_alias(lambda_function_name,resource_name)
+
         # Delete k8s resource
         _, deleted = k8s.delete_custom_resource(ref)
         assert deleted
