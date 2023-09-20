@@ -1,0 +1,17 @@
+apiVersion: lambda.services.k8s.aws/v1alpha1
+kind: Version
+metadata:
+  name: $VERSION_NAME
+  annotations:
+    services.k8s.aws/region: $AWS_REGION
+spec:
+  functionName: $FUNCTION_NAME
+  functionEventInvokeConfig:
+    destinationConfig:
+      onSuccess:
+        destination: $ON_SUCCESS_DESTINATION
+      onFailure:
+        destination: $ON_FAILURE_DESTINATION
+    maximumEventAgeInSeconds: $MAXIMUM_EVENT_AGE_IN_SECONDS
+    maximumRetryAttempts: $MAXIMUM_RETRY_ATTEMPTS
+  description: version created by ACK lambda-controller e2e tests
