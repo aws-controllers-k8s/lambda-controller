@@ -185,3 +185,50 @@ class TestVersion:
 
         # Check function version doesn't exist
         assert not lambda_validator.version_exists(lambda_function_name, version_number)
+
+    def test_smoke_ref(self, lambda_client, lambda_function):
+        (_, function_resource) = lambda_function
+        function_resource_name = function_resource["metadata"]["name"]
+
+        resource_name = random_suffix_name("lambda-version", 24)
+        replacements = REPLACEMENT_VALUES.copy()
+        replacements["AWS_REGION"] = get_region()
+        replacements["VERSION_NAME"] = resource_name
+        replacements["FUNCTION_REF_NAME"] = function_resource_name
+
+        # Load alias CR
+        resource_data = load_lambda_resource(
+            "version_ref",
+            additional_replacements=replacements,
+        )
+        logging.debug(resource_data)
+
+        # Create k8s resource
+        ref = k8s.CustomResourceReference(
+            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            resource_name, namespace="default",
+        )
+        k8s.create_custom_resource(ref, resource_data)
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        assert cr is not None
+        assert k8s.get_resource_exists(ref)
+
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        lambda_validator = LambdaValidator(lambda_client)
+
+        # Check version exists
+        version_number = cr['status']['version']
+        assert lambda_validator.version_exists(function_resource_name, version_number)
+
+        # Delete k8s resource
+        _, deleted = k8s.delete_custom_resource(ref)
+        assert deleted is True
+
+        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+
+        # Check alias doesn't exist
+        assert not lambda_validator.version_exists(function_resource_name, version_number)
