@@ -3161,6 +3161,11 @@ func (in *VersionSpec) DeepCopyInto(out *VersionSpec) {
 		*out = new(corev1alpha1.AWSResourceReferenceWrapper)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.ProvisionedConcurrencyConfig != nil {
+		in, out := &in.ProvisionedConcurrencyConfig, &out.ProvisionedConcurrencyConfig
+		*out = new(PutProvisionedConcurrencyConfigInput)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.RevisionID != nil {
 		in, out := &in.RevisionID, &out.RevisionID
 		*out = new(string)

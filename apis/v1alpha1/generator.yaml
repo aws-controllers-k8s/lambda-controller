@@ -230,6 +230,10 @@ resources:
         from:
           operation: PutFunctionEventInvokeConfig
           path: .
+      ProvisionedConcurrencyConfig:
+        from:
+          operation: PutProvisionedConcurrencyConfig
+          path: .
     tags:
       ignore: true
     update_operation:

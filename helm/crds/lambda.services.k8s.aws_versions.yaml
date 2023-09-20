@@ -117,6 +117,16 @@ spec:
                         type: string
                     type: object
                 type: object
+              provisionedConcurrencyConfig:
+                properties:
+                  functionName:
+                    type: string
+                  provisionedConcurrentExecutions:
+                    format: int64
+                    type: integer
+                  qualifier:
+                    type: string
+                type: object
               revisionID:
                 description: |-
                   Only update the function if the revision ID matches the ID that's specified.

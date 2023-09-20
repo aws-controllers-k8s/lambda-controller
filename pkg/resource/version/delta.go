@@ -125,6 +125,31 @@ func newResourceDelta(
 	if !reflect.DeepEqual(a.ko.Spec.FunctionRef, b.ko.Spec.FunctionRef) {
 		delta.Add("Spec.FunctionRef", a.ko.Spec.FunctionRef, b.ko.Spec.FunctionRef)
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.ProvisionedConcurrencyConfig, b.ko.Spec.ProvisionedConcurrencyConfig) {
+		delta.Add("Spec.ProvisionedConcurrencyConfig", a.ko.Spec.ProvisionedConcurrencyConfig, b.ko.Spec.ProvisionedConcurrencyConfig)
+	} else if a.ko.Spec.ProvisionedConcurrencyConfig != nil && b.ko.Spec.ProvisionedConcurrencyConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.ProvisionedConcurrencyConfig.FunctionName, b.ko.Spec.ProvisionedConcurrencyConfig.FunctionName) {
+			delta.Add("Spec.ProvisionedConcurrencyConfig.FunctionName", a.ko.Spec.ProvisionedConcurrencyConfig.FunctionName, b.ko.Spec.ProvisionedConcurrencyConfig.FunctionName)
+		} else if a.ko.Spec.ProvisionedConcurrencyConfig.FunctionName != nil && b.ko.Spec.ProvisionedConcurrencyConfig.FunctionName != nil {
+			if *a.ko.Spec.ProvisionedConcurrencyConfig.FunctionName != *b.ko.Spec.ProvisionedConcurrencyConfig.FunctionName {
+				delta.Add("Spec.ProvisionedConcurrencyConfig.FunctionName", a.ko.Spec.ProvisionedConcurrencyConfig.FunctionName, b.ko.Spec.ProvisionedConcurrencyConfig.FunctionName)
+			}
+		}
+		if ackcompare.HasNilDifference(a.ko.Spec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions, b.ko.Spec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions) {
+			delta.Add("Spec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions", a.ko.Spec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions, b.ko.Spec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions)
+		} else if a.ko.Spec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions != nil && b.ko.Spec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions != nil {
+			if *a.ko.Spec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions != *b.ko.Spec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions {
+				delta.Add("Spec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions", a.ko.Spec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions, b.ko.Spec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions)
+			}
+		}
+		if ackcompare.HasNilDifference(a.ko.Spec.ProvisionedConcurrencyConfig.Qualifier, b.ko.Spec.ProvisionedConcurrencyConfig.Qualifier) {
+			delta.Add("Spec.ProvisionedConcurrencyConfig.Qualifier", a.ko.Spec.ProvisionedConcurrencyConfig.Qualifier, b.ko.Spec.ProvisionedConcurrencyConfig.Qualifier)
+		} else if a.ko.Spec.ProvisionedConcurrencyConfig.Qualifier != nil && b.ko.Spec.ProvisionedConcurrencyConfig.Qualifier != nil {
+			if *a.ko.Spec.ProvisionedConcurrencyConfig.Qualifier != *b.ko.Spec.ProvisionedConcurrencyConfig.Qualifier {
+				delta.Add("Spec.ProvisionedConcurrencyConfig.Qualifier", a.ko.Spec.ProvisionedConcurrencyConfig.Qualifier, b.ko.Spec.ProvisionedConcurrencyConfig.Qualifier)
+			}
+		}
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.RevisionID, b.ko.Spec.RevisionID) {
 		delta.Add("Spec.RevisionID", a.ko.Spec.RevisionID, b.ko.Spec.RevisionID)
 	} else if a.ko.Spec.RevisionID != nil && b.ko.Spec.RevisionID != nil {
