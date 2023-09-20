@@ -12,6 +12,10 @@ operations:
       - Create
       - Update
     resource_name: LayerVersion
+  PublishVersion:
+    operation_type:
+      - Create
+    resource_name: Version
 resources:
   Function:
     synced:
@@ -196,3 +200,10 @@ resources:
         ListLayerVersions:
           input_fields:
             Version: VersionNumber
+  Version:
+    fields:
+      FunctionName:
+        is_required: true
+        is_primary_key: true
+    tags:
+      ignore: true

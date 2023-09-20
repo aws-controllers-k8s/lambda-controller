@@ -25,14 +25,14 @@ import (
 // Details about a Code signing configuration (https://docs.aws.amazon.com/lambda/latest/dg/configuration-codesigning.html).
 type CodeSigningConfigSpec struct {
 
-	// Signing profiles for this code signing configuration.
-	// +kubebuilder:validation:Required
-	AllowedPublishers *AllowedPublishers `json:"allowedPublishers"`
-	// The code signing policies define the actions to take if the validation checks
-	// fail.
-	CodeSigningPolicies *CodeSigningPolicies `json:"codeSigningPolicies,omitempty"`
-	// Descriptive name for this code signing configuration.
-	Description *string `json:"description,omitempty"`
+// Signing profiles for this code signing configuration.
+// +kubebuilder:validation:Required
+AllowedPublishers *AllowedPublishers `json:"allowedPublishers"`
+// The code signing policies define the actions to take if the validation checks
+// fail.
+CodeSigningPolicies *CodeSigningPolicies `json:"codeSigningPolicies,omitempty"`
+// Descriptive name for this code signing configuration.
+Description *string `json:"description,omitempty"`
 }
 
 // CodeSigningConfigStatus defines the observed state of CodeSigningConfig
@@ -52,7 +52,7 @@ type CodeSigningConfigStatus struct {
 	// +kubebuilder:validation:Optional
 	CodeSigningConfigID *string `json:"codeSigningConfigID,omitempty"`
 	// The date and time that the Code signing configuration was last modified,
-	// in ISO-8601 format (YYYY-MM-DDThh:mm:ss.sTZD).
+// in ISO-8601 format (YYYY-MM-DDThh:mm:ss.sTZD).
 	// +kubebuilder:validation:Optional
 	LastModified *string `json:"lastModified,omitempty"`
 }
@@ -63,8 +63,8 @@ type CodeSigningConfigStatus struct {
 type CodeSigningConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              CodeSigningConfigSpec   `json:"spec,omitempty"`
-	Status            CodeSigningConfigStatus `json:"status,omitempty"`
+	Spec   CodeSigningConfigSpec   `json:"spec,omitempty"`
+	Status CodeSigningConfigStatus `json:"status,omitempty"`
 }
 
 // CodeSigningConfigList contains a list of CodeSigningConfig
@@ -72,7 +72,7 @@ type CodeSigningConfig struct {
 type CodeSigningConfigList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []CodeSigningConfig `json:"items"`
+	Items []CodeSigningConfig `json:"items"`
 }
 
 func init() {
