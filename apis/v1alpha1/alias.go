@@ -25,54 +25,54 @@ import (
 
 type AliasSpec struct {
 
-// A description of the alias.
-Description *string `json:"description,omitempty"`
-// Configures options for asynchronous invocation on an alias.
-// 
-// - DestinationConfig
-// A destination for events after they have been sent to a function for processing.
-// 
-// Types of Destinations:
-// Function - The Amazon Resource Name (ARN) of a Lambda function.
-// Queue - The ARN of a standard SQS queue.
-// Topic - The ARN of a standard SNS topic.
-// Event Bus - The ARN of an Amazon EventBridge event bus.
-// 
-// - MaximumEventAgeInSeconds
-// The maximum age of a request that Lambda sends to a function for processing.
-// 
-// - MaximumRetryAttempts
-// The maximum number of times to retry when the function returns an error.
-FunctionEventInvokeConfig *PutFunctionEventInvokeConfigInput `json:"functionEventInvokeConfig,omitempty"`
-// The name of the Lambda function.
-// 
-// Name formats
-// 
-//    * Function name - MyFunction.
-// 
-//    * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:MyFunction.
-// 
-//    * Partial ARN - 123456789012:function:MyFunction.
-// 
-// The length constraint applies only to the full ARN. If you specify only the
-// function name, it is limited to 64 characters in length.
-FunctionName *string `json:"functionName,omitempty"`
-FunctionRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"functionRef,omitempty"`
-// The function version that the alias invokes.
-// +kubebuilder:validation:Required
-FunctionVersion *string `json:"functionVersion"`
-// The name of the alias.
-// +kubebuilder:validation:Required
-Name *string `json:"name"`
-// Configures provisioned concurrency to a function's alias
-// 
-// - ProvisionedConcurrentExecutions
-// The amount of provisioned concurrency to allocate for the version or alias.
-// Minimum value of 1 is required
-ProvisionedConcurrencyConfig *PutProvisionedConcurrencyConfigInput `json:"provisionedConcurrencyConfig,omitempty"`
-// The routing configuration (https://docs.aws.amazon.com/lambda/latest/dg/configuration-aliases.html#configuring-alias-routing)
-// of the alias.
-RoutingConfig *AliasRoutingConfiguration `json:"routingConfig,omitempty"`
+	// A description of the alias.
+	Description *string `json:"description,omitempty"`
+	// Configures options for asynchronous invocation on an alias.
+	//
+	// - DestinationConfig
+	// A destination for events after they have been sent to a function for processing.
+	//
+	// Types of Destinations:
+	// Function - The Amazon Resource Name (ARN) of a Lambda function.
+	// Queue - The ARN of a standard SQS queue.
+	// Topic - The ARN of a standard SNS topic.
+	// Event Bus - The ARN of an Amazon EventBridge event bus.
+	//
+	// - MaximumEventAgeInSeconds
+	// The maximum age of a request that Lambda sends to a function for processing.
+	//
+	// - MaximumRetryAttempts
+	// The maximum number of times to retry when the function returns an error.
+	FunctionEventInvokeConfig *PutFunctionEventInvokeConfigInput `json:"functionEventInvokeConfig,omitempty"`
+	// The name of the Lambda function.
+	//
+	// Name formats
+	//
+	//   - Function name - MyFunction.
+	//
+	//   - Function ARN - arn:aws:lambda:us-west-2:123456789012:function:MyFunction.
+	//
+	//   - Partial ARN - 123456789012:function:MyFunction.
+	//
+	// The length constraint applies only to the full ARN. If you specify only the
+	// function name, it is limited to 64 characters in length.
+	FunctionName *string                                  `json:"functionName,omitempty"`
+	FunctionRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"functionRef,omitempty"`
+	// The function version that the alias invokes.
+	// +kubebuilder:validation:Required
+	FunctionVersion *string `json:"functionVersion"`
+	// The name of the alias.
+	// +kubebuilder:validation:Required
+	Name *string `json:"name"`
+	// Configures provisioned concurrency to a function's alias
+	//
+	// - ProvisionedConcurrentExecutions
+	// The amount of provisioned concurrency to allocate for the version or alias.
+	// Minimum value of 1 is required
+	ProvisionedConcurrencyConfig *PutProvisionedConcurrencyConfigInput `json:"provisionedConcurrencyConfig,omitempty"`
+	// The routing configuration (https://docs.aws.amazon.com/lambda/latest/dg/configuration-aliases.html#configuring-alias-routing)
+	// of the alias.
+	RoutingConfig *AliasRoutingConfiguration `json:"routingConfig,omitempty"`
 }
 
 // AliasStatus defines the observed state of Alias
@@ -99,8 +99,8 @@ type AliasStatus struct {
 type Alias struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec   AliasSpec   `json:"spec,omitempty"`
-	Status AliasStatus `json:"status,omitempty"`
+	Spec              AliasSpec   `json:"spec,omitempty"`
+	Status            AliasStatus `json:"status,omitempty"`
 }
 
 // AliasList contains a list of Alias
@@ -108,7 +108,7 @@ type Alias struct {
 type AliasList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items []Alias `json:"items"`
+	Items           []Alias `json:"items"`
 }
 
 func init() {

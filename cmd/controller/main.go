@@ -47,6 +47,7 @@ import (
 	_ "github.com/aws-controllers-k8s/lambda-controller/pkg/resource/function"
 	_ "github.com/aws-controllers-k8s/lambda-controller/pkg/resource/function_url_config"
 	_ "github.com/aws-controllers-k8s/lambda-controller/pkg/resource/layer_version"
+	_ "github.com/aws-controllers-k8s/lambda-controller/pkg/resource/version"
 
 	"github.com/aws-controllers-k8s/lambda-controller/pkg/version"
 )

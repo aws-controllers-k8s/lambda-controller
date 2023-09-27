@@ -25,32 +25,32 @@ import (
 
 type VersionSpec struct {
 
-// Only publish a version if the hash value matches the value that's specified.
-// Use this option to avoid publishing a version if the function code has changed
-// since you last updated it. You can get the hash for the version that you
-// uploaded from the output of UpdateFunctionCode.
-CodeSHA256 *string `json:"codeSHA256,omitempty"`
-// A description for the version to override the description in the function
-// configuration.
-Description *string `json:"description,omitempty"`
-// The name of the Lambda function.
-// 
-// Name formats
-// 
-//    * Function name - MyFunction.
-// 
-//    * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:MyFunction.
-// 
-//    * Partial ARN - 123456789012:function:MyFunction.
-// 
-// The length constraint applies only to the full ARN. If you specify only the
-// function name, it is limited to 64 characters in length.
-// +kubebuilder:validation:Required
-FunctionName *string `json:"functionName"`
-// Only update the function if the revision ID matches the ID that's specified.
-// Use this option to avoid publishing a version if the function configuration
-// has changed since you last updated it.
-RevisionID *string `json:"revisionID,omitempty"`
+	// Only publish a version if the hash value matches the value that's specified.
+	// Use this option to avoid publishing a version if the function code has changed
+	// since you last updated it. You can get the hash for the version that you
+	// uploaded from the output of UpdateFunctionCode.
+	CodeSHA256 *string `json:"codeSHA256,omitempty"`
+	// A description for the version to override the description in the function
+	// configuration.
+	Description *string `json:"description,omitempty"`
+	// The name of the Lambda function.
+	//
+	// Name formats
+	//
+	//   - Function name - MyFunction.
+	//
+	//   - Function ARN - arn:aws:lambda:us-west-2:123456789012:function:MyFunction.
+	//
+	//   - Partial ARN - 123456789012:function:MyFunction.
+	//
+	// The length constraint applies only to the full ARN. If you specify only the
+	// function name, it is limited to 64 characters in length.
+	// +kubebuilder:validation:Required
+	FunctionName *string `json:"functionName"`
+	// Only update the function if the revision ID matches the ID that's specified.
+	// Use this option to avoid publishing a version if the function configuration
+	// has changed since you last updated it.
+	RevisionID *string `json:"revisionID,omitempty"`
 }
 
 // VersionStatus defines the observed state of Version
@@ -67,8 +67,8 @@ type VersionStatus struct {
 	// +kubebuilder:validation:Optional
 	Conditions []*ackv1alpha1.Condition `json:"conditions"`
 	// The instruction set architecture that the function supports. Architecture
-// is a string array with one of the valid values. The default architecture
-// value is x86_64.
+	// is a string array with one of the valid values. The default architecture
+	// value is x86_64.
 	// +kubebuilder:validation:Optional
 	Architectures []*string `json:"architectures,omitempty"`
 	// The size of the function's deployment package, in bytes.
@@ -78,11 +78,11 @@ type VersionStatus struct {
 	// +kubebuilder:validation:Optional
 	DeadLetterConfig *DeadLetterConfig `json:"deadLetterConfig,omitempty"`
 	// The function's environment variables (https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html).
-// Omitted from CloudTrail logs.
+	// Omitted from CloudTrail logs.
 	// +kubebuilder:validation:Optional
 	Environment *EnvironmentResponse `json:"environment,omitempty"`
 	// The size of the function’s /tmp directory in MB. The default value is 512,
-// but it can be any whole number between 512 and 10,240 MB.
+	// but it can be any whole number between 512 and 10,240 MB.
 	// +kubebuilder:validation:Optional
 	EphemeralStorage *EphemeralStorage `json:"ephemeralStorage,omitempty"`
 	// Connection settings for an Amazon EFS file system (https://docs.aws.amazon.com/lambda/latest/dg/configuration-filesystem.html).
@@ -98,15 +98,15 @@ type VersionStatus struct {
 	// +kubebuilder:validation:Optional
 	ImageConfigResponse *ImageConfigResponse `json:"imageConfigResponse,omitempty"`
 	// The KMS key that's used to encrypt the function's environment variables.
-// This key is returned only if you've configured a customer managed key.
+	// This key is returned only if you've configured a customer managed key.
 	// +kubebuilder:validation:Optional
 	KMSKeyARN *string `json:"kmsKeyARN,omitempty"`
 	// The date and time that the function was last updated, in ISO-8601 format
-// (https://www.w3.org/TR/NOTE-datetime) (YYYY-MM-DDThh:mm:ss.sTZD).
+	// (https://www.w3.org/TR/NOTE-datetime) (YYYY-MM-DDThh:mm:ss.sTZD).
 	// +kubebuilder:validation:Optional
 	LastModified *string `json:"lastModified,omitempty"`
 	// The status of the last update that was performed on the function. This is
-// first set to Successful after function creation completes.
+	// first set to Successful after function creation completes.
 	// +kubebuilder:validation:Optional
 	LastUpdateStatus *string `json:"lastUpdateStatus,omitempty"`
 	// The reason for the last update that was performed on the function.
@@ -125,7 +125,7 @@ type VersionStatus struct {
 	// +kubebuilder:validation:Optional
 	MemorySize *int64 `json:"memorySize,omitempty"`
 	// The type of deployment package. Set to Image for container image and set
-// Zip for .zip file archive.
+	// Zip for .zip file archive.
 	// +kubebuilder:validation:Optional
 	PackageType *string `json:"packageType,omitempty"`
 	// The function's execution role.
@@ -141,23 +141,23 @@ type VersionStatus struct {
 	// +kubebuilder:validation:Optional
 	SigningProfileVersionARN *string `json:"signingProfileVersionARN,omitempty"`
 	// Set ApplyOn to PublishedVersions to create a snapshot of the initialized
-// execution environment when you publish a function version. For more information,
-// see Improving startup performance with Lambda SnapStart (https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html).
+	// execution environment when you publish a function version. For more information,
+	// see Improving startup performance with Lambda SnapStart (https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html).
 	// +kubebuilder:validation:Optional
 	SnapStart *SnapStartResponse `json:"snapStart,omitempty"`
 	// The current state of the function. When the state is Inactive, you can reactivate
-// the function by invoking it.
+	// the function by invoking it.
 	// +kubebuilder:validation:Optional
 	State *string `json:"state,omitempty"`
 	// The reason for the function's current state.
 	// +kubebuilder:validation:Optional
 	StateReason *string `json:"stateReason,omitempty"`
 	// The reason code for the function's current state. When the code is Creating,
-// you can't invoke or modify the function.
+	// you can't invoke or modify the function.
 	// +kubebuilder:validation:Optional
 	StateReasonCode *string `json:"stateReasonCode,omitempty"`
 	// The amount of time in seconds that Lambda allows a function to run before
-// stopping it.
+	// stopping it.
 	// +kubebuilder:validation:Optional
 	Timeout *int64 `json:"timeout,omitempty"`
 	// The function's X-Ray tracing configuration.
@@ -177,8 +177,8 @@ type VersionStatus struct {
 type Version struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec   VersionSpec   `json:"spec,omitempty"`
-	Status VersionStatus `json:"status,omitempty"`
+	Spec              VersionSpec   `json:"spec,omitempty"`
+	Status            VersionStatus `json:"status,omitempty"`
 }
 
 // VersionList contains a list of Version
@@ -186,7 +186,7 @@ type Version struct {
 type VersionList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items []Version `json:"items"`
+	Items           []Version `json:"items"`
 }
 
 func init() {

@@ -15,6 +15,7 @@ operations:
   PublishVersion:
     operation_type:
       - Create
+      - ReadOne
     resource_name: Version
 resources:
   Function:

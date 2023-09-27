@@ -15,15 +15,9 @@ operations:
   PublishVersion:
     operation_type:
       - Create
+      - ReadOne
     resource_name: Version
 resources:
-  Version:
-    fields:
-      FunctionName:
-        is_required: true
-        is_primary_key: true
-    tags:
-      ignore: true
   Function:
     synced:
       when:
@@ -207,3 +201,10 @@ resources:
         ListLayerVersions:
           input_fields:
             Version: VersionNumber
+  Version:
+    fields:
+      FunctionName:
+        is_required: true
+        is_primary_key: true
+    tags:
+      ignore: true
