@@ -128,6 +128,9 @@ type VersionStatus struct {
 	// Zip for .zip file archive.
 	// +kubebuilder:validation:Optional
 	PackageType *string `json:"packageType,omitempty"`
+	// The version of the Lambda function.
+	// +kubebuilder:validation:Optional
+	Qualifier *string `json:"qualifier,omitempty"`
 	// The function's execution role.
 	// +kubebuilder:validation:Optional
 	Role *string `json:"role,omitempty"`

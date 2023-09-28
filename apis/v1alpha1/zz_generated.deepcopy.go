@@ -3291,6 +3291,11 @@ func (in *VersionStatus) DeepCopyInto(out *VersionStatus) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.Qualifier != nil {
+		in, out := &in.Qualifier, &out.Qualifier
+		*out = new(string)
+		**out = **in
+	}
 	if in.Role != nil {
 		in, out := &in.Role, &out.Role
 		*out = new(string)

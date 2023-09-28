@@ -17,6 +17,10 @@ operations:
       - Create
       - ReadOne
     resource_name: Version
+  DeleteFunction:
+    operation_type:
+      - Delete
+    resource_name: Version
 resources:
   Function:
     synced:
@@ -206,5 +210,15 @@ resources:
       FunctionName:
         is_required: true
         is_primary_key: true
+      Qualifier:
+        is_read_only: true
+        from:
+          operation: GetFunction
+          path: Configuration.Version
     tags:
       ignore: true
+    renames:
+      operations:
+        DeleteFunction:
+          input_fields:
+            Qualifier: Version

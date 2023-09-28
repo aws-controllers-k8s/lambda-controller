@@ -265,6 +265,9 @@ spec:
                 description: The type of deployment package. Set to Image for container
                   image and set Zip for .zip file archive.
                 type: string
+              qualifier:
+                description: The version of the Lambda function.
+                type: string
               role:
                 description: The function's execution role.
                 type: string
