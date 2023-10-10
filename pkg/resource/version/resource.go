@@ -90,17 +90,9 @@ func (r *resource) SetIdentifiers(identifier *ackv1alpha1.AWSIdentifiers) error 
 	}
 	r.ko.Spec.FunctionName = &identifier.NameOrID
 
-	f0, f0ok := identifier.AdditionalKeys["codeSHA256"]
-	if f0ok {
-		r.ko.Spec.CodeSHA256 = &f0
-	}
-	f1, f1ok := identifier.AdditionalKeys["description"]
+	f1, f1ok := identifier.AdditionalKeys["version"]
 	if f1ok {
-		r.ko.Spec.Description = &f1
-	}
-	f3, f3ok := identifier.AdditionalKeys["revisionID"]
-	if f3ok {
-		r.ko.Spec.RevisionID = &f3
+		r.ko.Status.Version = &f1
 	}
 
 	return nil

@@ -61,6 +61,9 @@ func (rm *resourceManager) sdkFind(
 	defer func() {
 		exit(err)
 	}()
+	if r.ko.Status.Version == nil {
+		return nil, ackerr.NotFound
+	}
 	// If any required fields in the input shape are missing, AWS resource is
 	// not created yet. Return NotFound here to indicate to callers that the
 	// resource isn't yet created.
@@ -74,8 +77,8 @@ func (rm *resourceManager) sdkFind(
 	}
 
 	var resp *svcsdk.FunctionConfiguration
-	resp, err = rm.sdkapi.PublishVersionWithContext(ctx, input)
-	rm.metrics.RecordAPICall("READ_ONE", "PublishVersion", err)
+	resp, err = rm.sdkapi.GetFunctionConfigurationWithContext(ctx, input)
+	rm.metrics.RecordAPICall("READ_ONE", "GetFunctionConfiguration", err)
 	if err != nil {
 		if reqErr, ok := ackerr.AWSRequestFailure(err); ok && reqErr.StatusCode() == 404 {
 			return nil, ackerr.NotFound
@@ -410,20 +413,14 @@ func (rm *resourceManager) requiredFieldsMissingFromReadOneInput(
 // payload of the Describe API call for the resource
 func (rm *resourceManager) newDescribeRequestPayload(
 	r *resource,
-) (*svcsdk.PublishVersionInput, error) {
-	res := &svcsdk.PublishVersionInput{}
+) (*svcsdk.GetFunctionConfigurationInput, error) {
+	res := &svcsdk.GetFunctionConfigurationInput{}
 
-	if r.ko.Spec.CodeSHA256 != nil {
-		res.SetCodeSha256(*r.ko.Spec.CodeSHA256)
-	}
-	if r.ko.Spec.Description != nil {
-		res.SetDescription(*r.ko.Spec.Description)
-	}
 	if r.ko.Spec.FunctionName != nil {
 		res.SetFunctionName(*r.ko.Spec.FunctionName)
 	}
-	if r.ko.Spec.RevisionID != nil {
-		res.SetRevisionId(*r.ko.Spec.RevisionID)
+	if r.ko.Status.Version != nil {
+		res.SetQualifier(*r.ko.Status.Version)
 	}
 
 	return res, nil

@@ -961,9 +961,29 @@ func (rm *resourceManager) sdkDelete(
 	defer func() {
 		exit(err)
 	}()
-	// TODO(jaypipes): Figure this out...
-	return nil, nil
+	input, err := rm.newDeleteRequestPayload(r)
+	if err != nil {
+		return nil, err
+	}
+	var resp *svcsdk.DeleteFunctionOutput
+	_ = resp
+	resp, err = rm.sdkapi.DeleteFunctionWithContext(ctx, input)
+	rm.metrics.RecordAPICall("DELETE", "DeleteFunction", err)
+	return nil, err
+}
 
+// newDeleteRequestPayload returns an SDK-specific struct for the HTTP request
+// payload of the Delete API call for the resource
+func (rm *resourceManager) newDeleteRequestPayload(
+	r *resource,
+) (*svcsdk.DeleteFunctionInput, error) {
+	res := &svcsdk.DeleteFunctionInput{}
+
+	if r.ko.Spec.Name != nil {
+		res.SetFunctionName(*r.ko.Spec.Name)
+	}
+
+	return res, nil
 }
 
 // setStatusDefaults sets default properties into supplied custom resource

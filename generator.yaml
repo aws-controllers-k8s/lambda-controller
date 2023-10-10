@@ -7,20 +7,28 @@ ignore:
     # FunctionUrlConfig
     # LayerVersion
 operations:
-  PublishLayerVersion:
+  PublishLayerVersion: #opID
     operation_type:
       - Create
       - Update
-    resource_name: LayerVersion
+    resource_name: 
+      - LayerVersion
   PublishVersion:
     operation_type:
       - Create
+    resource_name: 
+      - Version
+  GetFunctionConfiguration:
+    operation_type:
       - ReadOne
-    resource_name: Version
+    resource_name: 
+      - Version
   DeleteFunction:
     operation_type:
       - Delete
-    resource_name: Version
+    resource_name: 
+      - Version
+      - Function
 resources:
   Function:
     synced:
@@ -213,12 +221,18 @@ resources:
       Qualifier:
         is_read_only: true
         from:
-          operation: GetFunction
-          path: Configuration.Version
+          operation: GetFunctionConfiguration
+          path: Version
     tags:
       ignore: true
+    hooks:
+      sdk_read_one_pre_build_request:
+        template_path: hooks/version/sdk_read_one_pre_build_request.go.tpl
     renames:
       operations:
         DeleteFunction:
+          input_fields:
+            Qualifier: Version
+        GetFunctionConfiguration:
           input_fields:
             Qualifier: Version
