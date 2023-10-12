@@ -6,6 +6,6 @@ metadata:
     services.k8s.aws/region: $AWS_REGION
 spec:
   functionName: $FUNCTION_NAME
-  # codeSha256: $HASH
-  # revisionId: $ID
+  codeSha256: $HASH
+  revisionId: $ID
   description: version created by ACK lambda-controller e2e tests

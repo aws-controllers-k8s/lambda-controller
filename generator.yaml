@@ -228,6 +228,10 @@ resources:
     hooks:
       sdk_read_one_pre_build_request:
         template_path: hooks/version/sdk_read_one_pre_build_request.go.tpl
+      sdk_create_pre_build_request:
+        template_path: hooks/version/sdk_create_pre_build_request.go.tpl
+      sdk_create_pre_set_output:
+        template_path: hooks/version/sdk_create_pre_set_output.go.tpl
     renames:
       operations:
         DeleteFunction:

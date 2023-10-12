@@ -438,6 +438,24 @@ func (rm *resourceManager) sdkCreate(
 	defer func() {
 		exit(err)
 	}()
+	res := &svcsdk.ListVersionsByFunctionInput{}
+	res.FunctionName = desired.ko.Spec.FunctionName
+	var list *svcsdk.ListVersionsByFunctionOutput
+	list, err = rm.sdkapi.ListVersionsByFunctionWithContext(ctx, res)
+	if err != nil {
+		return nil, err
+	}
+	bigList := list.Versions
+
+	for ok := list.NextMarker != nil; ok; ok = (list.NextMarker != nil) {
+		res.Marker = list.NextMarker
+		list, err = rm.sdkapi.ListVersionsByFunctionWithContext(ctx, res)
+		if err != nil {
+			return nil, err
+		}
+		bigList = append(bigList, list.Versions...)
+	}
+
 	input, err := rm.newCreateRequestPayload(ctx, desired)
 	if err != nil {
 		return nil, err
@@ -453,6 +471,12 @@ func (rm *resourceManager) sdkCreate(
 	// Merge in the information we read from the API call above to the copy of
 	// the original Kubernetes object we passed to the function
 	ko := desired.ko.DeepCopy()
+	for _, version := range bigList {
+		if *version.Version == *resp.Version {
+			ErrCannotCreateResource := errors.New("No changes were made to $LATEST since publishing last version, so no version was published.")
+			return nil, ackerr.NewTerminalError(ErrCannotCreateResource)
+		}
+	}
 
 	if resp.Architectures != nil {
 		f0 := []*string{}
