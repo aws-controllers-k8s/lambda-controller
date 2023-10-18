@@ -172,3 +172,17 @@ class LambdaValidator:
         except Exception as e:
             logging.debug(e)
             return None
+        
+    def get_function_config(self, function_name:str, qualifier: str) -> dict:
+        try:
+            resp = self.lambda_client.get_function_configuration(
+                FunctionName = function_name,
+                Qualifier = qualifier
+            )
+            return resp
+        except Exception as e:
+            logging.debug(e)
+            return None
+    
+    def version_exists(self, function_name: str, qualifier: str) -> bool:
+        return self.get_function_config(function_name, qualifier) is not None
