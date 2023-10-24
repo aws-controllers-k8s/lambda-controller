@@ -5,7 +5,7 @@ list, err = rm.sdkapi.ListVersionsByFunctionWithContext(ctx, res)
 if err != nil {
 	return nil, err
 }
-bigList := list.Versions
+versionList := list.Versions
 
 for ok := list.NextMarker != nil; ok; ok = (list.NextMarker != nil) {
 	res.Marker = list.NextMarker
@@ -13,6 +13,6 @@ for ok := list.NextMarker != nil; ok; ok = (list.NextMarker != nil) {
 	if err != nil {
 		return nil, err
 	}
-	bigList = append(bigList, list.Versions...)
+	versionList = append(versionList, list.Versions...)
 }
 

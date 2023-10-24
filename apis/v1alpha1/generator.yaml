@@ -7,7 +7,7 @@ ignore:
     # FunctionUrlConfig
     # LayerVersion
 operations:
-  PublishLayerVersion: #opID
+  PublishLayerVersion:
     operation_type:
       - Create
       - Update
