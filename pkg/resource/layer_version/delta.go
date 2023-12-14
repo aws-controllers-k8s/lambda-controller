@@ -43,11 +43,19 @@ func newResourceDelta(
 		return delta
 	}
 
-	if !ackcompare.SliceStringPEqual(a.ko.Spec.CompatibleArchitectures, b.ko.Spec.CompatibleArchitectures) {
+	if len(a.ko.Spec.CompatibleArchitectures) != len(b.ko.Spec.CompatibleArchitectures) {
 		delta.Add("Spec.CompatibleArchitectures", a.ko.Spec.CompatibleArchitectures, b.ko.Spec.CompatibleArchitectures)
+	} else if len(a.ko.Spec.CompatibleArchitectures) > 0 {
+		if !ackcompare.SliceStringPEqual(a.ko.Spec.CompatibleArchitectures, b.ko.Spec.CompatibleArchitectures) {
+			delta.Add("Spec.CompatibleArchitectures", a.ko.Spec.CompatibleArchitectures, b.ko.Spec.CompatibleArchitectures)
+		}
 	}
-	if !ackcompare.SliceStringPEqual(a.ko.Spec.CompatibleRuntimes, b.ko.Spec.CompatibleRuntimes) {
+	if len(a.ko.Spec.CompatibleRuntimes) != len(b.ko.Spec.CompatibleRuntimes) {
 		delta.Add("Spec.CompatibleRuntimes", a.ko.Spec.CompatibleRuntimes, b.ko.Spec.CompatibleRuntimes)
+	} else if len(a.ko.Spec.CompatibleRuntimes) > 0 {
+		if !ackcompare.SliceStringPEqual(a.ko.Spec.CompatibleRuntimes, b.ko.Spec.CompatibleRuntimes) {
+			delta.Add("Spec.CompatibleRuntimes", a.ko.Spec.CompatibleRuntimes, b.ko.Spec.CompatibleRuntimes)
+		}
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.Description, b.ko.Spec.Description) {
 		delta.Add("Spec.Description", a.ko.Spec.Description, b.ko.Spec.Description)

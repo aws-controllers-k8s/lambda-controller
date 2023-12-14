@@ -44,8 +44,12 @@ func newResourceDelta(
 	}
 	customPreCompare(delta, a, b)
 
-	if !ackcompare.SliceStringPEqual(a.ko.Spec.Architectures, b.ko.Spec.Architectures) {
+	if len(a.ko.Spec.Architectures) != len(b.ko.Spec.Architectures) {
 		delta.Add("Spec.Architectures", a.ko.Spec.Architectures, b.ko.Spec.Architectures)
+	} else if len(a.ko.Spec.Architectures) > 0 {
+		if !ackcompare.SliceStringPEqual(a.ko.Spec.Architectures, b.ko.Spec.Architectures) {
+			delta.Add("Spec.Architectures", a.ko.Spec.Architectures, b.ko.Spec.Architectures)
+		}
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.CodeSigningConfigARN, b.ko.Spec.CodeSigningConfigARN) {
 		delta.Add("Spec.CodeSigningConfigARN", a.ko.Spec.CodeSigningConfigARN, b.ko.Spec.CodeSigningConfigARN)
@@ -75,9 +79,9 @@ func newResourceDelta(
 	if ackcompare.HasNilDifference(a.ko.Spec.Environment, b.ko.Spec.Environment) {
 		delta.Add("Spec.Environment", a.ko.Spec.Environment, b.ko.Spec.Environment)
 	} else if a.ko.Spec.Environment != nil && b.ko.Spec.Environment != nil {
-		if ackcompare.HasNilDifference(a.ko.Spec.Environment.Variables, b.ko.Spec.Environment.Variables) {
+		if len(a.ko.Spec.Environment.Variables) != len(b.ko.Spec.Environment.Variables) {
 			delta.Add("Spec.Environment.Variables", a.ko.Spec.Environment.Variables, b.ko.Spec.Environment.Variables)
-		} else if a.ko.Spec.Environment.Variables != nil && b.ko.Spec.Environment.Variables != nil {
+		} else if len(a.ko.Spec.Environment.Variables) > 0 {
 			if !ackcompare.MapStringStringPEqual(a.ko.Spec.Environment.Variables, b.ko.Spec.Environment.Variables) {
 				delta.Add("Spec.Environment.Variables", a.ko.Spec.Environment.Variables, b.ko.Spec.Environment.Variables)
 			}
@@ -94,8 +98,12 @@ func newResourceDelta(
 			}
 		}
 	}
-	if !reflect.DeepEqual(a.ko.Spec.FileSystemConfigs, b.ko.Spec.FileSystemConfigs) {
+	if len(a.ko.Spec.FileSystemConfigs) != len(b.ko.Spec.FileSystemConfigs) {
 		delta.Add("Spec.FileSystemConfigs", a.ko.Spec.FileSystemConfigs, b.ko.Spec.FileSystemConfigs)
+	} else if len(a.ko.Spec.FileSystemConfigs) > 0 {
+		if !reflect.DeepEqual(a.ko.Spec.FileSystemConfigs, b.ko.Spec.FileSystemConfigs) {
+			delta.Add("Spec.FileSystemConfigs", a.ko.Spec.FileSystemConfigs, b.ko.Spec.FileSystemConfigs)
+		}
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.FunctionEventInvokeConfig, b.ko.Spec.FunctionEventInvokeConfig) {
 		delta.Add("Spec.FunctionEventInvokeConfig", a.ko.Spec.FunctionEventInvokeConfig, b.ko.Spec.FunctionEventInvokeConfig)
@@ -165,11 +173,19 @@ func newResourceDelta(
 	if ackcompare.HasNilDifference(a.ko.Spec.ImageConfig, b.ko.Spec.ImageConfig) {
 		delta.Add("Spec.ImageConfig", a.ko.Spec.ImageConfig, b.ko.Spec.ImageConfig)
 	} else if a.ko.Spec.ImageConfig != nil && b.ko.Spec.ImageConfig != nil {
-		if !ackcompare.SliceStringPEqual(a.ko.Spec.ImageConfig.Command, b.ko.Spec.ImageConfig.Command) {
+		if len(a.ko.Spec.ImageConfig.Command) != len(b.ko.Spec.ImageConfig.Command) {
 			delta.Add("Spec.ImageConfig.Command", a.ko.Spec.ImageConfig.Command, b.ko.Spec.ImageConfig.Command)
+		} else if len(a.ko.Spec.ImageConfig.Command) > 0 {
+			if !ackcompare.SliceStringPEqual(a.ko.Spec.ImageConfig.Command, b.ko.Spec.ImageConfig.Command) {
+				delta.Add("Spec.ImageConfig.Command", a.ko.Spec.ImageConfig.Command, b.ko.Spec.ImageConfig.Command)
+			}
 		}
-		if !ackcompare.SliceStringPEqual(a.ko.Spec.ImageConfig.EntryPoint, b.ko.Spec.ImageConfig.EntryPoint) {
+		if len(a.ko.Spec.ImageConfig.EntryPoint) != len(b.ko.Spec.ImageConfig.EntryPoint) {
 			delta.Add("Spec.ImageConfig.EntryPoint", a.ko.Spec.ImageConfig.EntryPoint, b.ko.Spec.ImageConfig.EntryPoint)
+		} else if len(a.ko.Spec.ImageConfig.EntryPoint) > 0 {
+			if !ackcompare.SliceStringPEqual(a.ko.Spec.ImageConfig.EntryPoint, b.ko.Spec.ImageConfig.EntryPoint) {
+				delta.Add("Spec.ImageConfig.EntryPoint", a.ko.Spec.ImageConfig.EntryPoint, b.ko.Spec.ImageConfig.EntryPoint)
+			}
 		}
 		if ackcompare.HasNilDifference(a.ko.Spec.ImageConfig.WorkingDirectory, b.ko.Spec.ImageConfig.WorkingDirectory) {
 			delta.Add("Spec.ImageConfig.WorkingDirectory", a.ko.Spec.ImageConfig.WorkingDirectory, b.ko.Spec.ImageConfig.WorkingDirectory)
@@ -189,8 +205,12 @@ func newResourceDelta(
 	if !reflect.DeepEqual(a.ko.Spec.KMSKeyRef, b.ko.Spec.KMSKeyRef) {
 		delta.Add("Spec.KMSKeyRef", a.ko.Spec.KMSKeyRef, b.ko.Spec.KMSKeyRef)
 	}
-	if !ackcompare.SliceStringPEqual(a.ko.Spec.Layers, b.ko.Spec.Layers) {
+	if len(a.ko.Spec.Layers) != len(b.ko.Spec.Layers) {
 		delta.Add("Spec.Layers", a.ko.Spec.Layers, b.ko.Spec.Layers)
+	} else if len(a.ko.Spec.Layers) > 0 {
+		if !ackcompare.SliceStringPEqual(a.ko.Spec.Layers, b.ko.Spec.Layers) {
+			delta.Add("Spec.Layers", a.ko.Spec.Layers, b.ko.Spec.Layers)
+		}
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.MemorySize, b.ko.Spec.MemorySize) {
 		delta.Add("Spec.MemorySize", a.ko.Spec.MemorySize, b.ko.Spec.MemorySize)
@@ -279,11 +299,19 @@ func newResourceDelta(
 	if ackcompare.HasNilDifference(a.ko.Spec.VPCConfig, b.ko.Spec.VPCConfig) {
 		delta.Add("Spec.VPCConfig", a.ko.Spec.VPCConfig, b.ko.Spec.VPCConfig)
 	} else if a.ko.Spec.VPCConfig != nil && b.ko.Spec.VPCConfig != nil {
-		if !ackcompare.SliceStringPEqual(a.ko.Spec.VPCConfig.SecurityGroupIDs, b.ko.Spec.VPCConfig.SecurityGroupIDs) {
+		if len(a.ko.Spec.VPCConfig.SecurityGroupIDs) != len(b.ko.Spec.VPCConfig.SecurityGroupIDs) {
 			delta.Add("Spec.VPCConfig.SecurityGroupIDs", a.ko.Spec.VPCConfig.SecurityGroupIDs, b.ko.Spec.VPCConfig.SecurityGroupIDs)
+		} else if len(a.ko.Spec.VPCConfig.SecurityGroupIDs) > 0 {
+			if !ackcompare.SliceStringPEqual(a.ko.Spec.VPCConfig.SecurityGroupIDs, b.ko.Spec.VPCConfig.SecurityGroupIDs) {
+				delta.Add("Spec.VPCConfig.SecurityGroupIDs", a.ko.Spec.VPCConfig.SecurityGroupIDs, b.ko.Spec.VPCConfig.SecurityGroupIDs)
+			}
 		}
-		if !ackcompare.SliceStringPEqual(a.ko.Spec.VPCConfig.SubnetIDs, b.ko.Spec.VPCConfig.SubnetIDs) {
+		if len(a.ko.Spec.VPCConfig.SubnetIDs) != len(b.ko.Spec.VPCConfig.SubnetIDs) {
 			delta.Add("Spec.VPCConfig.SubnetIDs", a.ko.Spec.VPCConfig.SubnetIDs, b.ko.Spec.VPCConfig.SubnetIDs)
+		} else if len(a.ko.Spec.VPCConfig.SubnetIDs) > 0 {
+			if !ackcompare.SliceStringPEqual(a.ko.Spec.VPCConfig.SubnetIDs, b.ko.Spec.VPCConfig.SubnetIDs) {
+				delta.Add("Spec.VPCConfig.SubnetIDs", a.ko.Spec.VPCConfig.SubnetIDs, b.ko.Spec.VPCConfig.SubnetIDs)
+			}
 		}
 	}
 

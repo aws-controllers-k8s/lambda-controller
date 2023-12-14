@@ -60,17 +60,33 @@ func newResourceDelta(
 				delta.Add("Spec.CORS.AllowCredentials", a.ko.Spec.CORS.AllowCredentials, b.ko.Spec.CORS.AllowCredentials)
 			}
 		}
-		if !ackcompare.SliceStringPEqual(a.ko.Spec.CORS.AllowHeaders, b.ko.Spec.CORS.AllowHeaders) {
+		if len(a.ko.Spec.CORS.AllowHeaders) != len(b.ko.Spec.CORS.AllowHeaders) {
 			delta.Add("Spec.CORS.AllowHeaders", a.ko.Spec.CORS.AllowHeaders, b.ko.Spec.CORS.AllowHeaders)
+		} else if len(a.ko.Spec.CORS.AllowHeaders) > 0 {
+			if !ackcompare.SliceStringPEqual(a.ko.Spec.CORS.AllowHeaders, b.ko.Spec.CORS.AllowHeaders) {
+				delta.Add("Spec.CORS.AllowHeaders", a.ko.Spec.CORS.AllowHeaders, b.ko.Spec.CORS.AllowHeaders)
+			}
 		}
-		if !ackcompare.SliceStringPEqual(a.ko.Spec.CORS.AllowMethods, b.ko.Spec.CORS.AllowMethods) {
+		if len(a.ko.Spec.CORS.AllowMethods) != len(b.ko.Spec.CORS.AllowMethods) {
 			delta.Add("Spec.CORS.AllowMethods", a.ko.Spec.CORS.AllowMethods, b.ko.Spec.CORS.AllowMethods)
+		} else if len(a.ko.Spec.CORS.AllowMethods) > 0 {
+			if !ackcompare.SliceStringPEqual(a.ko.Spec.CORS.AllowMethods, b.ko.Spec.CORS.AllowMethods) {
+				delta.Add("Spec.CORS.AllowMethods", a.ko.Spec.CORS.AllowMethods, b.ko.Spec.CORS.AllowMethods)
+			}
 		}
-		if !ackcompare.SliceStringPEqual(a.ko.Spec.CORS.AllowOrigins, b.ko.Spec.CORS.AllowOrigins) {
+		if len(a.ko.Spec.CORS.AllowOrigins) != len(b.ko.Spec.CORS.AllowOrigins) {
 			delta.Add("Spec.CORS.AllowOrigins", a.ko.Spec.CORS.AllowOrigins, b.ko.Spec.CORS.AllowOrigins)
+		} else if len(a.ko.Spec.CORS.AllowOrigins) > 0 {
+			if !ackcompare.SliceStringPEqual(a.ko.Spec.CORS.AllowOrigins, b.ko.Spec.CORS.AllowOrigins) {
+				delta.Add("Spec.CORS.AllowOrigins", a.ko.Spec.CORS.AllowOrigins, b.ko.Spec.CORS.AllowOrigins)
+			}
 		}
-		if !ackcompare.SliceStringPEqual(a.ko.Spec.CORS.ExposeHeaders, b.ko.Spec.CORS.ExposeHeaders) {
+		if len(a.ko.Spec.CORS.ExposeHeaders) != len(b.ko.Spec.CORS.ExposeHeaders) {
 			delta.Add("Spec.CORS.ExposeHeaders", a.ko.Spec.CORS.ExposeHeaders, b.ko.Spec.CORS.ExposeHeaders)
+		} else if len(a.ko.Spec.CORS.ExposeHeaders) > 0 {
+			if !ackcompare.SliceStringPEqual(a.ko.Spec.CORS.ExposeHeaders, b.ko.Spec.CORS.ExposeHeaders) {
+				delta.Add("Spec.CORS.ExposeHeaders", a.ko.Spec.CORS.ExposeHeaders, b.ko.Spec.CORS.ExposeHeaders)
+			}
 		}
 		if ackcompare.HasNilDifference(a.ko.Spec.CORS.MaxAge, b.ko.Spec.CORS.MaxAge) {
 			delta.Add("Spec.CORS.MaxAge", a.ko.Spec.CORS.MaxAge, b.ko.Spec.CORS.MaxAge)

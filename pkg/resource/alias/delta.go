@@ -160,9 +160,9 @@ func newResourceDelta(
 	if ackcompare.HasNilDifference(a.ko.Spec.RoutingConfig, b.ko.Spec.RoutingConfig) {
 		delta.Add("Spec.RoutingConfig", a.ko.Spec.RoutingConfig, b.ko.Spec.RoutingConfig)
 	} else if a.ko.Spec.RoutingConfig != nil && b.ko.Spec.RoutingConfig != nil {
-		if ackcompare.HasNilDifference(a.ko.Spec.RoutingConfig.AdditionalVersionWeights, b.ko.Spec.RoutingConfig.AdditionalVersionWeights) {
+		if len(a.ko.Spec.RoutingConfig.AdditionalVersionWeights) != len(b.ko.Spec.RoutingConfig.AdditionalVersionWeights) {
 			delta.Add("Spec.RoutingConfig.AdditionalVersionWeights", a.ko.Spec.RoutingConfig.AdditionalVersionWeights, b.ko.Spec.RoutingConfig.AdditionalVersionWeights)
-		} else if a.ko.Spec.RoutingConfig.AdditionalVersionWeights != nil && b.ko.Spec.RoutingConfig.AdditionalVersionWeights != nil {
+		} else if len(a.ko.Spec.RoutingConfig.AdditionalVersionWeights) > 0 {
 			if !reflect.DeepEqual(a.ko.Spec.RoutingConfig.AdditionalVersionWeights, b.ko.Spec.RoutingConfig.AdditionalVersionWeights) {
 				delta.Add("Spec.RoutingConfig.AdditionalVersionWeights", a.ko.Spec.RoutingConfig.AdditionalVersionWeights, b.ko.Spec.RoutingConfig.AdditionalVersionWeights)
 			}

@@ -122,8 +122,12 @@ func newResourceDelta(
 	if !reflect.DeepEqual(a.ko.Spec.FunctionRef, b.ko.Spec.FunctionRef) {
 		delta.Add("Spec.FunctionRef", a.ko.Spec.FunctionRef, b.ko.Spec.FunctionRef)
 	}
-	if !ackcompare.SliceStringPEqual(a.ko.Spec.FunctionResponseTypes, b.ko.Spec.FunctionResponseTypes) {
+	if len(a.ko.Spec.FunctionResponseTypes) != len(b.ko.Spec.FunctionResponseTypes) {
 		delta.Add("Spec.FunctionResponseTypes", a.ko.Spec.FunctionResponseTypes, b.ko.Spec.FunctionResponseTypes)
+	} else if len(a.ko.Spec.FunctionResponseTypes) > 0 {
+		if !ackcompare.SliceStringPEqual(a.ko.Spec.FunctionResponseTypes, b.ko.Spec.FunctionResponseTypes) {
+			delta.Add("Spec.FunctionResponseTypes", a.ko.Spec.FunctionResponseTypes, b.ko.Spec.FunctionResponseTypes)
+		}
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.MaximumBatchingWindowInSeconds, b.ko.Spec.MaximumBatchingWindowInSeconds) {
 		delta.Add("Spec.MaximumBatchingWindowInSeconds", a.ko.Spec.MaximumBatchingWindowInSeconds, b.ko.Spec.MaximumBatchingWindowInSeconds)
@@ -156,8 +160,12 @@ func newResourceDelta(
 	if !reflect.DeepEqual(a.ko.Spec.QueueRefs, b.ko.Spec.QueueRefs) {
 		delta.Add("Spec.QueueRefs", a.ko.Spec.QueueRefs, b.ko.Spec.QueueRefs)
 	}
-	if !ackcompare.SliceStringPEqual(a.ko.Spec.Queues, b.ko.Spec.Queues) {
+	if len(a.ko.Spec.Queues) != len(b.ko.Spec.Queues) {
 		delta.Add("Spec.Queues", a.ko.Spec.Queues, b.ko.Spec.Queues)
+	} else if len(a.ko.Spec.Queues) > 0 {
+		if !ackcompare.SliceStringPEqual(a.ko.Spec.Queues, b.ko.Spec.Queues) {
+			delta.Add("Spec.Queues", a.ko.Spec.Queues, b.ko.Spec.Queues)
+		}
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.ScalingConfig, b.ko.Spec.ScalingConfig) {
 		delta.Add("Spec.ScalingConfig", a.ko.Spec.ScalingConfig, b.ko.Spec.ScalingConfig)
@@ -173,9 +181,9 @@ func newResourceDelta(
 	if ackcompare.HasNilDifference(a.ko.Spec.SelfManagedEventSource, b.ko.Spec.SelfManagedEventSource) {
 		delta.Add("Spec.SelfManagedEventSource", a.ko.Spec.SelfManagedEventSource, b.ko.Spec.SelfManagedEventSource)
 	} else if a.ko.Spec.SelfManagedEventSource != nil && b.ko.Spec.SelfManagedEventSource != nil {
-		if ackcompare.HasNilDifference(a.ko.Spec.SelfManagedEventSource.Endpoints, b.ko.Spec.SelfManagedEventSource.Endpoints) {
+		if len(a.ko.Spec.SelfManagedEventSource.Endpoints) != len(b.ko.Spec.SelfManagedEventSource.Endpoints) {
 			delta.Add("Spec.SelfManagedEventSource.Endpoints", a.ko.Spec.SelfManagedEventSource.Endpoints, b.ko.Spec.SelfManagedEventSource.Endpoints)
-		} else if a.ko.Spec.SelfManagedEventSource.Endpoints != nil && b.ko.Spec.SelfManagedEventSource.Endpoints != nil {
+		} else if len(a.ko.Spec.SelfManagedEventSource.Endpoints) > 0 {
 			if !reflect.DeepEqual(a.ko.Spec.SelfManagedEventSource.Endpoints, b.ko.Spec.SelfManagedEventSource.Endpoints) {
 				delta.Add("Spec.SelfManagedEventSource.Endpoints", a.ko.Spec.SelfManagedEventSource.Endpoints, b.ko.Spec.SelfManagedEventSource.Endpoints)
 			}
@@ -192,8 +200,12 @@ func newResourceDelta(
 			}
 		}
 	}
-	if !reflect.DeepEqual(a.ko.Spec.SourceAccessConfigurations, b.ko.Spec.SourceAccessConfigurations) {
+	if len(a.ko.Spec.SourceAccessConfigurations) != len(b.ko.Spec.SourceAccessConfigurations) {
 		delta.Add("Spec.SourceAccessConfigurations", a.ko.Spec.SourceAccessConfigurations, b.ko.Spec.SourceAccessConfigurations)
+	} else if len(a.ko.Spec.SourceAccessConfigurations) > 0 {
+		if !reflect.DeepEqual(a.ko.Spec.SourceAccessConfigurations, b.ko.Spec.SourceAccessConfigurations) {
+			delta.Add("Spec.SourceAccessConfigurations", a.ko.Spec.SourceAccessConfigurations, b.ko.Spec.SourceAccessConfigurations)
+		}
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.StartingPosition, b.ko.Spec.StartingPosition) {
 		delta.Add("Spec.StartingPosition", a.ko.Spec.StartingPosition, b.ko.Spec.StartingPosition)
@@ -209,8 +221,12 @@ func newResourceDelta(
 			delta.Add("Spec.StartingPositionTimestamp", a.ko.Spec.StartingPositionTimestamp, b.ko.Spec.StartingPositionTimestamp)
 		}
 	}
-	if !ackcompare.SliceStringPEqual(a.ko.Spec.Topics, b.ko.Spec.Topics) {
+	if len(a.ko.Spec.Topics) != len(b.ko.Spec.Topics) {
 		delta.Add("Spec.Topics", a.ko.Spec.Topics, b.ko.Spec.Topics)
+	} else if len(a.ko.Spec.Topics) > 0 {
+		if !ackcompare.SliceStringPEqual(a.ko.Spec.Topics, b.ko.Spec.Topics) {
+			delta.Add("Spec.Topics", a.ko.Spec.Topics, b.ko.Spec.Topics)
+		}
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.TumblingWindowInSeconds, b.ko.Spec.TumblingWindowInSeconds) {
 		delta.Add("Spec.TumblingWindowInSeconds", a.ko.Spec.TumblingWindowInSeconds, b.ko.Spec.TumblingWindowInSeconds)
