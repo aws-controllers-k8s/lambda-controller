@@ -131,8 +131,12 @@ func newResourceDelta(
 	if ackcompare.HasNilDifference(a.ko.Spec.LDAPServerMetadata, b.ko.Spec.LDAPServerMetadata) {
 		delta.Add("Spec.LDAPServerMetadata", a.ko.Spec.LDAPServerMetadata, b.ko.Spec.LDAPServerMetadata)
 	} else if a.ko.Spec.LDAPServerMetadata != nil && b.ko.Spec.LDAPServerMetadata != nil {
-		if !ackcompare.SliceStringPEqual(a.ko.Spec.LDAPServerMetadata.Hosts, b.ko.Spec.LDAPServerMetadata.Hosts) {
+		if len(a.ko.Spec.LDAPServerMetadata.Hosts) != len(b.ko.Spec.LDAPServerMetadata.Hosts) {
 			delta.Add("Spec.LDAPServerMetadata.Hosts", a.ko.Spec.LDAPServerMetadata.Hosts, b.ko.Spec.LDAPServerMetadata.Hosts)
+		} else if len(a.ko.Spec.LDAPServerMetadata.Hosts) > 0 {
+			if !ackcompare.SliceStringPEqual(a.ko.Spec.LDAPServerMetadata.Hosts, b.ko.Spec.LDAPServerMetadata.Hosts) {
+				delta.Add("Spec.LDAPServerMetadata.Hosts", a.ko.Spec.LDAPServerMetadata.Hosts, b.ko.Spec.LDAPServerMetadata.Hosts)
+			}
 		}
 		if ackcompare.HasNilDifference(a.ko.Spec.LDAPServerMetadata.RoleBase, b.ko.Spec.LDAPServerMetadata.RoleBase) {
 			delta.Add("Spec.LDAPServerMetadata.RoleBase", a.ko.Spec.LDAPServerMetadata.RoleBase, b.ko.Spec.LDAPServerMetadata.RoleBase)
@@ -265,8 +269,12 @@ func newResourceDelta(
 	if !reflect.DeepEqual(a.ko.Spec.SecurityGroupRefs, b.ko.Spec.SecurityGroupRefs) {
 		delta.Add("Spec.SecurityGroupRefs", a.ko.Spec.SecurityGroupRefs, b.ko.Spec.SecurityGroupRefs)
 	}
-	if !ackcompare.SliceStringPEqual(a.ko.Spec.SecurityGroups, b.ko.Spec.SecurityGroups) {
+	if len(a.ko.Spec.SecurityGroups) != len(b.ko.Spec.SecurityGroups) {
 		delta.Add("Spec.SecurityGroups", a.ko.Spec.SecurityGroups, b.ko.Spec.SecurityGroups)
+	} else if len(a.ko.Spec.SecurityGroups) > 0 {
+		if !ackcompare.SliceStringPEqual(a.ko.Spec.SecurityGroups, b.ko.Spec.SecurityGroups) {
+			delta.Add("Spec.SecurityGroups", a.ko.Spec.SecurityGroups, b.ko.Spec.SecurityGroups)
+		}
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.StorageType, b.ko.Spec.StorageType) {
 		delta.Add("Spec.StorageType", a.ko.Spec.StorageType, b.ko.Spec.StorageType)
@@ -275,8 +283,12 @@ func newResourceDelta(
 			delta.Add("Spec.StorageType", a.ko.Spec.StorageType, b.ko.Spec.StorageType)
 		}
 	}
-	if !ackcompare.SliceStringPEqual(a.ko.Spec.SubnetIDs, b.ko.Spec.SubnetIDs) {
+	if len(a.ko.Spec.SubnetIDs) != len(b.ko.Spec.SubnetIDs) {
 		delta.Add("Spec.SubnetIDs", a.ko.Spec.SubnetIDs, b.ko.Spec.SubnetIDs)
+	} else if len(a.ko.Spec.SubnetIDs) > 0 {
+		if !ackcompare.SliceStringPEqual(a.ko.Spec.SubnetIDs, b.ko.Spec.SubnetIDs) {
+			delta.Add("Spec.SubnetIDs", a.ko.Spec.SubnetIDs, b.ko.Spec.SubnetIDs)
+		}
 	}
 	if !reflect.DeepEqual(a.ko.Spec.SubnetRefs, b.ko.Spec.SubnetRefs) {
 		delta.Add("Spec.SubnetRefs", a.ko.Spec.SubnetRefs, b.ko.Spec.SubnetRefs)
