@@ -438,24 +438,24 @@ func (rm *resourceManager) sdkCreate(
 	defer func() {
 		exit(err)
 	}()
-	res := &svcsdk.ListVersionsByFunctionInput{}
-	res.FunctionName = desired.ko.Spec.FunctionName
-	var list *svcsdk.ListVersionsByFunctionOutput
-	list, err = rm.sdkapi.ListVersionsByFunctionWithContext(ctx, res)
-	if err != nil {
-		return nil, err
-	}
-	versionList := list.Versions
-
-	for ok := list.NextMarker != nil; ok; ok = (list.NextMarker != nil) {
-		res.Marker = list.NextMarker
-		list, err = rm.sdkapi.ListVersionsByFunctionWithContext(ctx, res)
+	var marker *string = nil
+	var versionList []*svcsdk.FunctionConfiguration
+	for {
+		listVersionsInput := &svcsdk.ListVersionsByFunctionInput{
+			FunctionName: desired.ko.Spec.FunctionName,
+			Marker:       marker,
+		}
+		listVersionResponse, err := rm.sdkapi.ListVersionsByFunctionWithContext(ctx, listVersionsInput)
 		if err != nil {
 			return nil, err
 		}
-		versionList = append(versionList, list.Versions...)
-	}
+		versionList = append(versionList, listVersionResponse.Versions...)
 
+		if listVersionResponse.NextMarker == nil {
+			break
+		}
+		marker = listVersionResponse.NextMarker
+	}
 	input, err := rm.newCreateRequestPayload(ctx, desired)
 	if err != nil {
 		return nil, err
