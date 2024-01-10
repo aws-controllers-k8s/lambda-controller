@@ -11,7 +11,24 @@ operations:
     operation_type:
       - Create
       - Update
-    resource_name: LayerVersion
+    resource_name: 
+      - LayerVersion
+  PublishVersion:
+    operation_type:
+      - Create
+    resource_name: 
+      - Version
+  GetFunctionConfiguration:
+    operation_type:
+      - ReadOne
+    resource_name: 
+      - Version
+  DeleteFunction:
+    operation_type:
+      - Delete
+    resource_name: 
+      - Version
+      - Function
 resources:
   Function:
     synced:
@@ -196,3 +213,30 @@ resources:
         ListLayerVersions:
           input_fields:
             Version: VersionNumber
+  Version:
+    fields:
+      FunctionName:
+        is_required: true
+        is_primary_key: true
+      Qualifier:
+        is_read_only: true
+        from:
+          operation: GetFunctionConfiguration
+          path: Version
+    tags:
+      ignore: true
+    hooks:
+      sdk_read_one_pre_build_request:
+        template_path: hooks/version/sdk_read_one_pre_build_request.go.tpl
+      sdk_create_pre_build_request:
+        template_path: hooks/version/sdk_create_pre_build_request.go.tpl
+      sdk_create_pre_set_output:
+        template_path: hooks/version/sdk_create_pre_set_output.go.tpl
+    renames:
+      operations:
+        DeleteFunction:
+          input_fields:
+            Qualifier: Version
+        GetFunctionConfiguration:
+          input_fields:
+            Qualifier: Version
