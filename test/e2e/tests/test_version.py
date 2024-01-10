@@ -129,7 +129,7 @@ class TestVersion:
         # Check function version doesn't exist
         assert not lambda_validator.version_exists(lambda_function_name, version_number)
 
-    def test_version_with_check(self, lambda_client, lambda_function):
+    def test_version_with_revision_hash(self, lambda_client, lambda_function):
         (_, function_resource) = lambda_function
         lambda_function_name = function_resource["spec"]["name"]
 
@@ -150,7 +150,7 @@ class TestVersion:
 
         # Load Lambda CR
         resource_data = load_lambda_resource(
-            "version_with_check",
+            "version_with_revision_hash",
             additional_replacements=replacements,
         )
         logging.debug(resource_data)
