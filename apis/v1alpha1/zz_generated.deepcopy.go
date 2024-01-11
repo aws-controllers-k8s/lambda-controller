@@ -3147,6 +3147,11 @@ func (in *VersionSpec) DeepCopyInto(out *VersionSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.FunctionRef != nil {
+		in, out := &in.FunctionRef, &out.FunctionRef
+		*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.RevisionID != nil {
 		in, out := &in.RevisionID, &out.RevisionID
 		*out = new(string)
