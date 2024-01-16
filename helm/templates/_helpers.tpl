@@ -49,7 +49,6 @@ If release name contains chart name it will be used as a full name.
 
 {{/* The rules a of ClusterRole or Role */}}
 {{- define "controller-role-rules" }}
-rules:
 - apiGroups:
   - ""
   resources:
