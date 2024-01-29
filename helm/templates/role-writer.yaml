@@ -10,7 +10,6 @@ rules:
   - mq.services.k8s.aws
   resources:
   - brokers
-
   verbs:
   - create
   - delete
