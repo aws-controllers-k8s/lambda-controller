@@ -81,7 +81,8 @@ def lambda_function():
 @pytest.mark.canary
 class TestVersion:
     def test_smoke(self, lambda_client, lambda_function):
-        (_, function_resource) = lambda_function
+        (function_reference, function_resource) = lambda_function
+
         lambda_function_name = function_resource["spec"]["name"]
 
         resource_name = random_suffix_name("lambda-version", 24)
@@ -120,14 +121,61 @@ class TestVersion:
         # Check version exists
         assert lambda_validator.version_exists(lambda_function_name, version_number)
 
+        # Updating Function code
+        update = {
+             "spec": {
+                  "description": "Updated descriptionsss"
+             }
+        }
+
+        # Patch k8s resource for Function
+        k8s.patch_custom_resource(function_reference,update)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        # Publishing new version
+        resource_name_v2 = random_suffix_name("lambda-version", 24)
+        replacements["VERSION_NAME"] = resource_name_v2
+
+        resource_data_v2 = load_lambda_resource(
+            "version",
+            additional_replacements=replacements,
+        )
+        logging.debug(resource_data)
+
+        # Creating new Version resource
+        ref_v2 = k8s.CustomResourceReference(
+            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            resource_name_v2, namespace="default",
+        )
+        k8s.create_custom_resource(ref_v2, resource_data_v2)
+        cr_v2 = k8s.wait_resource_consumed_by_controller(ref_v2)
+
+        assert cr_v2 is not None
+        assert k8s.get_resource_exists(ref_v2)
+
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+        cr_v2 = k8s.wait_resource_consumed_by_controller(ref_v2)
+
+        lambda_validator = LambdaValidator(lambda_client)
+
+        version_number_2 = cr_v2['status']['version']
+        
+        assert version_number_2 == "2"
+        assert lambda_validator.version_exists(lambda_function_name, version_number_2)
+
         # Delete k8s resource
         _, deleted = k8s.delete_custom_resource(ref)
         assert deleted is True
+
+        _, deleted_2 = k8s.delete_custom_resource(ref_v2)
+        assert deleted_2 is True
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
 
         # Check function version doesn't exist
         assert not lambda_validator.version_exists(lambda_function_name, version_number)
+        assert not lambda_validator.version_exists(lambda_function_name, version_number_2)
 
     def test_version_with_revision_hash(self, lambda_client, lambda_function):
         (_, function_resource) = lambda_function
