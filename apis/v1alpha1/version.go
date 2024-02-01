@@ -32,7 +32,8 @@ type VersionSpec struct {
 	CodeSHA256 *string `json:"codeSHA256,omitempty"`
 	// A description for the version to override the description in the function
 	// configuration.
-	Description *string `json:"description,omitempty"`
+	Description               *string                            `json:"description,omitempty"`
+	FunctionEventInvokeConfig *PutFunctionEventInvokeConfigInput `json:"functionEventInvokeConfig,omitempty"`
 	// The name of the Lambda function.
 	//
 	// Name formats

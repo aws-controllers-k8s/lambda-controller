@@ -3142,6 +3142,11 @@ func (in *VersionSpec) DeepCopyInto(out *VersionSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.FunctionEventInvokeConfig != nil {
+		in, out := &in.FunctionEventInvokeConfig, &out.FunctionEventInvokeConfig
+		*out = new(PutFunctionEventInvokeConfigInput)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.FunctionName != nil {
 		in, out := &in.FunctionName, &out.FunctionName
 		*out = new(string)
