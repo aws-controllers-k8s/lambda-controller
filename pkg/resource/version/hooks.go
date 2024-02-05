@@ -71,6 +71,13 @@ func (rm *resourceManager) customUpdateVersion(
 		}
 	}
 
+	if delta.DifferentAt("Spec.ProvisionedConcurrencyConfig") {
+		err = rm.updateProvisionedConcurrency(ctx, desired)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	readOneLatest, err := rm.ReadOne(ctx, desired)
 	if err != nil {
 		return nil, err
@@ -193,6 +200,87 @@ func (rm *resourceManager) setFunctionEventInvokeConfig(
 	return nil
 }
 
+// updateProvisionedConcurrency calls `PutProvisionedConcurrencyConfig` to update the fields
+// or `DeleteProvisionedConcurrencyConfig` if users removes the fields
+func (rm *resourceManager) updateProvisionedConcurrency(
+	ctx context.Context,
+	desired *resource,
+) error {
+	var err error
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.updateProvisionedConcurrency")
+	defer exit(err)
+
+	if desired.ko.Status.Version == nil {
+		return nil
+	}
+
+	// Check if the user deleted the 'ProvisionedConcurrency' configuration
+	// If yes, delete ProvisionedConcurrencyConfig
+	if desired.ko.Spec.ProvisionedConcurrencyConfig == nil || desired.ko.Spec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions == nil {
+		input_delete := &svcsdk.DeleteProvisionedConcurrencyConfigInput{
+			FunctionName: aws.String(*desired.ko.Spec.FunctionName),
+			Qualifier:    aws.String(*desired.ko.Status.Version),
+		}
+		_, err = rm.sdkapi.DeleteProvisionedConcurrencyConfigWithContext(ctx, input_delete)
+		rm.metrics.RecordAPICall("DELETE", "DeleteProvisionedConcurrency", err)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	dspec := desired.ko.Spec
+	input := &svcsdk.PutProvisionedConcurrencyConfigInput{
+		FunctionName:                    aws.String(*desired.ko.Spec.FunctionName),
+		Qualifier:                       aws.String(*desired.ko.Status.Version),
+		ProvisionedConcurrentExecutions: aws.Int64(*dspec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions),
+	}
+
+	_, err = rm.sdkapi.PutProvisionedConcurrencyConfigWithContext(ctx, input)
+	rm.metrics.RecordAPICall("UPDATE", "UpdateProvisionedConcurrency", err)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// setProvisionedConcurrencyConfig sets the Provisioned Concurrency
+// for the Function's Version
+func (rm *resourceManager) setProvisionedConcurrencyConfig(
+	ctx context.Context,
+	ko *svcapitypes.Version,
+) (err error) {
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.setProvisionedConcurrencyConfig")
+	defer exit(err)
+
+	var getProvisionedConcurrencyConfigOutput *svcsdk.GetProvisionedConcurrencyConfigOutput
+	getProvisionedConcurrencyConfigOutput, err = rm.sdkapi.GetProvisionedConcurrencyConfigWithContext(
+		ctx,
+		&svcsdk.GetProvisionedConcurrencyConfigInput{
+			FunctionName: ko.Spec.FunctionName,
+			Qualifier:    ko.Status.Version,
+		},
+	)
+	rm.metrics.RecordAPICall("GET", "GetProvisionedConcurrencyConfig", err)
+
+	if err != nil {
+		if awserr, ok := ackerr.AWSError(err); ok && (awserr.Code() == "ProvisionedConcurrencyConfigNotFoundException" || awserr.Code() == "ResourceNotFoundException") {
+			ko.Spec.ProvisionedConcurrencyConfig = nil
+		} else {
+			return err
+		}
+	} else {
+		// creating ProvisionedConcurrency object to store the values returned from `Get` call
+		cloudProvisionedConcurrency := &svcapitypes.PutProvisionedConcurrencyConfigInput{}
+		cloudProvisionedConcurrency.ProvisionedConcurrentExecutions = getProvisionedConcurrencyConfigOutput.RequestedProvisionedConcurrentExecutions
+		ko.Spec.ProvisionedConcurrencyConfig = cloudProvisionedConcurrency
+	}
+
+	return nil
+}
+
 // setResourceAdditionalFields will describe the fields that are not return by the
 // getFunctionConfiguration API call
 func (rm *resourceManager) setResourceAdditionalFields(
@@ -205,6 +293,12 @@ func (rm *resourceManager) setResourceAdditionalFields(
 
 	// To set Asynchronous Invocations for the function's version
 	err = rm.setFunctionEventInvokeConfig(ctx, ko)
+	if err != nil {
+		return err
+	}
+
+	// To set Provisioned Concurrency for the function's version
+	err = rm.setProvisionedConcurrencyConfig(ctx, ko)
 	if err != nil {
 		return err
 	}

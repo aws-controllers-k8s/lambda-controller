@@ -91,7 +91,7 @@ class TestVersion:
         replacements["AWS_REGION"] = get_region()
         replacements["FUNCTION_NAME"] = lambda_function_name
         replacements["VERSION_NAME"] = resource_name
-        
+
         # Load Lambda CR
         resource_data = load_lambda_resource(
             "version",
@@ -280,7 +280,7 @@ class TestVersion:
 
         # Check alias doesn't exist
         assert not lambda_validator.version_exists(function_resource_name, version_number)
-    
+
     def test_function_event_invoke_config(self, lambda_client, lambda_function):
         (_, function_resource) = lambda_function
         lambda_function_name = function_resource["spec"]["name"]
@@ -325,7 +325,7 @@ class TestVersion:
 
         version_number = cr['status']['version']
 
-         # Check version exists
+        # Check version exists
         assert lambda_validator.version_exists(lambda_function_name, version_number)
 
         # Update cr
@@ -360,3 +360,79 @@ class TestVersion:
 
         # Check version doesn't exist
         assert not lambda_validator.version_exists(lambda_function_name, version_number)
+    
+    def test_provisioned_concurrency_config(self, lambda_client, lambda_function):
+        (_, function_resource) = lambda_function
+        lambda_function_name = function_resource["spec"]["name"]
+
+        resource_name = random_suffix_name("lambda-version", 24)
+
+        resources = get_bootstrap_resources()
+        logging.debug(resources)
+
+        replacements = REPLACEMENT_VALUES.copy()
+        replacements["AWS_REGION"] = get_region()
+        replacements["FUNCTION_NAME"] = lambda_function_name
+        replacements["VERSION_NAME"] = resource_name
+        replacements["PROVISIONED_CONCURRENT_EXECUTIONS"] = "1"
+
+        # Load version CR
+        resource_data = load_lambda_resource(
+            "version_provisioned_concurrency",
+            additional_replacements=replacements,
+        )
+        logging.debug(resource_data)
+
+        # Create k8s resource
+        ref = k8s.CustomResourceReference(
+            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            resource_name, namespace="default",
+        )
+        k8s.create_custom_resource(ref, resource_data)
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        assert cr is not None
+        assert k8s.get_resource_exists(ref)
+
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        lambda_validator = LambdaValidator(lambda_client)
+
+        version_number = cr['status']['version']
+
+        # Check version exists
+        assert lambda_validator.version_exists(lambda_function_name, version_number)
+        
+        # Update provisioned_concurrency
+        cr["spec"]["provisionedConcurrencyConfig"]["provisionedConcurrentExecutions"] = 2
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        #Check provisioned_concurrency_config update fields
+        provisioned_concurrency_config = lambda_validator.get_provisioned_concurrency_config(lambda_function_name, version_number)
+        assert provisioned_concurrency_config["RequestedProvisionedConcurrentExecutions"] == 2
+
+        # Delete provisioned_concurrency from version
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr["spec"]["provisionedConcurrencyConfig"] = None
+
+        # Patch k8s resource     
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        #Check provisioned_concurrency_config is deleted
+        assert not lambda_validator.get_provisioned_concurrency_config(lambda_function_name, version_number)
+
+        # Delete k8s resource
+        _, deleted = k8s.delete_custom_resource(ref)
+        assert deleted
+
+        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+
+        # Check version doesn't exist
+        assert not lambda_validator.version_exists(lambda_function_name, version_number)
+    

@@ -46,8 +46,9 @@ type VersionSpec struct {
 	//
 	// The length constraint applies only to the full ARN. If you specify only the
 	// function name, it is limited to 64 characters in length.
-	FunctionName *string                                  `json:"functionName,omitempty"`
-	FunctionRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"functionRef,omitempty"`
+	FunctionName                 *string                                  `json:"functionName,omitempty"`
+	FunctionRef                  *ackv1alpha1.AWSResourceReferenceWrapper `json:"functionRef,omitempty"`
+	ProvisionedConcurrencyConfig *PutProvisionedConcurrencyConfigInput    `json:"provisionedConcurrencyConfig,omitempty"`
 	// Only update the function if the revision ID matches the ID that's specified.
 	// Use this option to avoid publishing a version if the function configuration
 	// has changed since you last updated it.
