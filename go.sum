@@ -8,8 +8,8 @@ github.com/aws-controllers-k8s/kms-controller v0.1.2 h1:9lb98jspqOpFpmIFHOJ6pRnO
 github.com/aws-controllers-k8s/kms-controller v0.1.2/go.mod h1:6CoV0UMFd03EUF9dXgOTTScGdBhJzsWn9W0dw2n0kA4=
 github.com/aws-controllers-k8s/mq-controller v0.0.22 h1:XxFSQL9yaaiiuZ6E/fh/+Y9C+3DG2c5oXWG/4ZNwd1w=
 github.com/aws-controllers-k8s/mq-controller v0.0.22/go.mod h1:p+YVFjpwlgRC+1cPeCabk1xTB1hTCU+RwYtFzrTnJmE=
-github.com/aws-controllers-k8s/runtime v0.30.0 h1:AibYRdi/7xUA3t8BA0u8g+J+OioaTAT6R4Vq8hxLiYw=
-github.com/aws-controllers-k8s/runtime v0.30.0/go.mod h1:Pv1ozlUaO11KO2mwPN/HzhAtZ70ZDE9UP24mjsbkul0=
+github.com/aws-controllers-k8s/runtime v0.32.0 h1:R0dQs8vRlK50KZ7rgdExqExdlUgFSAzDT8q1HCxc1uc=
+github.com/aws-controllers-k8s/runtime v0.32.0/go.mod h1:6qr9ULkjOHo0fTwEUkE+48IxHqNbHxvvf/9JzGoR8pM=
 github.com/aws-controllers-k8s/s3-controller v0.1.5 h1:5zb7jsh0fgbPM8cIvcsuH1dta1dKzaAnlwgvb6u3hOc=
 github.com/aws-controllers-k8s/s3-controller v0.1.5/go.mod h1:8Z8JlO5Hc1dZX2YELu94+lnOgKM0FioAHJBsyaWvtx8=
 github.com/aws/aws-sdk-go v1.49.0 h1:g9BkW1fo9GqKfwg2+zCD+TW/D36Ux+vtfJ8guF4AYmY=
@@ -227,8 +227,8 @@ k8s.io/kube-openapi v0.0.0-20231010175941-2dd684a91f00 h1:aVUu9fTY98ivBPKR9Y5w/A
 k8s.io/kube-openapi v0.0.0-20231010175941-2dd684a91f00/go.mod h1:AsvuZPBlUDVuCdzJ87iajxtXuR9oktsTctW/R9wwouA=
 k8s.io/utils v0.0.0-20230726121419-3b25d923346b h1:sgn3ZU783SCgtaSJjpcVVlRqd6GSnlTLKgpAAttJvpI=
 k8s.io/utils v0.0.0-20230726121419-3b25d923346b/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
-sigs.k8s.io/controller-runtime v0.17.0 h1:fjJQf8Ukya+VjogLO6/bNX9HE6Y2xpsO5+fyS26ur/s=
-sigs.k8s.io/controller-runtime v0.17.0/go.mod h1:+MngTvIQQQhfXtwfdGw/UOQ/aIaqsYywfCINOtwMO/s=
+sigs.k8s.io/controller-runtime v0.17.2 h1:FwHwD1CTUemg0pW2otk7/U5/i5m2ymzvOXdbeGOUvw0=
+sigs.k8s.io/controller-runtime v0.17.2/go.mod h1:+MngTvIQQQhfXtwfdGw/UOQ/aIaqsYywfCINOtwMO/s=
 sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd h1:EDPBXCAspyGV4jQlpZSudPeMmr1bNJefnuqLsRAsHZo=
 sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd/go.mod h1:B8JuhiUyNFVKdsE8h686QcCxMaH6HrOAZj4vswFpcB0=
 sigs.k8s.io/structured-merge-diff/v4 v4.4.1 h1:150L+0vs/8DA78h1u02ooW1/fFq/Lwr+sGiqlzvrtq4=
