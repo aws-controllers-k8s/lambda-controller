@@ -12,6 +12,17 @@
 			ko.Spec.Code.ImageURI = resp.Code.ImageUri
 		}
 	}
+	if resp.Configuration.Architectures != nil {
+		f1 := []*string{}
+		for _, f1iter := range resp.Configuration.Architectures {
+			var f1elem string
+			f1elem = *f1iter
+			f1 = append(f1, &f1elem)
+		}
+		ko.Spec.Architectures = f1
+	} else {
+		ko.Spec.Architectures = nil
+	}
 	if resp.Configuration.CodeSha256 != nil {
 		ko.Status.CodeSHA256 = resp.Configuration.CodeSha256
 	} else {

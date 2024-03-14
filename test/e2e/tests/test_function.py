@@ -539,6 +539,71 @@ class TestFunction:
         # Check Lambda function doesn't exist
         assert not lambda_validator.function_exists(resource_name)
 
+    def test_function_architecture(self, lambda_client):
+        resource_name = random_suffix_name("functionsarchitecture", 24)
+
+        resources = get_bootstrap_resources()
+        logging.debug(resources)
+
+        replacements = REPLACEMENT_VALUES.copy()
+        replacements["FUNCTION_NAME"] = resource_name
+        replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
+        replacements["LAMBDA_ROLE"] = resources.BasicRole.arn
+        replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
+        replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "0"
+        replacements["CODE_SIGNING_CONFIG_ARN"] = ""
+        replacements["AWS_REGION"] = get_region()
+        replacements["ARCHITECTURES"] = 'x86_64'
+
+        # Load Lambda CR
+        resource_data = load_lambda_resource(
+            "function_architectures",
+            additional_replacements=replacements,
+        )
+        logging.debug(resource_data)
+
+        # Create k8s resource
+        ref = k8s.CustomResourceReference(
+            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            resource_name, namespace="default",
+        )
+        k8s.create_custom_resource(ref, resource_data)
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        assert cr is not None
+        assert k8s.get_resource_exists(ref)
+
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        lambda_validator = LambdaValidator(lambda_client)
+
+        # Check Lambda function exists
+        assert lambda_validator.function_exists(resource_name)
+
+        # Update cr
+        cr["spec"]["architectures"] = ['arm64']
+        cr["spec"]["code"]["s3Bucket"] = resources.FunctionsBucket.name
+        cr["spec"]["code"]["s3Key"] = LAMBDA_FUNCTION_FILE_ZIP
+
+        #Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        #Check function_snapstart update fields
+        function = lambda_validator.get_function(resource_name)
+        assert function["Configuration"]["Architectures"] == ['arm64']
+
+        # Delete k8s resource
+        _, deleted = k8s.delete_custom_resource(ref)
+        assert deleted is True
+
+        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+
+        # Check Lambda function doesn't exist
+        assert not lambda_validator.function_exists(resource_name)
+
     def test_function_event_invoke_config(self, lambda_client):
         resource_name = random_suffix_name("lambda-function", 24)
 
