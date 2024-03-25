@@ -102,6 +102,12 @@ func (rm *resourceManager) customUpdateFunction(
 			}
 		}
 	}
+	if delta.DifferentAt("Spec.Architectures") {
+		err = rm.updateFunctionArchitectures(ctx, desired, latest)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	// Only try to update Spec.Code or Spec.Configuration at once. It is
 	// not correct to sequentially call UpdateFunctionConfiguration and
@@ -338,6 +344,47 @@ func (rm *resourceManager) updateFunctionTags(
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+// updateFunctionArchitectures calls UpdateFunctionCode to update architecture for lambda
+// function code.
+func (rm *resourceManager) updateFunctionArchitectures(
+	ctx context.Context,
+	desired *resource,
+	latest *resource,
+) error {
+	var err error
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.updateFunctionArchitectures")
+	defer exit(err)
+
+	dspec := desired.ko.Spec
+	input := &svcsdk.UpdateFunctionCodeInput{
+		FunctionName: aws.String(*dspec.Name),
+	}
+
+	if dspec.Architectures != nil {
+		input.Architectures = dspec.Architectures
+	} else {
+		input.Architectures = nil
+	}
+
+	if latest.ko.Spec.Code != nil {
+		if latest.ko.Spec.PackageType != nil && *latest.ko.Spec.PackageType == "Image" {
+			input.ImageUri = latest.ko.Spec.Code.ImageURI
+		} else if latest.ko.Spec.PackageType != nil && *latest.ko.Spec.PackageType == "Zip" {
+			input.S3Bucket = latest.ko.Spec.Code.S3Bucket
+			input.S3Key = latest.ko.Spec.Code.S3Key
+		}
+	}
+
+	_, err = rm.sdkapi.UpdateFunctionCodeWithContext(ctx, input)
+	rm.metrics.RecordAPICall("UPDATE", "UpdateFunctionArchitectures", err)
+	if err != nil {
+		return err
 	}
 
 	return nil
