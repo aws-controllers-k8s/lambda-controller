@@ -4,7 +4,7 @@
 
 image:
   repository: public.ecr.aws/aws-controllers-k8s/mq-controller
-  tag: 0.0.32
+  tag: 0.0.33
   pullPolicy: IfNotPresent
   pullSecrets: []
 
