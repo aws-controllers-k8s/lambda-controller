@@ -38,13 +38,13 @@ resources:
         - path: Status.State
           in: [ "Active" ]
     fields:
-      Code.S3SHA256:
+      Code.SHA256:
         type: string
         compare:
           is_ignored: true
-        set:  
-          - method: Create
-            ignore: true
+        set:
+        - ignore: "to"
+          method: Create
       Code.S3Bucket:
         references:
           resource: Bucket

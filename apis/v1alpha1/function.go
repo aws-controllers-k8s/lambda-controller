@@ -105,6 +105,8 @@ type FunctionSpec struct {
 	PackageType *string `json:"packageType,omitempty"`
 	// Set to true to publish the first version of the function during creation.
 	Publish *bool `json:"publish,omitempty"`
+	// The number of simultaneous executions to reserve for the function.
+	ReservedConcurrentExecutions *int64 `json:"reservedConcurrentExecutions,omitempty"`
 	// The Amazon Resource Name (ARN) of the function's execution role.
 	Role    *string                                  `json:"role,omitempty"`
 	RoleRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"roleRef,omitempty"`

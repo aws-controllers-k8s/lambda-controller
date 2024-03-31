@@ -118,12 +118,12 @@ func (rm *resourceManager) customUpdateFunction(
 		"Spec.Tags",
 		"Spec.ReservedConcurrentExecutions",
 		"Spec.CodeSigningConfigARN",
-		"Spec.Code.S3SHA256"):
+		"Spec.Code.SHA256"):
 		err = rm.updateFunctionConfiguration(ctx, desired, delta)
 		if err != nil {
 			return nil, err
 		}
-	case delta.DifferentAt("Spec.Code") || delta.DifferentAt("Spec.Code.S3SHA256"):
+	case delta.DifferentAt("Spec.Code") || delta.DifferentAt("Spec.Code.SHA256"):
 		err = rm.updateFunctionCode(ctx, desired, delta)
 		if err != nil {
 			return nil, err
@@ -428,7 +428,7 @@ func (rm *resourceManager) updateFunctionCode(
 	}
 
 	if dspec.Code != nil {
-		if delta.DifferentAt("Spec.Code.S3SHA256") && dspec.Code.S3SHA256 != nil {
+		if delta.DifferentAt("Spec.Code.SHA256") && dspec.Code.SHA256 != nil {
 			if dspec.PackageType != nil && *dspec.PackageType == "Image" {
 				if delta.DifferentAt("Spec.Code.ImageURI") {
 					if dspec.Code.ImageURI != nil {
@@ -456,22 +456,6 @@ func (rm *resourceManager) updateFunctionCode(
 			}
 		}
 	}
-
-	// if delta.DifferentAt("Spec.Code.ImageURI") {
-	// 	if dspec.Code.ImageURI != nil {
-	// 		input.ImageUri = aws.String(*dspec.Code.ImageURI)
-	// 	}
-	// } else if delta.DifferentAt("Spec.CodeS3SHA256") {
-	// 	if dspec.Code.S3Key != nil {
-	// 		input.S3Key = aws.String(*dspec.Code.S3Key)
-	// 	}
-	// 	if dspec.Code.S3Bucket != nil {
-	// 		input.S3Bucket = aws.String(*dspec.Code.S3Bucket)
-	// 	}
-	// 	if dspec.Code.S3ObjectVersion != nil {
-	// 		input.S3ObjectVersion = aws.String(*dspec.Code.S3ObjectVersion)
-	// 	}
-	// }
 
 	_, err = rm.sdkapi.UpdateFunctionCodeWithContext(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateFunctionCode", err)
@@ -528,22 +512,22 @@ func customPreCompare(
 					delta.Add("Spec.Code.ImageURI", a.ko.Spec.Code.ImageURI, b.ko.Spec.Code.ImageURI)
 				}
 			}
-			if a.ko.Spec.Code.S3SHA256 != nil {
-				if ackcompare.HasNilDifference(a.ko.Spec.Code.S3SHA256, b.ko.Status.CodeSHA256) {
-					delta.Add("Spec.Code.S3SHA256", a.ko.Spec.Code.S3SHA256, b.ko.Status.CodeSHA256)
-				} else if a.ko.Spec.Code.S3SHA256 != nil && b.ko.Status.CodeSHA256 != nil {
-					if *a.ko.Spec.Code.S3SHA256 != *b.ko.Status.CodeSHA256 {
-						delta.Add("Spec.Code.S3SHA256", a.ko.Spec.Code.S3SHA256, b.ko.Status.CodeSHA256)
+			if a.ko.Spec.Code.SHA256 != nil {
+				if ackcompare.HasNilDifference(a.ko.Spec.Code.SHA256, b.ko.Status.CodeSHA256) {
+					delta.Add("Spec.Code.SHA256", a.ko.Spec.Code.SHA256, b.ko.Status.CodeSHA256)
+				} else if a.ko.Spec.Code.SHA256 != nil && b.ko.Status.CodeSHA256 != nil {
+					if *a.ko.Spec.Code.SHA256 != *b.ko.Status.CodeSHA256 {
+						delta.Add("Spec.Code.SHA256", a.ko.Spec.Code.SHA256, b.ko.Status.CodeSHA256)
 					}
 				}
 			}
 		} else if a.ko.Spec.PackageType != nil && *a.ko.Spec.PackageType == "Zip" {
-			if a.ko.Spec.Code.S3SHA256 != nil {
-				if ackcompare.HasNilDifference(a.ko.Spec.Code.S3SHA256, b.ko.Status.CodeSHA256) {
-					delta.Add("Spec.Code.S3SHA256", a.ko.Spec.Code.S3SHA256, b.ko.Status.CodeSHA256)
-				} else if a.ko.Spec.Code.S3SHA256 != nil && b.ko.Status.CodeSHA256 != nil {
-					if *a.ko.Spec.Code.S3SHA256 != *b.ko.Status.CodeSHA256 {
-						delta.Add("Spec.Code.S3SHA256", a.ko.Spec.Code.S3SHA256, b.ko.Status.CodeSHA256)
+			if a.ko.Spec.Code.SHA256 != nil {
+				if ackcompare.HasNilDifference(a.ko.Spec.Code.SHA256, b.ko.Status.CodeSHA256) {
+					delta.Add("Spec.Code.SHA256", a.ko.Spec.Code.SHA256, b.ko.Status.CodeSHA256)
+				} else if a.ko.Spec.Code.SHA256 != nil && b.ko.Status.CodeSHA256 != nil {
+					if *a.ko.Spec.Code.SHA256 != *b.ko.Status.CodeSHA256 {
+						delta.Add("Spec.Code.SHA256", a.ko.Spec.Code.SHA256, b.ko.Status.CodeSHA256)
 					}
 				}
 			}
@@ -554,32 +538,10 @@ func customPreCompare(
 		// and compares it with desired field values. Since the API doesn't return values of S3 fields, it doesn't
 		// notice any changes between desired and latest, hence fails to recognize the update in the values.
 
-		// To solve this we created a new field 'Code.S3SHA256' to store the hash value of deployment package. Any change
+		// To solve this we created a new field 'Code.SHA256' to store the hash value of deployment package. Any change
 		// in hash value refers to change in S3 Key/Bucket/ObjectVersion and controller can recognize the change in
-		// desired and latest value of 'Code.S3SHA256' and hence calls the update function.
+		// desired and latest value of 'Code.SHA256' and hence calls the update function.
 
-		//TODO(hialylmh) handle Spec.Code.S3bucket changes
-		//  if ackcompare.HasNilDifference(a.ko.Spec.Code.S3Bucket, b.ko.Spec.Code.S3Bucket) {
-		//  	delta.Add("Spec.Code.S3Bucket", a.ko.Spec.Code.S3Bucket, b.ko.Spec.Code.S3Bucket)
-		//  } else if a.ko.Spec.Code.S3Bucket != nil && b.ko.Spec.Code.S3Bucket != nil {
-		//  	if *a.ko.Spec.Code.S3Bucket != *b.ko.Spec.Code.S3Bucket {
-		//  		delta.Add("Spec.Code.S3Bucket", a.ko.Spec.Code.S3Bucket, b.ko.Spec.Code.S3Bucket)
-		//  	}
-		//  }
-		// if ackcompare.HasNilDifference(a.ko.Spec.Code.S3Key, b.ko.Spec.Code.S3Key) {
-		// 	delta.Add("Spec.Code.S3Key", a.ko.Spec.Code.S3Key, b.ko.Spec.Code.S3Key)
-		// } else if a.ko.Spec.Code.S3Key != nil && b.ko.Spec.Code.S3Key != nil {
-		// 	if *a.ko.Spec.Code.S3Key != *b.ko.Spec.Code.S3Key {
-		// 		delta.Add("Spec.Code.S3Key", a.ko.Spec.Code.S3Key, b.ko.Spec.Code.S3Key)
-		// 	}
-		// }
-		// if ackcompare.HasNilDifference(a.ko.Spec.Code.S3ObjectVersion, b.ko.Spec.Code.S3ObjectVersion) {
-		// 	delta.Add("Spec.Code.S3ObjectVersion", a.ko.Spec.Code.S3ObjectVersion, b.ko.Spec.Code.S3ObjectVersion)
-		// } else if a.ko.Spec.Code.S3ObjectVersion != nil && b.ko.Spec.Code.S3ObjectVersion != nil {
-		// 	if *a.ko.Spec.Code.S3ObjectVersion != *b.ko.Spec.Code.S3ObjectVersion {
-		// 		delta.Add("Spec.Code.S3ObjectVersion", a.ko.Spec.Code.S3ObjectVersion, b.ko.Spec.Code.S3ObjectVersion)
-		// 	}
-		// }
 	}
 }
 

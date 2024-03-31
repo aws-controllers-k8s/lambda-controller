@@ -9,7 +9,7 @@ spec:
   code:
     s3Bucket: $BUCKET_NAME
     s3Key: $LAMBDA_FILE_NAME
-    s3SHA256: $HASH
+    sha256: $HASH
   role: $LAMBDA_ROLE
   runtime: python3.9
   handler: main
