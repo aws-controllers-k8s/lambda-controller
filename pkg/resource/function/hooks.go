@@ -113,6 +113,11 @@ func (rm *resourceManager) customUpdateFunction(
 	// UpdateFunctionCode because both of them can put the function in a
 	// Pending state.
 	switch {
+	case delta.DifferentAt("Spec.Code") || delta.DifferentAt("Spec.Code.SHA256"):
+		err = rm.updateFunctionCode(ctx, desired, delta)
+		if err != nil {
+			return nil, err
+		}
 	case delta.DifferentExcept(
 		"Spec.Code",
 		"Spec.Tags",
@@ -120,11 +125,6 @@ func (rm *resourceManager) customUpdateFunction(
 		"Spec.CodeSigningConfigARN",
 		"Spec.Code.SHA256"):
 		err = rm.updateFunctionConfiguration(ctx, desired, delta)
-		if err != nil {
-			return nil, err
-		}
-	case delta.DifferentAt("Spec.Code") || delta.DifferentAt("Spec.Code.SHA256"):
-		err = rm.updateFunctionCode(ctx, desired, delta)
 		if err != nil {
 			return nil, err
 		}
