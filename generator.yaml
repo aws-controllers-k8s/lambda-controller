@@ -7,6 +7,8 @@ ignore:
     # FunctionUrlConfig
     # LayerVersion
 operations:
+  GetFunction:
+    output_wrapper_field_path: Configuration
   PublishLayerVersion:
     operation_type:
       - Create
@@ -77,6 +79,8 @@ resources:
       Layers:
         set:
           - method: Create
+            ignore: true
+          - method: ReadOne
             ignore: true
       LayerStatuses:
         is_read_only: true

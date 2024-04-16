@@ -90,41 +90,14 @@ func (rm *resourceManager) sdkFind(
 	// the original Kubernetes object we passed to the function
 	ko := r.ko.DeepCopy()
 
-	if resp.Tags != nil {
-		f3 := map[string]*string{}
-		for f3key, f3valiter := range resp.Tags {
-			var f3val string
-			f3val = *f3valiter
-			f3[f3key] = &f3val
-		}
-		ko.Spec.Tags = f3
-	} else {
-		ko.Spec.Tags = nil
-	}
-
-	rm.setStatusDefaults(ko)
-	if resp.Code != nil {
-		// We need to keep the desired .Code s3Bucket s3Key and s3ObjectVersion
-		// part of the function's spec. So instead of setting Spec.Code to nil
-		// we only set ImageURI
-		//
-		// When adopting a Function resource, Spec.Code field should be manually
-		// initialised before injecting ImageURI.
-		if ko.Spec.Code == nil {
-			ko.Spec.Code = &svcapitypes.FunctionCode{}
-		}
-		if resp.Code.ImageUri != nil {
-			ko.Spec.Code.ImageURI = resp.Code.ImageUri
-		}
-	}
 	if resp.Configuration.Architectures != nil {
-		f1 := []*string{}
-		for _, f1iter := range resp.Configuration.Architectures {
-			var f1elem string
-			f1elem = *f1iter
-			f1 = append(f1, &f1elem)
+		f0 := []*string{}
+		for _, f0iter := range resp.Configuration.Architectures {
+			var f0elem string
+			f0elem = *f0iter
+			f0 = append(f0, &f0elem)
 		}
-		ko.Spec.Architectures = f1
+		ko.Spec.Architectures = f0
 	} else {
 		ko.Spec.Architectures = nil
 	}
@@ -139,11 +112,11 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.CodeSize = nil
 	}
 	if resp.Configuration.DeadLetterConfig != nil {
-		f2 := &svcapitypes.DeadLetterConfig{}
+		f3 := &svcapitypes.DeadLetterConfig{}
 		if resp.Configuration.DeadLetterConfig.TargetArn != nil {
-			f2.TargetARN = resp.Configuration.DeadLetterConfig.TargetArn
+			f3.TargetARN = resp.Configuration.DeadLetterConfig.TargetArn
 		}
-		ko.Spec.DeadLetterConfig = f2
+		ko.Spec.DeadLetterConfig = f3
 	} else {
 		ko.Spec.DeadLetterConfig = nil
 	}
@@ -153,37 +126,45 @@ func (rm *resourceManager) sdkFind(
 		ko.Spec.Description = nil
 	}
 	if resp.Configuration.Environment != nil {
-		f4 := &svcapitypes.Environment{}
+		f5 := &svcapitypes.Environment{}
 		if resp.Configuration.Environment.Variables != nil {
-			f4f1 := map[string]*string{}
-			for f4f1key, f4f1valiter := range resp.Configuration.Environment.Variables {
-				var f4f1val string
-				f4f1val = *f4f1valiter
-				f4f1[f4f1key] = &f4f1val
+			f5f1 := map[string]*string{}
+			for f5f1key, f5f1valiter := range resp.Configuration.Environment.Variables {
+				var f5f1val string
+				f5f1val = *f5f1valiter
+				f5f1[f5f1key] = &f5f1val
 			}
-			f4.Variables = f4f1
+			f5.Variables = f5f1
 		}
-		ko.Spec.Environment = f4
+		ko.Spec.Environment = f5
 	} else {
 		ko.Spec.Environment = nil
 	}
-	if resp.Configuration.FileSystemConfigs != nil {
-		f5 := []*svcapitypes.FileSystemConfig{}
-		for _, f5iter := range resp.Configuration.FileSystemConfigs {
-			f5elem := &svcapitypes.FileSystemConfig{}
-			if f5iter.Arn != nil {
-				f5elem.ARN = f5iter.Arn
-			}
-			if f5iter.LocalMountPath != nil {
-				f5elem.LocalMountPath = f5iter.LocalMountPath
-			}
-			f5 = append(f5, f5elem)
+	if resp.Configuration.EphemeralStorage != nil {
+		f6 := &svcapitypes.EphemeralStorage{}
+		if resp.Configuration.EphemeralStorage.Size != nil {
+			f6.Size = resp.Configuration.EphemeralStorage.Size
 		}
-		ko.Spec.FileSystemConfigs = f5
+		ko.Spec.EphemeralStorage = f6
+	} else {
+		ko.Spec.EphemeralStorage = nil
+	}
+	if resp.Configuration.FileSystemConfigs != nil {
+		f7 := []*svcapitypes.FileSystemConfig{}
+		for _, f7iter := range resp.Configuration.FileSystemConfigs {
+			f7elem := &svcapitypes.FileSystemConfig{}
+			if f7iter.Arn != nil {
+				f7elem.ARN = f7iter.Arn
+			}
+			if f7iter.LocalMountPath != nil {
+				f7elem.LocalMountPath = f7iter.LocalMountPath
+			}
+			f7 = append(f7, f7elem)
+		}
+		ko.Spec.FileSystemConfigs = f7
 	} else {
 		ko.Spec.FileSystemConfigs = nil
 	}
-
 	if ko.Status.ACKResourceMetadata == nil {
 		ko.Status.ACKResourceMetadata = &ackv1alpha1.ResourceMetadata{}
 	}
@@ -202,43 +183,43 @@ func (rm *resourceManager) sdkFind(
 		ko.Spec.Handler = nil
 	}
 	if resp.Configuration.ImageConfigResponse != nil {
-		f9 := &svcapitypes.ImageConfigResponse{}
+		f11 := &svcapitypes.ImageConfigResponse{}
 		if resp.Configuration.ImageConfigResponse.Error != nil {
-			f9f0 := &svcapitypes.ImageConfigError{}
+			f11f0 := &svcapitypes.ImageConfigError{}
 			if resp.Configuration.ImageConfigResponse.Error.ErrorCode != nil {
-				f9f0.ErrorCode = resp.Configuration.ImageConfigResponse.Error.ErrorCode
+				f11f0.ErrorCode = resp.Configuration.ImageConfigResponse.Error.ErrorCode
 			}
 			if resp.Configuration.ImageConfigResponse.Error.Message != nil {
-				f9f0.Message = resp.Configuration.ImageConfigResponse.Error.Message
+				f11f0.Message = resp.Configuration.ImageConfigResponse.Error.Message
 			}
-			f9.Error = f9f0
+			f11.Error = f11f0
 		}
 		if resp.Configuration.ImageConfigResponse.ImageConfig != nil {
-			f9f1 := &svcapitypes.ImageConfig{}
+			f11f1 := &svcapitypes.ImageConfig{}
 			if resp.Configuration.ImageConfigResponse.ImageConfig.Command != nil {
-				f9f1f0 := []*string{}
-				for _, f9f1f0iter := range resp.Configuration.ImageConfigResponse.ImageConfig.Command {
-					var f9f1f0elem string
-					f9f1f0elem = *f9f1f0iter
-					f9f1f0 = append(f9f1f0, &f9f1f0elem)
+				f11f1f0 := []*string{}
+				for _, f11f1f0iter := range resp.Configuration.ImageConfigResponse.ImageConfig.Command {
+					var f11f1f0elem string
+					f11f1f0elem = *f11f1f0iter
+					f11f1f0 = append(f11f1f0, &f11f1f0elem)
 				}
-				f9f1.Command = f9f1f0
+				f11f1.Command = f11f1f0
 			}
 			if resp.Configuration.ImageConfigResponse.ImageConfig.EntryPoint != nil {
-				f9f1f1 := []*string{}
-				for _, f9f1f1iter := range resp.Configuration.ImageConfigResponse.ImageConfig.EntryPoint {
-					var f9f1f1elem string
-					f9f1f1elem = *f9f1f1iter
-					f9f1f1 = append(f9f1f1, &f9f1f1elem)
+				f11f1f1 := []*string{}
+				for _, f11f1f1iter := range resp.Configuration.ImageConfigResponse.ImageConfig.EntryPoint {
+					var f11f1f1elem string
+					f11f1f1elem = *f11f1f1iter
+					f11f1f1 = append(f11f1f1, &f11f1f1elem)
 				}
-				f9f1.EntryPoint = f9f1f1
+				f11f1.EntryPoint = f11f1f1
 			}
 			if resp.Configuration.ImageConfigResponse.ImageConfig.WorkingDirectory != nil {
-				f9f1.WorkingDirectory = resp.Configuration.ImageConfigResponse.ImageConfig.WorkingDirectory
+				f11f1.WorkingDirectory = resp.Configuration.ImageConfigResponse.ImageConfig.WorkingDirectory
 			}
-			f9.ImageConfig = f9f1
+			f11.ImageConfig = f11f1
 		}
-		ko.Status.ImageConfigResponse = f9
+		ko.Status.ImageConfigResponse = f11
 	} else {
 		ko.Status.ImageConfigResponse = nil
 	}
@@ -266,28 +247,6 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.LastUpdateStatusReasonCode = resp.Configuration.LastUpdateStatusReasonCode
 	} else {
 		ko.Status.LastUpdateStatusReasonCode = nil
-	}
-	if resp.Configuration.Layers != nil {
-		f16 := []*svcapitypes.Layer{}
-		for _, f16iter := range resp.Configuration.Layers {
-			f16elem := &svcapitypes.Layer{}
-			if f16iter.Arn != nil {
-				f16elem.ARN = f16iter.Arn
-			}
-			if f16iter.CodeSize != nil {
-				f16elem.CodeSize = f16iter.CodeSize
-			}
-			if f16iter.SigningJobArn != nil {
-				f16elem.SigningJobARN = f16iter.SigningJobArn
-			}
-			if f16iter.SigningProfileVersionArn != nil {
-				f16elem.SigningProfileVersionARN = f16iter.SigningProfileVersionArn
-			}
-			f16 = append(f16, f16elem)
-		}
-		ko.Status.LayerStatuses = f16
-	} else {
-		ko.Status.LayerStatuses = nil
 	}
 	if resp.Configuration.MasterArn != nil {
 		ko.Status.MasterARN = resp.Configuration.MasterArn
@@ -329,6 +288,15 @@ func (rm *resourceManager) sdkFind(
 	} else {
 		ko.Status.SigningProfileVersionARN = nil
 	}
+	if resp.Configuration.SnapStart != nil {
+		f26 := &svcapitypes.SnapStart{}
+		if resp.Configuration.SnapStart.ApplyOn != nil {
+			f26.ApplyOn = resp.Configuration.SnapStart.ApplyOn
+		}
+		ko.Spec.SnapStart = f26
+	} else {
+		ko.Spec.SnapStart = nil
+	}
 	if resp.Configuration.State != nil {
 		ko.Status.State = resp.Configuration.State
 	} else {
@@ -350,11 +318,11 @@ func (rm *resourceManager) sdkFind(
 		ko.Spec.Timeout = nil
 	}
 	if resp.Configuration.TracingConfig != nil {
-		f28 := &svcapitypes.TracingConfig{}
+		f31 := &svcapitypes.TracingConfig{}
 		if resp.Configuration.TracingConfig.Mode != nil {
-			f28.Mode = resp.Configuration.TracingConfig.Mode
+			f31.Mode = resp.Configuration.TracingConfig.Mode
 		}
-		ko.Spec.TracingConfig = f28
+		ko.Spec.TracingConfig = f31
 	} else {
 		ko.Spec.TracingConfig = nil
 	}
@@ -364,49 +332,78 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.Version = nil
 	}
 	if resp.Configuration.VpcConfig != nil {
-		f30 := &svcapitypes.VPCConfig{}
+		f33 := &svcapitypes.VPCConfig{}
 		if resp.Configuration.VpcConfig.SecurityGroupIds != nil {
-			f30f0 := []*string{}
-			for _, f30f0iter := range resp.Configuration.VpcConfig.SecurityGroupIds {
-				var f30f0elem string
-				f30f0elem = *f30f0iter
-				f30f0 = append(f30f0, &f30f0elem)
+			f33f0 := []*string{}
+			for _, f33f0iter := range resp.Configuration.VpcConfig.SecurityGroupIds {
+				var f33f0elem string
+				f33f0elem = *f33f0iter
+				f33f0 = append(f33f0, &f33f0elem)
 			}
-			f30.SecurityGroupIDs = f30f0
+			f33.SecurityGroupIDs = f33f0
 		}
 		if resp.Configuration.VpcConfig.SubnetIds != nil {
-			f30f1 := []*string{}
-			for _, f30f1iter := range resp.Configuration.VpcConfig.SubnetIds {
-				var f30f1elem string
-				f30f1elem = *f30f1iter
-				f30f1 = append(f30f1, &f30f1elem)
+			f33f1 := []*string{}
+			for _, f33f1iter := range resp.Configuration.VpcConfig.SubnetIds {
+				var f33f1elem string
+				f33f1elem = *f33f1iter
+				f33f1 = append(f33f1, &f33f1elem)
 			}
-			f30.SubnetIDs = f30f1
+			f33.SubnetIDs = f33f1
 		}
-		ko.Spec.VPCConfig = f30
+		ko.Spec.VPCConfig = f33
 	} else {
 		ko.Spec.VPCConfig = nil
 	}
+
+	rm.setStatusDefaults(ko)
+	if resp.Code != nil {
+		// We need to keep the desired .Code s3Bucket s3Key and s3ObjectVersion
+		// part of the function's spec. So instead of setting Spec.Code to nil
+		// we only set ImageURI
+		//
+		// When adopting a Function resource, Spec.Code field should be manually
+		// initialised before injecting ImageURI.
+		if ko.Spec.Code == nil {
+			ko.Spec.Code = &svcapitypes.FunctionCode{}
+		}
+		if resp.Code.ImageUri != nil {
+			ko.Spec.Code.ImageURI = resp.Code.ImageUri
+		}
+	}
+	if resp.Configuration.Layers != nil {
+		f16 := []*svcapitypes.Layer{}
+		for _, f16iter := range resp.Configuration.Layers {
+			f16elem := &svcapitypes.Layer{}
+			if f16iter.Arn != nil {
+				f16elem.ARN = f16iter.Arn
+			}
+			if f16iter.CodeSize != nil {
+				f16elem.CodeSize = f16iter.CodeSize
+			}
+			if f16iter.SigningJobArn != nil {
+				f16elem.SigningJobARN = f16iter.SigningJobArn
+			}
+			if f16iter.SigningProfileVersionArn != nil {
+				f16elem.SigningProfileVersionARN = f16iter.SigningProfileVersionArn
+			}
+			f16 = append(f16, f16elem)
+		}
+		ko.Status.LayerStatuses = f16
+	} else {
+		ko.Status.LayerStatuses = nil
+	}
+	if resp.Tags != nil {
+		expectedOutput := map[string]*string{}
+		for expectedOutputKey, expectedOutputIter := range resp.Tags {
+			var expectedOutputVal string
+			expectedOutputVal = *expectedOutputIter
+			expectedOutput[expectedOutputKey] = &expectedOutputVal
+		}
+		ko.Spec.Tags = expectedOutput
+	}
 	if err := rm.setResourceAdditionalFields(ctx, ko); err != nil {
 		return nil, err
-	}
-	if resp.Configuration.EphemeralStorage != nil {
-		f31 := &svcapitypes.EphemeralStorage{}
-		if resp.Configuration.EphemeralStorage.Size != nil {
-			f31.Size = resp.Configuration.EphemeralStorage.Size
-		}
-		ko.Spec.EphemeralStorage = f31
-	} else {
-		ko.Spec.EphemeralStorage = nil
-	}
-	if resp.Configuration.SnapStart != nil {
-		f32 := &svcapitypes.SnapStart{}
-		if resp.Configuration.SnapStart.ApplyOn != nil {
-			f32.ApplyOn = resp.Configuration.SnapStart.ApplyOn
-		}
-		ko.Spec.SnapStart = f32
-	} else {
-		ko.Spec.SnapStart = nil
 	}
 	return &resource{ko}, nil
 }
