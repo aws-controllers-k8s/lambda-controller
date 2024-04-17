@@ -162,6 +162,15 @@ func (rm *resourceManager) updateFunctionConfiguration(
 		FunctionName: aws.String(*dspec.Name),
 	}
 
+	if delta.DifferentAt("Spec.DeadLetterConfig") {
+		deadLetterConfig := &svcsdk.DeadLetterConfig{}
+		if dspec.DeadLetterConfig != nil {
+			deadLetterConfigCopy := dspec.DeadLetterConfig.DeepCopy()
+			deadLetterConfig.TargetArn = deadLetterConfigCopy.TargetARN
+		}
+		input.DeadLetterConfig = deadLetterConfig
+	}
+
 	if delta.DifferentAt("Spec.Description") {
 		if dspec.Description != nil {
 			input.Description = aws.String(*dspec.Description)
