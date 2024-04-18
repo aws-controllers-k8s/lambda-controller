@@ -373,6 +373,7 @@ func (rm *resourceManager) sdkFind(
 	}
 	if resp.Configuration.Layers != nil {
 		f16 := []*svcapitypes.Layer{}
+		f := []*string{}
 		for _, f16iter := range resp.Configuration.Layers {
 			f16elem := &svcapitypes.Layer{}
 			if f16iter.Arn != nil {
@@ -388,7 +389,9 @@ func (rm *resourceManager) sdkFind(
 				f16elem.SigningProfileVersionARN = f16iter.SigningProfileVersionArn
 			}
 			f16 = append(f16, f16elem)
+			f = append(f, f16iter.Arn)
 		}
+		ko.Spec.Layers = f
 		ko.Status.LayerStatuses = f16
 	} else {
 		ko.Status.LayerStatuses = nil
