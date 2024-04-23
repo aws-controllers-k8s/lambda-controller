@@ -179,52 +179,21 @@ func (rm *resourceManager) updateFunctionConfiguration(
 		}
 	}
 
-	if delta.DifferentAt("Spec.Handler") {
-		if dspec.Handler != nil {
-			input.Handler = aws.String(*dspec.Handler)
-		} else {
-			input.Handler = aws.String("")
-		}
-	}
-
-	if delta.DifferentAt("Spec.KMSKeyARN") {
-		if dspec.KMSKeyARN != nil {
-			input.KMSKeyArn = aws.String(*dspec.KMSKeyARN)
-		} else {
-			input.KMSKeyArn = aws.String("")
-		}
-	}
-
-	if delta.DifferentAt("Spec.Role") {
-		if dspec.Role != nil {
-			input.Role = aws.String(*dspec.Role)
-		} else {
-			input.Role = aws.String("")
-		}
-	}
-
-	if delta.DifferentAt("Spec.MemorySize") {
-		if dspec.MemorySize != nil {
-			input.MemorySize = aws.Int64(*dspec.MemorySize)
-		} else {
-			input.MemorySize = aws.Int64(0)
-		}
-	}
-
-	if delta.DifferentAt("Spec.Timeout") {
-		if dspec.Timeout != nil {
-			input.Timeout = aws.Int64(*dspec.Timeout)
-		} else {
-			input.Timeout = aws.Int64(0)
-		}
-	}
-
 	if delta.DifferentAt("Spec.Environment") {
 		environment := &svcsdk.Environment{}
 		if dspec.Environment != nil {
 			environment.Variables = dspec.Environment.DeepCopy().Variables
 		}
 		input.Environment = environment
+	}
+
+	if delta.DifferentAt("Spec.EphemeralStorage") {
+		ephemeralStorage := &svcsdk.EphemeralStorage{}
+		if dspec.EphemeralStorage != nil {
+			ephemeralStorageCopy := dspec.EphemeralStorage.DeepCopy()
+			ephemeralStorage.Size = ephemeralStorageCopy.Size
+		}
+		input.EphemeralStorage = ephemeralStorage
 	}
 
 	if delta.DifferentAt("Spec.FileSystemConfigs") {
@@ -242,6 +211,14 @@ func (rm *resourceManager) updateFunctionConfiguration(
 		}
 	}
 
+	if delta.DifferentAt("Spec.Handler") {
+		if dspec.Handler != nil {
+			input.Handler = aws.String(*dspec.Handler)
+		} else {
+			input.Handler = aws.String("")
+		}
+	}
+
 	if delta.DifferentAt("Spec.ImageConfig") {
 		if dspec.ImageConfig != nil && dspec.Code.ImageURI != nil && *dspec.Code.ImageURI != "" {
 			imageConfig := &svcsdk.ImageConfig{}
@@ -252,6 +229,58 @@ func (rm *resourceManager) updateFunctionConfiguration(
 				imageConfig.WorkingDirectory = imageConfigCopy.WorkingDirectory
 			}
 			input.ImageConfig = imageConfig
+		}
+	}
+
+	if delta.DifferentAt("Spec.KMSKeyARN") {
+		if dspec.KMSKeyARN != nil {
+			input.KMSKeyArn = aws.String(*dspec.KMSKeyARN)
+		} else {
+			input.KMSKeyArn = aws.String("")
+		}
+	}
+
+	if delta.DifferentAt("Spec.Layers") {
+		layers := []*string{}
+		if len(dspec.Layers) > 0 {
+			for _, iter := range dspec.Layers {
+				var elem string = *iter
+				layers = append(layers, &elem)
+			}
+			input.Layers = layers
+		}
+	}
+
+	if delta.DifferentAt("Spec.MemorySize") {
+		if dspec.MemorySize != nil {
+			input.MemorySize = aws.Int64(*dspec.MemorySize)
+		} else {
+			input.MemorySize = aws.Int64(0)
+		}
+	}
+
+	if delta.DifferentAt("Spec.Role") {
+		if dspec.Role != nil {
+			input.Role = aws.String(*dspec.Role)
+		} else {
+			input.Role = aws.String("")
+		}
+	}
+
+	if delta.DifferentAt(("Spec.SnapStart")) {
+		snapStart := &svcsdk.SnapStart{}
+		if dspec.SnapStart != nil {
+			snapStartCopy := dspec.SnapStart.DeepCopy()
+			snapStart.ApplyOn = snapStartCopy.ApplyOn
+		}
+		input.SnapStart = snapStart
+	}
+
+	if delta.DifferentAt("Spec.Timeout") {
+		if dspec.Timeout != nil {
+			input.Timeout = aws.Int64(*dspec.Timeout)
+		} else {
+			input.Timeout = aws.Int64(0)
 		}
 	}
 
@@ -271,24 +300,6 @@ func (rm *resourceManager) updateFunctionConfiguration(
 			VPCConfig.SecurityGroupIds = vpcConfigCopy.SecurityGroupIDs
 		}
 		input.VpcConfig = VPCConfig
-	}
-
-	if delta.DifferentAt("Spec.EphemeralStorage") {
-		ephemeralStorage := &svcsdk.EphemeralStorage{}
-		if dspec.EphemeralStorage != nil {
-			ephemeralStorageCopy := dspec.EphemeralStorage.DeepCopy()
-			ephemeralStorage.Size = ephemeralStorageCopy.Size
-		}
-		input.EphemeralStorage = ephemeralStorage
-	}
-
-	if delta.DifferentAt(("Spec.SnapStart")) {
-		snapStart := &svcsdk.SnapStart{}
-		if dspec.SnapStart != nil {
-			snapStartCopy := dspec.SnapStart.DeepCopy()
-			snapStart.ApplyOn = snapStartCopy.ApplyOn
-		}
-		input.SnapStart = snapStart
 	}
 
 	_, err = rm.sdkapi.UpdateFunctionConfigurationWithContext(ctx, input)
