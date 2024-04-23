@@ -358,12 +358,6 @@ func (rm *resourceManager) sdkFind(
 
 	rm.setStatusDefaults(ko)
 	if resp.Code != nil {
-		// We need to keep the desired .Code s3Bucket s3Key and s3ObjectVersion
-		// part of the function's spec. So instead of setting Spec.Code to nil
-		// we only set ImageURI
-		//
-		// When adopting a Function resource, Spec.Code field should be manually
-		// initialised before injecting ImageURI.
 		if ko.Spec.Code == nil {
 			ko.Spec.Code = &svcapitypes.FunctionCode{}
 		}
@@ -373,7 +367,7 @@ func (rm *resourceManager) sdkFind(
 	}
 	if resp.Configuration.Layers != nil {
 		f16 := []*svcapitypes.Layer{}
-		f := []*string{}
+		layer := []*string{}
 		for _, f16iter := range resp.Configuration.Layers {
 			f16elem := &svcapitypes.Layer{}
 			if f16iter.Arn != nil {
@@ -389,9 +383,9 @@ func (rm *resourceManager) sdkFind(
 				f16elem.SigningProfileVersionARN = f16iter.SigningProfileVersionArn
 			}
 			f16 = append(f16, f16elem)
-			f = append(f, f16iter.Arn)
+			layer = append(layer, f16iter.Arn)
 		}
-		ko.Spec.Layers = f
+		ko.Spec.Layers = layer
 		ko.Status.LayerStatuses = f16
 	} else {
 		ko.Status.LayerStatuses = nil

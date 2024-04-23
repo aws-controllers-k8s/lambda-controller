@@ -7,7 +7,7 @@
 		}
 	}
 	if resp.Configuration.Layers != nil {
-		f17 := []*svcapitypes.Layer{}
+		f16 := []*svcapitypes.Layer{}
 		layer := []*string{}
 		for _, f16iter := range resp.Configuration.Layers {
 			f16elem := &svcapitypes.Layer{}
