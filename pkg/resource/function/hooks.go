@@ -267,6 +267,14 @@ func (rm *resourceManager) updateFunctionConfiguration(
 		}
 	}
 
+	if delta.DifferentAt("Spec.Runtime") {
+		if dspec.Runtime != nil {
+			input.Runtime = aws.String(*dspec.Runtime)
+		} else {
+			input.Runtime = aws.String("")
+		}
+	}
+
 	if delta.DifferentAt(("Spec.SnapStart")) {
 		snapStart := &svcsdk.SnapStart{}
 		if dspec.SnapStart != nil {
