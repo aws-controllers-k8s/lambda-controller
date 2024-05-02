@@ -51,6 +51,41 @@ func newResourceDelta(
 			delta.Add("Spec.Architectures", a.ko.Spec.Architectures, b.ko.Spec.Architectures)
 		}
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.Code, b.ko.Spec.Code) {
+		delta.Add("Spec.Code", a.ko.Spec.Code, b.ko.Spec.Code)
+	} else if a.ko.Spec.Code != nil && b.ko.Spec.Code != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.Code.ImageURI, b.ko.Spec.Code.ImageURI) {
+			delta.Add("Spec.Code.ImageURI", a.ko.Spec.Code.ImageURI, b.ko.Spec.Code.ImageURI)
+		} else if a.ko.Spec.Code.ImageURI != nil && b.ko.Spec.Code.ImageURI != nil {
+			if *a.ko.Spec.Code.ImageURI != *b.ko.Spec.Code.ImageURI {
+				delta.Add("Spec.Code.ImageURI", a.ko.Spec.Code.ImageURI, b.ko.Spec.Code.ImageURI)
+			}
+		}
+		if ackcompare.HasNilDifference(a.ko.Spec.Code.S3Bucket, b.ko.Spec.Code.S3Bucket) {
+			delta.Add("Spec.Code.S3Bucket", a.ko.Spec.Code.S3Bucket, b.ko.Spec.Code.S3Bucket)
+		} else if a.ko.Spec.Code.S3Bucket != nil && b.ko.Spec.Code.S3Bucket != nil {
+			if *a.ko.Spec.Code.S3Bucket != *b.ko.Spec.Code.S3Bucket {
+				delta.Add("Spec.Code.S3Bucket", a.ko.Spec.Code.S3Bucket, b.ko.Spec.Code.S3Bucket)
+			}
+		}
+		if ackcompare.HasNilDifference(a.ko.Spec.Code.S3Key, b.ko.Spec.Code.S3Key) {
+			delta.Add("Spec.Code.S3Key", a.ko.Spec.Code.S3Key, b.ko.Spec.Code.S3Key)
+		} else if a.ko.Spec.Code.S3Key != nil && b.ko.Spec.Code.S3Key != nil {
+			if *a.ko.Spec.Code.S3Key != *b.ko.Spec.Code.S3Key {
+				delta.Add("Spec.Code.S3Key", a.ko.Spec.Code.S3Key, b.ko.Spec.Code.S3Key)
+			}
+		}
+		if ackcompare.HasNilDifference(a.ko.Spec.Code.S3ObjectVersion, b.ko.Spec.Code.S3ObjectVersion) {
+			delta.Add("Spec.Code.S3ObjectVersion", a.ko.Spec.Code.S3ObjectVersion, b.ko.Spec.Code.S3ObjectVersion)
+		} else if a.ko.Spec.Code.S3ObjectVersion != nil && b.ko.Spec.Code.S3ObjectVersion != nil {
+			if *a.ko.Spec.Code.S3ObjectVersion != *b.ko.Spec.Code.S3ObjectVersion {
+				delta.Add("Spec.Code.S3ObjectVersion", a.ko.Spec.Code.S3ObjectVersion, b.ko.Spec.Code.S3ObjectVersion)
+			}
+		}
+		if !bytes.Equal(a.ko.Spec.Code.ZipFile, b.ko.Spec.Code.ZipFile) {
+			delta.Add("Spec.Code.ZipFile", a.ko.Spec.Code.ZipFile, b.ko.Spec.Code.ZipFile)
+		}
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.CodeSigningConfigARN, b.ko.Spec.CodeSigningConfigARN) {
 		delta.Add("Spec.CodeSigningConfigARN", a.ko.Spec.CodeSigningConfigARN, b.ko.Spec.CodeSigningConfigARN)
 	} else if a.ko.Spec.CodeSigningConfigARN != nil && b.ko.Spec.CodeSigningConfigARN != nil {

@@ -6,6 +6,7 @@ metadata:
     services.k8s.aws/region: $AWS_REGION
 spec:
   name: $FUNCTION_NAME
+  architectures: [$ARCHITECTURES]
   code:
     s3Bucket: $BUCKET_NAME
     s3Key: $LAMBDA_FILE_NAME

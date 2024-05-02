@@ -79,7 +79,7 @@ resources:
           path: ReservedConcurrentExecutions
       Code:
         compare:
-          is_ignored: true
+          is_ignored: false
         set:
           - ignore: true
             operation: ReadOne
