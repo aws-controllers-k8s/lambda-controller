@@ -38,6 +38,13 @@ resources:
         - path: Status.State
           in: [ "Active" ]
     fields:
+      Code.SHA256:
+        type: string
+        compare:
+          is_ignored: true
+        set:
+        - ignore: "to"
+          method: Create
       Code.S3Bucket:
         references:
           resource: Bucket
@@ -72,7 +79,7 @@ resources:
           path: ReservedConcurrentExecutions
       Code:
         compare:
-          is_ignored: true
+          is_ignored: false
         set:
           - ignore: true
             operation: ReadOne

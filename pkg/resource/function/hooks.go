@@ -102,25 +102,15 @@ func (rm *resourceManager) customUpdateFunction(
 			}
 		}
 	}
-	if delta.DifferentAt("Spec.Architectures") {
-		err = rm.updateFunctionArchitectures(ctx, desired, latest)
-		if err != nil {
-			return nil, err
-		}
-	}
 
 	// Only try to update Spec.Code or Spec.Configuration at once. It is
 	// not correct to sequentially call UpdateFunctionConfiguration and
 	// UpdateFunctionCode because both of them can put the function in a
 	// Pending state.
 	switch {
-	case delta.DifferentAt("Spec.Code"):
-		err = rm.updateFunctionCode(ctx, desired, delta)
+	case delta.DifferentAt("Spec.Code.ImageURI") || delta.DifferentAt("Spec.Code.SHA256") || delta.DifferentAt("Spec.Architectures"):
+		err = rm.updateFunctionCode(ctx, desired, delta, latest)
 		if err != nil {
-			// If the source image is not available, we get an error like this:
-			// "InvalidParameterValueException: Source image 1234567890.dkr.ecr.us-east-2.amazonaws.com/my-lambda:my-tag does not exist. Provide a valid source image."
-			// Because this may be recoverable (i.e. the image may be pushed once a build completes),
-			// we requeue the function for reconciliation after one minute.
 			if strings.Contains(err.Error(), "Provide a valid source image.") {
 				return nil, requeueWaitWhileSourceImageDoesNotExist
 			} else {
@@ -131,6 +121,7 @@ func (rm *resourceManager) customUpdateFunction(
 		"Spec.Code",
 		"Spec.Tags",
 		"Spec.ReservedConcurrentExecutions",
+		"Spec.FunctionEventInvokeConfig",
 		"Spec.CodeSigningConfigARN"):
 		err = rm.updateFunctionConfiguration(ctx, desired, delta)
 		if err != nil {
@@ -377,16 +368,17 @@ func (rm *resourceManager) updateFunctionTags(
 	return nil
 }
 
-// updateFunctionArchitectures calls UpdateFunctionCode to update architecture for lambda
+// updateFunctionsCode calls UpdateFunctionCode to update a specific lambda
 // function code.
-func (rm *resourceManager) updateFunctionArchitectures(
+func (rm *resourceManager) updateFunctionCode(
 	ctx context.Context,
 	desired *resource,
+	delta *ackcompare.Delta,
 	latest *resource,
 ) error {
 	var err error
 	rlog := ackrtlog.FromContext(ctx)
-	exit := rlog.Trace("rm.updateFunctionArchitectures")
+	exit := rlog.Trace("rm.updateFunctionCode")
 	defer exit(err)
 
 	dspec := desired.ko.Spec
@@ -400,60 +392,30 @@ func (rm *resourceManager) updateFunctionArchitectures(
 		input.Architectures = nil
 	}
 
-	if latest.ko.Spec.Code != nil {
-		if latest.ko.Spec.PackageType != nil && *latest.ko.Spec.PackageType == "Image" {
-			input.ImageUri = latest.ko.Spec.Code.ImageURI
-		} else if latest.ko.Spec.PackageType != nil && *latest.ko.Spec.PackageType == "Zip" {
-			input.S3Bucket = latest.ko.Spec.Code.S3Bucket
-			input.S3Key = latest.ko.Spec.Code.S3Key
-		}
-	}
-
-	_, err = rm.sdkapi.UpdateFunctionCodeWithContext(ctx, input)
-	rm.metrics.RecordAPICall("UPDATE", "UpdateFunctionArchitectures", err)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// updateFunctionsCode calls UpdateFunctionCode to update a specific lambda
-// function code.
-func (rm *resourceManager) updateFunctionCode(
-	ctx context.Context,
-	desired *resource,
-	delta *ackcompare.Delta,
-) error {
-	var err error
-	rlog := ackrtlog.FromContext(ctx)
-	exit := rlog.Trace("rm.updateFunctionCode")
-	defer exit(err)
-
-	if delta.DifferentAt("Spec.Code.S3Key") &&
-		!delta.DifferentAt("Spec.Code.S3Bucket") &&
-		!delta.DifferentAt("Spec.Code.S3ObjectVersion") &&
-		!delta.DifferentAt("Spec.Code.ImageURI") {
-		log := ackrtlog.FromContext(ctx)
-		log.Info("updating code.s3Key field is not currently supported.")
-		return nil
-	}
-
-	dspec := desired.ko.Spec
-	input := &svcsdk.UpdateFunctionCodeInput{
-		FunctionName: aws.String(*dspec.Name),
-	}
-
 	if dspec.Code != nil {
-		switch {
-		case dspec.Code.ImageURI != nil:
-			input.ImageUri = dspec.Code.ImageURI
-		case dspec.Code.S3Bucket != nil,
-			dspec.Code.S3Key != nil,
-			dspec.Code.S3ObjectVersion != nil:
-			input.S3Bucket = dspec.Code.S3Bucket
-			input.S3Key = dspec.Code.S3Key
-			input.S3ObjectVersion = dspec.Code.S3ObjectVersion
+		if delta.DifferentAt("Spec.Code.SHA256") && dspec.Code.SHA256 != nil {
+			if dspec.Code.S3Key != nil {
+				input.S3Key = aws.String(*dspec.Code.S3Key)
+			}
+			if dspec.Code.S3Bucket != nil {
+				input.S3Bucket = aws.String(*dspec.Code.S3Bucket)
+			}
+			if dspec.Code.S3ObjectVersion != nil {
+				input.S3ObjectVersion = aws.String(*dspec.Code.S3ObjectVersion)
+			}
+		} else if delta.DifferentAt("Spec.Code.ImageURI") && dspec.Code.ImageURI != nil {
+			if dspec.Code.ImageURI != nil {
+				input.ImageUri = aws.String(*dspec.Code.ImageURI)
+			}
+
+		} else { // We need to pass the latest code to Update API call,
+			//if there is change in architecture and no change in Code
+			if latest.ko.Spec.PackageType != nil && *latest.ko.Spec.PackageType == "Image" {
+				input.ImageUri = latest.ko.Spec.Code.ImageURI
+			} else if latest.ko.Spec.PackageType != nil && *latest.ko.Spec.PackageType == "Zip" {
+				input.S3Bucket = latest.ko.Spec.Code.S3Bucket
+				input.S3Key = latest.ko.Spec.Code.S3Key
+			}
 		}
 	}
 
@@ -501,36 +463,27 @@ func customPreCompare(
 	a *resource,
 	b *resource,
 ) {
+	// No need to compare difference in S3 Key/Bucket/ObjectVersion. As in sdkFind() there is a copy 'ko := r.ko.DeepCopy()'
+	// of S3 Key/Bucket/ObjectVersion passed. This 'ko' then stores the values of latest S3 fields which API returns
+	// and compares it with desired field values. Since the API doesn't return values of S3 fields, it doesn't
+	// notice any changes between desired and latest, hence fails to recognize the update in the values.
+
+	// To solve this we created a new field 'Code.SHA256' to store the hash value of deployment package. Any change
+	// in hash value refers to change in S3 Key/Bucket/ObjectVersion and controller can recognize the change in
+	// desired and latest value of 'Code.SHA256' and hence calls the update function.
+
 	if ackcompare.HasNilDifference(a.ko.Spec.Code, b.ko.Spec.Code) {
 		delta.Add("Spec.Code", a.ko.Spec.Code, b.ko.Spec.Code)
 	} else if a.ko.Spec.Code != nil && b.ko.Spec.Code != nil {
-		if ackcompare.HasNilDifference(a.ko.Spec.Code.ImageURI, b.ko.Spec.Code.ImageURI) {
-			delta.Add("Spec.Code.ImageURI", a.ko.Spec.Code.ImageURI, b.ko.Spec.Code.ImageURI)
-		} else if a.ko.Spec.Code.ImageURI != nil && b.ko.Spec.Code.ImageURI != nil {
-			if *a.ko.Spec.Code.ImageURI != *b.ko.Spec.Code.ImageURI {
-				delta.Add("Spec.Code.ImageURI", a.ko.Spec.Code.ImageURI, b.ko.Spec.Code.ImageURI)
-			}
-		}
-		//TODO(hialylmh) handle Spec.Code.S3bucket changes
-		//  if ackcompare.HasNilDifference(a.ko.Spec.Code.S3Bucket, b.ko.Spec.Code.S3Bucket) {
-		//  	delta.Add("Spec.Code.S3Bucket", a.ko.Spec.Code.S3Bucket, b.ko.Spec.Code.S3Bucket)
-		//  } else if a.ko.Spec.Code.S3Bucket != nil && b.ko.Spec.Code.S3Bucket != nil {
-		//  	if *a.ko.Spec.Code.S3Bucket != *b.ko.Spec.Code.S3Bucket {
-		//  		delta.Add("Spec.Code.S3Bucket", a.ko.Spec.Code.S3Bucket, b.ko.Spec.Code.S3Bucket)
-		//  	}
-		//  }
-		if ackcompare.HasNilDifference(a.ko.Spec.Code.S3Key, b.ko.Spec.Code.S3Key) {
-			delta.Add("Spec.Code.S3Key", a.ko.Spec.Code.S3Key, b.ko.Spec.Code.S3Key)
-		} else if a.ko.Spec.Code.S3Key != nil && b.ko.Spec.Code.S3Key != nil {
-			if *a.ko.Spec.Code.S3Key != *b.ko.Spec.Code.S3Key {
-				delta.Add("Spec.Code.S3Key", a.ko.Spec.Code.S3Key, b.ko.Spec.Code.S3Key)
-			}
-		}
-		if ackcompare.HasNilDifference(a.ko.Spec.Code.S3ObjectVersion, b.ko.Spec.Code.S3ObjectVersion) {
-			delta.Add("Spec.Code.S3ObjectVersion", a.ko.Spec.Code.S3ObjectVersion, b.ko.Spec.Code.S3ObjectVersion)
-		} else if a.ko.Spec.Code.S3ObjectVersion != nil && b.ko.Spec.Code.S3ObjectVersion != nil {
-			if *a.ko.Spec.Code.S3ObjectVersion != *b.ko.Spec.Code.S3ObjectVersion {
-				delta.Add("Spec.Code.S3ObjectVersion", a.ko.Spec.Code.S3ObjectVersion, b.ko.Spec.Code.S3ObjectVersion)
+		if a.ko.Spec.PackageType != nil && *a.ko.Spec.PackageType == "Zip" {
+			if a.ko.Spec.Code.SHA256 != nil {
+				if ackcompare.HasNilDifference(a.ko.Spec.Code.SHA256, b.ko.Status.CodeSHA256) {
+					delta.Add("Spec.Code.SHA256", a.ko.Spec.Code.SHA256, b.ko.Status.CodeSHA256)
+				} else if a.ko.Spec.Code.SHA256 != nil && b.ko.Status.CodeSHA256 != nil {
+					if *a.ko.Spec.Code.SHA256 != *b.ko.Status.CodeSHA256 {
+						delta.Add("Spec.Code.SHA256", a.ko.Spec.Code.SHA256, b.ko.Status.CodeSHA256)
+					}
+				}
 			}
 		}
 	}

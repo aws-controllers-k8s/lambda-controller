@@ -1353,6 +1353,11 @@ func (in *FunctionCode) DeepCopyInto(out *FunctionCode) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.SHA256 != nil {
+		in, out := &in.SHA256, &out.SHA256
+		*out = new(string)
+		**out = **in
+	}
 	if in.ZipFile != nil {
 		in, out := &in.ZipFile, &out.ZipFile
 		*out = make([]byte, len(*in))
