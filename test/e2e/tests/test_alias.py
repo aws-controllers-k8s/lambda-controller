@@ -28,16 +28,34 @@ from e2e.bootstrap_resources import get_bootstrap_resources
 from e2e.service_bootstrap import LAMBDA_FUNCTION_FILE_ZIP
 from e2e.tests.helper import LambdaValidator
 
+log = logging.getLogger()
 RESOURCE_PLURAL = "aliases"
 
 CREATE_WAIT_AFTER_SECONDS = 30
 UPDATE_WAIT_AFTER_SECONDS = 30
 DELETE_WAIT_AFTER_SECONDS = 30
+TESTING_NAMESPACE = "custom_namespace"
 
 @pytest.fixture(scope="module")
-def lambda_function():
+def lambda_function(request):
         resource_name = random_suffix_name("lambda-function", 24)
         resources = get_bootstrap_resources()
+
+        marker = request.node.get_closest_marker("resource_data")
+        filename = "function"
+        namespace = "default"
+
+        if marker is not None:
+            data = marker.args[0]
+            if 'withNamespace' in data and data['withNamespace']:
+                filename = "function_namespace"
+                namespace = TESTING_NAMESPACE
+                replacements['FUNCTION_NAMESPACE'] = namespace
+                k8s.create_k8s_namespace(
+                    namespace
+                )
+                time.sleep(CREATE_WAIT_AFTER_SECONDS)
+                log.error("WE HAVE REACHED HERE")
 
         replacements = REPLACEMENT_VALUES.copy()
         replacements["FUNCTION_NAME"] = resource_name
@@ -50,7 +68,7 @@ def lambda_function():
 
         # Load function CR
         resource_data = load_lambda_resource(
-            "function",
+            filename,
             additional_replacements=replacements,
         )
         logging.debug(resource_data)
@@ -58,7 +76,7 @@ def lambda_function():
         # Create k8s resource
         function_reference = k8s.CustomResourceReference(
             CRD_GROUP, CRD_VERSION, "functions",
-            resource_name, namespace="default",
+            resource_name, namespace=namespace,
         )
 
         # Create lambda function
@@ -68,7 +86,7 @@ def lambda_function():
         assert function_resource is not None
         assert k8s.get_resource_exists(function_reference)
 
-        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)                
 
         yield (function_reference, function_resource)
 
@@ -78,6 +96,7 @@ def lambda_function():
 @service_marker
 @pytest.mark.canary
 class TestAlias:
+    @pytest.mark.resource_data({'withNamespace': False})
     def test_smoke(self, lambda_client, lambda_function):
         (_, function_resource) = lambda_function
         lambda_function_name = function_resource["spec"]["name"]
@@ -137,6 +156,7 @@ class TestAlias:
         # Check alias doesn't exist
         assert not lambda_validator.alias_exists(resource_name, lambda_function_name)
 
+    @pytest.mark.resource_data({'withNamespace': False})
     def test_smoke_ref(self, lambda_client, lambda_function):
         (_, function_resource) = lambda_function
         function_resource_name = function_resource["metadata"]["name"]
@@ -195,7 +215,72 @@ class TestAlias:
 
         # Check alias doesn't exist
         assert not lambda_validator.alias_exists(resource_name, function_resource_name)
+    
+    @pytest.mark.resource_data({'withNamespace': True})
+    def test_smoke_namespace_ref(self, lambda_client, lambda_function):
+        (_, function_resource) = lambda_function
+        function_resource_name = function_resource["metadata"]["name"]
 
+        resource_name = random_suffix_name("lambda-alias", 24)
+
+        replacements = REPLACEMENT_VALUES.copy()
+        replacements["AWS_REGION"] = get_region()
+        replacements["ALIAS_NAME"] = resource_name
+        replacements["FUNCTION_REF_NAME"] = function_resource_name
+        replacements["FUNCTION_VERSION"] = "$LATEST"
+        replacements["FUNCTION_REF_NAMESPACE"] = TESTING_NAMESPACE
+
+        # Load alias CR
+        resource_data = load_lambda_resource(
+            "alias-ref-namespace",
+            additional_replacements=replacements,
+        )
+        logging.debug(resource_data)
+
+        # Create k8s resource
+        ref = k8s.CustomResourceReference(
+            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            resource_name, namespace="default",
+        )
+        k8s.create_custom_resource(ref, resource_data)
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        assert cr is not None
+        assert k8s.get_resource_exists(ref)
+
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+        lambda_validator = LambdaValidator(lambda_client)
+        # Check alias exists
+
+        log.error(lambda_validator.function_exists(function_resource_name))
+
+        assert lambda_validator.alias_exists(resource_name, function_resource_name)
+
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+        
+        # Update cr
+        cr["spec"]["description"] = ""
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        # Check alias description
+        alias = lambda_validator.get_alias(resource_name, function_resource_name)
+        assert alias is not None
+        assert alias["Description"] == ""
+
+        # Delete k8s resource
+        _, deleted = k8s.delete_custom_resource(ref)
+        assert deleted
+
+        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+
+        # Check alias doesn't exist
+        assert not lambda_validator.alias_exists(resource_name, function_resource_name)
+
+    @pytest.mark.resource_data({'withNamespace': False})
     def test_provisioned_concurrency_config(self, lambda_client, lambda_function):
         (_, function_resource) = lambda_function
         lambda_function_name = function_resource["spec"]["name"]
@@ -276,6 +361,7 @@ class TestAlias:
         # Check alias doesn't exist
         assert not lambda_validator.alias_exists(resource_name, lambda_function_name)
     
+    @pytest.mark.resource_data({'withNamespace': False})
     def test_function_event_invoke_config(self, lambda_client, lambda_function):
         (_, function_resource) = lambda_function
         lambda_function_name = function_resource["spec"]["name"]

@@ -10,7 +10,7 @@ require (
 	github.com/aws-controllers-k8s/kafka-controller v0.0.0-20230615185632-102279061de1
 	github.com/aws-controllers-k8s/kms-controller v0.1.2
 	github.com/aws-controllers-k8s/mq-controller v0.0.22
-	github.com/aws-controllers-k8s/runtime v0.35.0
+	github.com/aws-controllers-k8s/runtime v0.35.1-0.20240719172343-a132c887e8d4
 	github.com/aws-controllers-k8s/s3-controller v0.1.5
 	github.com/aws/aws-sdk-go v1.49.0
 	github.com/go-logr/logr v1.4.1

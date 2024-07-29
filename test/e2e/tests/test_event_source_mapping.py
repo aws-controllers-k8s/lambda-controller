@@ -33,51 +33,88 @@ RESOURCE_PLURAL = "eventsourcemappings"
 CREATE_WAIT_AFTER_SECONDS = 20
 UPDATE_WAIT_AFTER_SECONDS = 20
 DELETE_WAIT_AFTER_SECONDS = 20
+TESTING_NAMESPACE = "custom_namespace"
+
+log = logging.getLogger()
+
 
 @pytest.fixture(scope="module")
-def lambda_function():
-        resource_name = random_suffix_name("lambda-function", 24)
-        resources = get_bootstrap_resources()
+def referred_function_name():
+    return random_suffix_name("lambda-function", 24)
 
-        replacements = REPLACEMENT_VALUES.copy()
-        replacements["FUNCTION_NAME"] = resource_name
-        replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
-        replacements["LAMBDA_ROLE"] = resources.ESMRole.arn
-        replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
-        replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "10"
-        replacements["CODE_SIGNING_CONFIG_ARN"] = ""
-        replacements["AWS_REGION"] = get_region()
+@pytest.fixture(scope="module")
+def stupid_function(request):
+    marker = request.node.get_closest_marker("resource_data")
+    if marker is None:
+        return "SAD"
+    log.error("THIS IS A STUPID FUNCTION")
+    return "happy"
 
-        # Load function CR
-        resource_data = load_lambda_resource(
-            "function",
-            additional_replacements=replacements,
-        )
-        logging.debug(resource_data)
+@pytest.fixture(scope="module")
+def lambda_function(request, referred_function_name):
+    resource_name = referred_function_name
+    resources = get_bootstrap_resources()
 
-        # Create k8s resource
-        function_reference = k8s.CustomResourceReference(
-            CRD_GROUP, CRD_VERSION, "functions",
-            resource_name, namespace="default",
-        )
+    marker = request.node.get_closest_marker("resource_data")
+    filename = "function"
+    namespace = "default"
 
-        # Create lambda function
-        k8s.create_custom_resource(function_reference, resource_data)
-        function_resource = k8s.wait_resource_consumed_by_controller(function_reference)
+    replacements = REPLACEMENT_VALUES.copy()
+    replacements["FUNCTION_NAME"] = resource_name
+    replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
+    replacements["LAMBDA_ROLE"] = resources.ESMRole.arn
+    replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
+    replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "10"
+    replacements["CODE_SIGNING_CONFIG_ARN"] = ""
+    replacements["AWS_REGION"] = get_region()
 
-        assert function_resource is not None
-        assert k8s.get_resource_exists(function_reference)
+    log.error(request)
+    log.error(request.node)
+    log.error(request.node.get_closest_marker("resource_data"))
+    if marker is not None:
+        data = marker.args[0]
+        log.error(data)
+        if 'withNamespace' in data and data['withNamespace']:
+            k8s.create_k8s_namespace(
+                namespace
+            )
+            filename = "function_namespace"
+            namespace = TESTING_NAMESPACE
+            replacements['FUNCTION_NAMESPACE'] = namespace
+            log.error(replacements)
+            log.error(filename)
 
-        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+    # Load function CR
+    resource_data = load_lambda_resource(
+        filename,
+        additional_replacements=replacements,
+    )
+    logging.debug(resource_data)
 
-        yield (function_reference, function_resource)
+    # Create k8s resource
+    function_reference = k8s.CustomResourceReference(
+        CRD_GROUP, CRD_VERSION, "functions",
+        resource_name, namespace=namespace,
+    )
 
-        _, deleted = k8s.delete_custom_resource(function_reference)
-        assert deleted
+    # Create lambda function
+    k8s.create_custom_resource(function_reference, resource_data)
+    function_resource = k8s.wait_resource_consumed_by_controller(function_reference)
+
+    assert function_resource is not None
+    assert k8s.get_resource_exists(function_reference)
+
+    time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+    yield (function_reference, function_resource)
+
+    _, deleted = k8s.delete_custom_resource(function_reference)
+    assert deleted
 
 @service_marker
 @pytest.mark.canary
 class TestEventSourceMapping:
+    @pytest.mark.resource_data({'withNamespace': False})
     def test_smoke_sqs_queue_stream(self, lambda_client, lambda_function):
         (_, function_resource) = lambda_function
         lambda_function_name = function_resource["spec"]["name"]
@@ -168,6 +205,7 @@ class TestEventSourceMapping:
         # Check ESM doesn't exist
         assert not lambda_validator.event_source_mapping_exists(esm_uuid)
     
+    @pytest.mark.resource_data({'withNamespace': False})
     def test_smoke_sqs_queue_stream_ref(self, lambda_client, lambda_function):
         (_, function_resource) = lambda_function
         function_resource_name = function_resource["metadata"]["name"]
@@ -255,6 +293,102 @@ class TestEventSourceMapping:
         # Check ESM doesn't exist
         assert not lambda_validator.event_source_mapping_exists(esm_uuid)
 
+    @pytest.mark.resource_data({'withNamespace': True})
+    def test_smoke_sqs_queue_stream_namespace_ref(self, lambda_client, lambda_function, stupid_function):
+        (_, function_resource) = lambda_function
+        function_resource_name = function_resource["metadata"]["name"]
+        something = stupid_function
+        log.error(something)
+
+        resource_name = random_suffix_name("lambda-esm", 24)
+        resources = get_bootstrap_resources()
+
+        replacements = REPLACEMENT_VALUES.copy()
+        replacements["AWS_REGION"] = get_region()
+        replacements["EVENT_SOURCE_MAPPING_NAME"] = resource_name
+        replacements["BATCH_SIZE"] = "10"
+        replacements["FUNCTION_REF_NAME"] = function_resource_name
+        replacements["EVENT_SOURCE_ARN"] = resources.ESMQueue.arn
+        replacements["MAXIMUM_BATCHING_WINDOW_IN_SECONDS"] = "1"
+        replacements["FUNCTION_REF_NAMESPACE"] = TESTING_NAMESPACE
+
+        # Load ESM CR
+        resource_data = load_lambda_resource(
+            "event_source_mapping_sqs_ref_namespace",
+            additional_replacements=replacements,
+        )
+        logging.debug(resource_data)
+
+        # Create k8s resource
+        ref = k8s.CustomResourceReference(
+            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            resource_name, namespace="default",
+        )
+        k8s.create_custom_resource(ref, resource_data)
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        assert cr is not None
+        assert k8s.get_resource_exists(ref)
+
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+        log.error(cr['status'])
+
+        esm_uuid = cr['status']['uuid']
+
+        lambda_validator = LambdaValidator(lambda_client)
+        # Check ESM exists
+        assert lambda_validator.event_source_mapping_exists(esm_uuid)
+
+        # Update cr
+        cr["spec"]["batchSize"] = 20
+        cr["spec"]["filterCriteria"] = {
+            "filters": [
+                {
+                    "pattern": "{\"controller-version\":[\"v1\"]}"
+                },
+            ]
+        }
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        # Check ESM batch size & filters
+        esm = lambda_validator.get_event_source_mapping(esm_uuid)
+        assert esm is not None
+        assert esm["BatchSize"] == 20
+        assert esm["FilterCriteria"]["Filters"] == [
+            {
+                "Pattern": "{\"controller-version\":[\"v1\"]}"
+            },
+        ]
+
+        # Delete the filterCriteria field
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr["spec"]["filterCriteria"] = None
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        # Check filters have been deleted
+        esm = lambda_validator.get_event_source_mapping(esm_uuid)
+        assert esm is not None
+        assert "FilterCriteria" not in esm
+
+        # Delete k8s resource
+        _, deleted = k8s.delete_custom_resource(ref)
+        assert deleted
+
+        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+
+        # Check ESM doesn't exist
+        assert not lambda_validator.event_source_mapping_exists(esm_uuid)
+
+    @pytest.mark.resource_data({'withNamespace': False})
     def test_smoke_dynamodb_table_stream(self, lambda_client, lambda_function):
         (_, function_resource) = lambda_function
         lambda_function_name = function_resource["spec"]["name"]
