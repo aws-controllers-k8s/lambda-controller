@@ -1,0 +1,14 @@
+apiVersion: lambda.services.k8s.aws/v1alpha1
+kind: Alias
+metadata:
+  name: $ALIAS_NAME
+  annotations:
+    services.k8s.aws/region: $AWS_REGION
+spec:
+  name: $ALIAS_NAME
+  functionRef:
+    from:
+      name: $FUNCTION_REF_NAME
+      namespace: $FUNCTION_REF_NAMESPACE
+  functionVersion: $FUNCTION_VERSION
+  description: alias created by ACK lambda-controller e2e tests

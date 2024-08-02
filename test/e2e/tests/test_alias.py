@@ -33,13 +33,33 @@ RESOURCE_PLURAL = "aliases"
 CREATE_WAIT_AFTER_SECONDS = 30
 UPDATE_WAIT_AFTER_SECONDS = 30
 DELETE_WAIT_AFTER_SECONDS = 30
+TESTING_NAMESPACE = random_suffix_name("testing-alias-namespace", 28)
 
-@pytest.fixture(scope="module")
-def lambda_function():
+@pytest.fixture(scope="function")
+def lambda_function(request):
         resource_name = random_suffix_name("lambda-function", 24)
         resources = get_bootstrap_resources()
 
+        marker = request.node.get_closest_marker("resource_data")
+        filename = "function"
+        namespace = "default"
+
         replacements = REPLACEMENT_VALUES.copy()
+
+        if marker is not None:
+            data = marker.args[0]
+            if 'withNamespace' in data and data['withNamespace']:
+                filename = "function_namespace"
+                namespace = TESTING_NAMESPACE
+                replacements['FUNCTION_NAMESPACE'] = namespace
+                k8s.create_k8s_namespace(
+                    namespace
+                )
+                time.sleep(CREATE_WAIT_AFTER_SECONDS)
+                time.sleep(CREATE_WAIT_AFTER_SECONDS)
+                time.sleep(CREATE_WAIT_AFTER_SECONDS)
+                logging.info("function-namespace-is: "+ namespace)
+    
         replacements["FUNCTION_NAME"] = resource_name
         replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
         replacements["LAMBDA_ROLE"] = resources.EICRole.arn
@@ -50,7 +70,7 @@ def lambda_function():
 
         # Load function CR
         resource_data = load_lambda_resource(
-            "function",
+            filename,
             additional_replacements=replacements,
         )
         logging.debug(resource_data)
@@ -58,7 +78,7 @@ def lambda_function():
         # Create k8s resource
         function_reference = k8s.CustomResourceReference(
             CRD_GROUP, CRD_VERSION, "functions",
-            resource_name, namespace="default",
+            resource_name, namespace=namespace,
         )
 
         # Create lambda function
@@ -68,7 +88,7 @@ def lambda_function():
         assert function_resource is not None
         assert k8s.get_resource_exists(function_reference)
 
-        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)                
 
         yield (function_reference, function_resource)
 
@@ -78,66 +98,128 @@ def lambda_function():
 @service_marker
 @pytest.mark.canary
 class TestAlias:
-    def test_smoke(self, lambda_client, lambda_function):
-        (_, function_resource) = lambda_function
-        lambda_function_name = function_resource["spec"]["name"]
+    # @pytest.mark.resource_data({'withNamespace': False})
+    # def test_smoke(self, lambda_client, lambda_function):
+    #     (_, function_resource) = lambda_function
+    #     lambda_function_name = function_resource["spec"]["name"]
 
-        resource_name = random_suffix_name("lambda-alias", 24)
+    #     resource_name = random_suffix_name("lambda-alias", 24)
 
-        replacements = REPLACEMENT_VALUES.copy()
-        replacements["AWS_REGION"] = get_region()
-        replacements["ALIAS_NAME"] = resource_name
-        replacements["FUNCTION_NAME"] = lambda_function_name
-        replacements["FUNCTION_VERSION"] = "$LATEST"
+    #     replacements = REPLACEMENT_VALUES.copy()
+    #     replacements["AWS_REGION"] = get_region()
+    #     replacements["ALIAS_NAME"] = resource_name
+    #     replacements["FUNCTION_NAME"] = lambda_function_name
+    #     replacements["FUNCTION_VERSION"] = "$LATEST"
 
-        # Load alias CR
-        resource_data = load_lambda_resource(
-            "alias",
-            additional_replacements=replacements,
-        )
-        logging.debug(resource_data)
+    #     # Load alias CR
+    #     resource_data = load_lambda_resource(
+    #         "alias",
+    #         additional_replacements=replacements,
+    #     )
+    #     logging.debug(resource_data)
 
-        # Create k8s resource
-        ref = k8s.CustomResourceReference(
-            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
-            resource_name, namespace="default",
-        )
-        k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+    #     # Create k8s resource
+    #     ref = k8s.CustomResourceReference(
+    #         CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+    #         resource_name, namespace="default",
+    #     )
+    #     k8s.create_custom_resource(ref, resource_data)
+    #     cr = k8s.wait_resource_consumed_by_controller(ref)
 
-        assert cr is not None
-        assert k8s.get_resource_exists(ref)
+    #     assert cr is not None
+    #     assert k8s.get_resource_exists(ref)
 
-        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+    #     time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        lambda_validator = LambdaValidator(lambda_client)
-        # Check alias exists
-        assert lambda_validator.alias_exists(resource_name, lambda_function_name)
+    #     lambda_validator = LambdaValidator(lambda_client)
+    #     # Check alias exists
+    #     assert lambda_validator.alias_exists(resource_name, lambda_function_name)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+    #     cr = k8s.wait_resource_consumed_by_controller(ref)
         
-        # Update cr
-        cr["spec"]["description"] = ""
+    #     # Update cr
+    #     cr["spec"]["description"] = ""
 
-        # Patch k8s resource
-        k8s.patch_custom_resource(ref, cr)
-        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+    #     # Patch k8s resource
+    #     k8s.patch_custom_resource(ref, cr)
+    #     time.sleep(UPDATE_WAIT_AFTER_SECONDS)
 
-        # Check alias description
-        alias = lambda_validator.get_alias(resource_name, lambda_function_name)
-        assert alias is not None
-        assert alias["Description"] == ""
+    #     # Check alias description
+    #     alias = lambda_validator.get_alias(resource_name, lambda_function_name)
+    #     assert alias is not None
+    #     assert alias["Description"] == ""
 
-        # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
-        assert deleted
+    #     # Delete k8s resource
+    #     _, deleted = k8s.delete_custom_resource(ref)
+    #     assert deleted
 
-        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+    #     time.sleep(DELETE_WAIT_AFTER_SECONDS)
 
-        # Check alias doesn't exist
-        assert not lambda_validator.alias_exists(resource_name, lambda_function_name)
+    #     # Check alias doesn't exist
+    #     assert not lambda_validator.alias_exists(resource_name, lambda_function_name)
 
-    def test_smoke_ref(self, lambda_client, lambda_function):
+    # @pytest.mark.resource_data({'withNamespace': False})
+    # def test_smoke_ref(self, lambda_client, lambda_function):
+    #     (_, function_resource) = lambda_function
+    #     function_resource_name = function_resource["metadata"]["name"]
+
+    #     resource_name = random_suffix_name("lambda-alias", 24)
+
+    #     replacements = REPLACEMENT_VALUES.copy()
+    #     replacements["AWS_REGION"] = get_region()
+    #     replacements["ALIAS_NAME"] = resource_name
+    #     replacements["FUNCTION_REF_NAME"] = function_resource_name
+    #     replacements["FUNCTION_VERSION"] = "$LATEST"
+
+    #     # Load alias CR
+    #     resource_data = load_lambda_resource(
+    #         "alias-ref",
+    #         additional_replacements=replacements,
+    #     )
+    #     logging.debug(resource_data)
+
+    #     # Create k8s resource
+    #     ref = k8s.CustomResourceReference(
+    #         CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+    #         resource_name, namespace="default",
+    #     )
+    #     k8s.create_custom_resource(ref, resource_data)
+    #     cr = k8s.wait_resource_consumed_by_controller(ref)
+
+    #     assert cr is not None
+    #     assert k8s.get_resource_exists(ref)
+
+    #     time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+    #     lambda_validator = LambdaValidator(lambda_client)
+    #     # Check alias exists
+    #     assert lambda_validator.alias_exists(resource_name, function_resource_name)
+
+    #     cr = k8s.wait_resource_consumed_by_controller(ref)
+        
+    #     # Update cr
+    #     cr["spec"]["description"] = ""
+
+    #     # Patch k8s resource
+    #     k8s.patch_custom_resource(ref, cr)
+    #     time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+    #     # Check alias description
+    #     alias = lambda_validator.get_alias(resource_name, function_resource_name)
+    #     assert alias is not None
+    #     assert alias["Description"] == ""
+
+    #     # Delete k8s resource
+    #     _, deleted = k8s.delete_custom_resource(ref)
+    #     assert deleted
+
+    #     time.sleep(DELETE_WAIT_AFTER_SECONDS)
+
+    #     # Check alias doesn't exist
+    #     assert not lambda_validator.alias_exists(resource_name, function_resource_name)
+    
+    @pytest.mark.resource_data({'withNamespace': True})
+    def test_smoke_namespace_ref(self, lambda_client, lambda_function):
         (_, function_resource) = lambda_function
         function_resource_name = function_resource["metadata"]["name"]
 
@@ -148,10 +230,11 @@ class TestAlias:
         replacements["ALIAS_NAME"] = resource_name
         replacements["FUNCTION_REF_NAME"] = function_resource_name
         replacements["FUNCTION_VERSION"] = "$LATEST"
+        replacements["FUNCTION_REF_NAMESPACE"] = TESTING_NAMESPACE
 
         # Load alias CR
         resource_data = load_lambda_resource(
-            "alias-ref",
+            "alias-ref-namespace",
             additional_replacements=replacements,
         )
         logging.debug(resource_data)
@@ -171,6 +254,7 @@ class TestAlias:
 
         lambda_validator = LambdaValidator(lambda_client)
         # Check alias exists
+
         assert lambda_validator.alias_exists(resource_name, function_resource_name)
 
         cr = k8s.wait_resource_consumed_by_controller(ref)
@@ -196,161 +280,163 @@ class TestAlias:
         # Check alias doesn't exist
         assert not lambda_validator.alias_exists(resource_name, function_resource_name)
 
-    def test_provisioned_concurrency_config(self, lambda_client, lambda_function):
-        (_, function_resource) = lambda_function
-        lambda_function_name = function_resource["spec"]["name"]
+    # @pytest.mark.resource_data({'withNamespace': False})
+    # def test_provisioned_concurrency_config(self, lambda_client, lambda_function):
+    #     (_, function_resource) = lambda_function
+    #     lambda_function_name = function_resource["spec"]["name"]
 
-        resource_name = random_suffix_name("lambda-alias", 24)
+    #     resource_name = random_suffix_name("lambda-alias", 24)
 
-        resources = get_bootstrap_resources()
-        logging.debug(resources)
+    #     resources = get_bootstrap_resources()
+    #     logging.debug(resources)
 
-        resp = lambda_client.publish_version(
-                FunctionName = lambda_function_name
-        )
-        version = resp['Version']
+    #     resp = lambda_client.publish_version(
+    #             FunctionName = lambda_function_name
+    #     )
+    #     version = resp['Version']
     
-        replacements = REPLACEMENT_VALUES.copy()
-        replacements["AWS_REGION"] = get_region()
-        replacements["ALIAS_NAME"] = resource_name
-        replacements["FUNCTION_NAME"] = lambda_function_name
-        replacements["FUNCTION_VERSION"] = f"\'{version}\'"
-        replacements["PROVISIONED_CONCURRENT_EXECUTIONS"] = "1"
+    #     replacements = REPLACEMENT_VALUES.copy()
+    #     replacements["AWS_REGION"] = get_region()
+    #     replacements["ALIAS_NAME"] = resource_name
+    #     replacements["FUNCTION_NAME"] = lambda_function_name
+    #     replacements["FUNCTION_VERSION"] = f"\'{version}\'"
+    #     replacements["PROVISIONED_CONCURRENT_EXECUTIONS"] = "1"
 
-        # Load alias CR
-        resource_data = load_lambda_resource(
-            "alias_provisioned_concurrency",
-            additional_replacements=replacements,
-        )
-        logging.debug(resource_data)
+    #     # Load alias CR
+    #     resource_data = load_lambda_resource(
+    #         "alias_provisioned_concurrency",
+    #         additional_replacements=replacements,
+    #     )
+    #     logging.debug(resource_data)
 
-        # Create k8s resource
-        ref = k8s.CustomResourceReference(
-            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
-            resource_name, namespace="default",
-        )
+    #     # Create k8s resource
+    #     ref = k8s.CustomResourceReference(
+    #         CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+    #         resource_name, namespace="default",
+    #     )
 
-        k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+    #     k8s.create_custom_resource(ref, resource_data)
+    #     cr = k8s.wait_resource_consumed_by_controller(ref)
 
-        assert cr is not None
-        assert k8s.get_resource_exists(ref)
+    #     assert cr is not None
+    #     assert k8s.get_resource_exists(ref)
 
-        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+    #     time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+    #     cr = k8s.wait_resource_consumed_by_controller(ref)
 
-        lambda_validator = LambdaValidator(lambda_client)
+    #     lambda_validator = LambdaValidator(lambda_client)
 
-         # Check alias exists
-        assert lambda_validator.alias_exists(resource_name, lambda_function_name)
+    #      # Check alias exists
+    #     assert lambda_validator.alias_exists(resource_name, lambda_function_name)
         
-        # Update provisioned_concurrency
-        cr["spec"]["provisionedConcurrencyConfig"]["provisionedConcurrentExecutions"] = 2
+    #     # Update provisioned_concurrency
+    #     cr["spec"]["provisionedConcurrencyConfig"]["provisionedConcurrentExecutions"] = 2
 
-        # Patch k8s resource
-        k8s.patch_custom_resource(ref, cr)
-        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+    #     # Patch k8s resource
+    #     k8s.patch_custom_resource(ref, cr)
+    #     time.sleep(UPDATE_WAIT_AFTER_SECONDS)
 
-        #Check provisioned_concurrency_config update fields
-        provisioned_concurrency_config = lambda_validator.get_provisioned_concurrency_config(lambda_function_name,resource_name)
-        assert provisioned_concurrency_config["RequestedProvisionedConcurrentExecutions"] == 2
+    #     #Check provisioned_concurrency_config update fields
+    #     provisioned_concurrency_config = lambda_validator.get_provisioned_concurrency_config(lambda_function_name,resource_name)
+    #     assert provisioned_concurrency_config["RequestedProvisionedConcurrentExecutions"] == 2
 
-        # Delete provisioned_concurrency from alias
-        cr = k8s.wait_resource_consumed_by_controller(ref)
-        cr["spec"]["provisionedConcurrencyConfig"] = None
+    #     # Delete provisioned_concurrency from alias
+    #     cr = k8s.wait_resource_consumed_by_controller(ref)
+    #     cr["spec"]["provisionedConcurrencyConfig"] = None
 
-        # Patch k8s resource     
-        k8s.patch_custom_resource(ref, cr)
-        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+    #     # Patch k8s resource     
+    #     k8s.patch_custom_resource(ref, cr)
+    #     time.sleep(UPDATE_WAIT_AFTER_SECONDS)
 
-        #Check provisioned_concurrency_config is deleted
-        assert not lambda_validator.get_provisioned_concurrency_config(lambda_function_name, resource_name)
+    #     #Check provisioned_concurrency_config is deleted
+    #     assert not lambda_validator.get_provisioned_concurrency_config(lambda_function_name, resource_name)
 
-        # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
-        assert deleted
+    #     # Delete k8s resource
+    #     _, deleted = k8s.delete_custom_resource(ref)
+    #     assert deleted
 
-        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+    #     time.sleep(DELETE_WAIT_AFTER_SECONDS)
 
-        # Check alias doesn't exist
-        assert not lambda_validator.alias_exists(resource_name, lambda_function_name)
+    #     # Check alias doesn't exist
+    #     assert not lambda_validator.alias_exists(resource_name, lambda_function_name)
     
-    def test_function_event_invoke_config(self, lambda_client, lambda_function):
-        (_, function_resource) = lambda_function
-        lambda_function_name = function_resource["spec"]["name"]
+    # @pytest.mark.resource_data({'withNamespace': False})
+    # def test_function_event_invoke_config(self, lambda_client, lambda_function):
+    #     (_, function_resource) = lambda_function
+    #     lambda_function_name = function_resource["spec"]["name"]
 
-        resource_name = random_suffix_name("lambda-alias", 24)
+    #     resource_name = random_suffix_name("lambda-alias", 24)
 
-        resources = get_bootstrap_resources()
-        logging.debug(resources)
+    #     resources = get_bootstrap_resources()
+    #     logging.debug(resources)
 
-        replacements = REPLACEMENT_VALUES.copy()
-        replacements["AWS_REGION"] = get_region()
-        replacements["ALIAS_NAME"] = resource_name
-        replacements["FUNCTION_VERSION"] = "$LATEST"
-        replacements["FUNCTION_NAME"] = lambda_function_name
-        replacements["MAXIMUM_EVENT_AGE_IN_SECONDS"] = "100"
-        replacements["MAXIMUM_RETRY_ATTEMPTS"] = "1"
-        replacements["ON_SUCCESS_DESTINATION"] = resources.EICQueueOnSuccess.arn
-        replacements["ON_FAILURE_DESTINATION"] = resources.EICQueueOnFailure.arn
+    #     replacements = REPLACEMENT_VALUES.copy()
+    #     replacements["AWS_REGION"] = get_region()
+    #     replacements["ALIAS_NAME"] = resource_name
+    #     replacements["FUNCTION_VERSION"] = "$LATEST"
+    #     replacements["FUNCTION_NAME"] = lambda_function_name
+    #     replacements["MAXIMUM_EVENT_AGE_IN_SECONDS"] = "100"
+    #     replacements["MAXIMUM_RETRY_ATTEMPTS"] = "1"
+    #     replacements["ON_SUCCESS_DESTINATION"] = resources.EICQueueOnSuccess.arn
+    #     replacements["ON_FAILURE_DESTINATION"] = resources.EICQueueOnFailure.arn
 
-        # Load alias CR
-        resource_data = load_lambda_resource(
-            "alias_event_invoke_config",
-            additional_replacements=replacements,
-        )
-        logging.debug(resource_data)
+    #     # Load alias CR
+    #     resource_data = load_lambda_resource(
+    #         "alias_event_invoke_config",
+    #         additional_replacements=replacements,
+    #     )
+    #     logging.debug(resource_data)
 
-        # Create k8s resource
-        ref = k8s.CustomResourceReference(
-            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
-            resource_name, namespace="default",
-        )
-        k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+    #     # Create k8s resource
+    #     ref = k8s.CustomResourceReference(
+    #         CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+    #         resource_name, namespace="default",
+    #     )
+    #     k8s.create_custom_resource(ref, resource_data)
+    #     cr = k8s.wait_resource_consumed_by_controller(ref)
 
-        assert cr is not None
-        assert k8s.get_resource_exists(ref)
+    #     assert cr is not None
+    #     assert k8s.get_resource_exists(ref)
 
-        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+    #     time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+    #     cr = k8s.wait_resource_consumed_by_controller(ref)
 
-        lambda_validator = LambdaValidator(lambda_client)
+    #     lambda_validator = LambdaValidator(lambda_client)
 
-         # Check alias exists
-        assert lambda_validator.alias_exists(resource_name, lambda_function_name)
+    #      # Check alias exists
+    #     assert lambda_validator.alias_exists(resource_name, lambda_function_name)
         
-        # Update cr
-        cr["spec"]["functionEventInvokeConfig"]["maximumEventAgeInSeconds"] = 200
-        cr["spec"]["functionEventInvokeConfig"]["maximumRetryAttempts"] = 2
+    #     # Update cr
+    #     cr["spec"]["functionEventInvokeConfig"]["maximumEventAgeInSeconds"] = 200
+    #     cr["spec"]["functionEventInvokeConfig"]["maximumRetryAttempts"] = 2
 
-        # Patch k8s resource
-        k8s.patch_custom_resource(ref, cr)
-        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+    #     # Patch k8s resource
+    #     k8s.patch_custom_resource(ref, cr)
+    #     time.sleep(UPDATE_WAIT_AFTER_SECONDS)
 
-        #Check function_event_invoke_config update fields
-        function_event_invoke_config = lambda_validator.get_function_event_invoke_config_alias(lambda_function_name,resource_name)
-        assert function_event_invoke_config["MaximumEventAgeInSeconds"] == 200
-        assert function_event_invoke_config["MaximumRetryAttempts"] == 2
+    #     #Check function_event_invoke_config update fields
+    #     function_event_invoke_config = lambda_validator.get_function_event_invoke_config_alias(lambda_function_name,resource_name)
+    #     assert function_event_invoke_config["MaximumEventAgeInSeconds"] == 200
+    #     assert function_event_invoke_config["MaximumRetryAttempts"] == 2
 
-        # Delete FunctionEventInvokeConfig
-        cr = k8s.wait_resource_consumed_by_controller(ref)
-        cr["spec"]["functionEventInvokeConfig"] =  None
+    #     # Delete FunctionEventInvokeConfig
+    #     cr = k8s.wait_resource_consumed_by_controller(ref)
+    #     cr["spec"]["functionEventInvokeConfig"] =  None
 
-        # Patch k8s resource
-        k8s.patch_custom_resource(ref, cr)
-        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+    #     # Patch k8s resource
+    #     k8s.patch_custom_resource(ref, cr)
+    #     time.sleep(UPDATE_WAIT_AFTER_SECONDS)
 
-        # Check if FunctionEventInvokeConfig is deleted
-        assert not lambda_validator.get_function_event_invoke_config_alias(lambda_function_name,resource_name)
+    #     # Check if FunctionEventInvokeConfig is deleted
+    #     assert not lambda_validator.get_function_event_invoke_config_alias(lambda_function_name,resource_name)
 
-        # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
-        assert deleted
+    #     # Delete k8s resource
+    #     _, deleted = k8s.delete_custom_resource(ref)
+    #     assert deleted
 
-        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+    #     time.sleep(DELETE_WAIT_AFTER_SECONDS)
 
-        # Check alias doesn't exist
-        assert not lambda_validator.alias_exists(resource_name, lambda_function_name)
+    #     # Check alias doesn't exist
+    #     assert not lambda_validator.alias_exists(resource_name, lambda_function_name)
