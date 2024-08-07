@@ -4,10 +4,10 @@ metadata:
   name: $BROKER_NAME
 spec:
   name: $BROKER_NAME
-  autoMinorVersionUpgrade: false
+  autoMinorVersionUpgrade: true
   deploymentMode: SINGLE_INSTANCE
   engineType: RabbitMQ
-  engineVersion: $MQ_RABBITMQ_ENGINE_VERSION
+  engineVersion: "$MQ_RABBITMQ_ENGINE_VERSION"
   hostInstanceType: $MQ_HOST_INSTANCE_TYPE
   publiclyAccessible: false
   users:
