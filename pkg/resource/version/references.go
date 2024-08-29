@@ -56,12 +56,11 @@ func (rm *resourceManager) ResolveReferences(
 	apiReader client.Reader,
 	res acktypes.AWSResource,
 ) (acktypes.AWSResource, bool, error) {
-	namespace := res.MetaObject().GetNamespace()
 	ko := rm.concreteResource(res).ko
 
 	resourceHasReferences := false
 	err := validateReferenceFields(ko)
-	if fieldHasReferences, err := rm.resolveReferenceForFunctionName(ctx, apiReader, namespace, ko); err != nil {
+	if fieldHasReferences, err := rm.resolveReferenceForFunctionName(ctx, apiReader, ko); err != nil {
 		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
 	} else {
 		resourceHasReferences = resourceHasReferences || fieldHasReferences
@@ -90,7 +89,6 @@ func validateReferenceFields(ko *svcapitypes.Version) error {
 func (rm *resourceManager) resolveReferenceForFunctionName(
 	ctx context.Context,
 	apiReader client.Reader,
-	namespace string,
 	ko *svcapitypes.Version,
 ) (hasReferences bool, err error) {
 	if ko.Spec.FunctionRef != nil && ko.Spec.FunctionRef.From != nil {
@@ -98,6 +96,10 @@ func (rm *resourceManager) resolveReferenceForFunctionName(
 		arr := ko.Spec.FunctionRef.From
 		if arr.Name == nil || *arr.Name == "" {
 			return hasReferences, fmt.Errorf("provided resource reference is nil or empty: FunctionRef")
+		}
+		namespace := ko.ObjectMeta.GetNamespace()
+		if arr.Namespace != nil && *arr.Namespace != "" {
+			namespace = *arr.Namespace
 		}
 		obj := &svcapitypes.Function{}
 		if err := getReferencedResourceState_Function(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
@@ -128,12 +130,8 @@ func getReferencedResourceState_Function(
 	if err != nil {
 		return err
 	}
-	var refResourceSynced, refResourceTerminal bool
+	var refResourceTerminal bool
 	for _, cond := range obj.Status.Conditions {
-		if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
-			cond.Status == corev1.ConditionTrue {
-			refResourceSynced = true
-		}
 		if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
 			cond.Status == corev1.ConditionTrue {
 			return ackerr.ResourceReferenceTerminalFor(
@@ -145,6 +143,13 @@ func getReferencedResourceState_Function(
 		return ackerr.ResourceReferenceTerminalFor(
 			"Function",
 			namespace, name)
+	}
+	var refResourceSynced bool
+	for _, cond := range obj.Status.Conditions {
+		if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+			cond.Status == corev1.ConditionTrue {
+			refResourceSynced = true
+		}
 	}
 	if !refResourceSynced {
 		return ackerr.ResourceReferenceNotSyncedFor(
