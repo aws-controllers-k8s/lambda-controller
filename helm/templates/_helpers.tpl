@@ -55,6 +55,7 @@ rules:
   - ""
   resources:
   - configmaps
+  - secrets
   verbs:
   - get
   - list
@@ -69,38 +70,11 @@ rules:
   - list
   - watch
 - apiGroups:
-  - ""
-  resources:
-  - secrets
-  verbs:
-  - get
-  - list
-  - patch
-  - watch
-- apiGroups:
   - ec2.services.k8s.aws
   resources:
   - securitygroups
-  verbs:
-  - get
-  - list
-- apiGroups:
-  - ec2.services.k8s.aws
-  resources:
   - securitygroups/status
-  verbs:
-  - get
-  - list
-- apiGroups:
-  - ec2.services.k8s.aws
-  resources:
   - subnets
-  verbs:
-  - get
-  - list
-- apiGroups:
-  - ec2.services.k8s.aws
-  resources:
   - subnets/status
   verbs:
   - get
@@ -109,12 +83,6 @@ rules:
   - iam.services.k8s.aws
   resources:
   - roles
-  verbs:
-  - get
-  - list
-- apiGroups:
-  - iam.services.k8s.aws
-  resources:
   - roles/status
   verbs:
   - get
@@ -123,12 +91,6 @@ rules:
   - kafka.services.k8s.aws
   resources:
   - clusters
-  verbs:
-  - get
-  - list
-- apiGroups:
-  - kafka.services.k8s.aws
-  resources:
   - clusters/status
   verbs:
   - get
@@ -137,12 +99,6 @@ rules:
   - kms.services.k8s.aws
   resources:
   - keys
-  verbs:
-  - get
-  - list
-- apiGroups:
-  - kms.services.k8s.aws
-  resources:
   - keys/status
   verbs:
   - get
@@ -151,125 +107,11 @@ rules:
   - lambda.services.k8s.aws
   resources:
   - aliases
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - lambda.services.k8s.aws
-  resources:
-  - aliases/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - lambda.services.k8s.aws
-  resources:
   - codesigningconfigs
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - lambda.services.k8s.aws
-  resources:
-  - codesigningconfigs/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - lambda.services.k8s.aws
-  resources:
   - eventsourcemappings
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - lambda.services.k8s.aws
-  resources:
-  - eventsourcemappings/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - lambda.services.k8s.aws
-  resources:
   - functions
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - lambda.services.k8s.aws
-  resources:
-  - functions/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - lambda.services.k8s.aws
-  resources:
   - functionurlconfigs
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - lambda.services.k8s.aws
-  resources:
-  - functionurlconfigs/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - lambda.services.k8s.aws
-  resources:
   - layerversions
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - lambda.services.k8s.aws
-  resources:
-  - layerversions/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - lambda.services.k8s.aws
-  resources:
   - versions
   verbs:
   - create
@@ -282,6 +124,12 @@ rules:
 - apiGroups:
   - lambda.services.k8s.aws
   resources:
+  - aliases/status
+  - codesigningconfigs/status
+  - eventsourcemappings/status
+  - functions/status
+  - functionurlconfigs/status
+  - layerversions/status
   - versions/status
   verbs:
   - get
@@ -291,12 +139,6 @@ rules:
   - mq.services.k8s.aws
   resources:
   - brokers
-  verbs:
-  - get
-  - list
-- apiGroups:
-  - mq.services.k8s.aws
-  resources:
   - brokers/status
   verbs:
   - get
@@ -305,12 +147,6 @@ rules:
   - s3.services.k8s.aws
   resources:
   - buckets
-  verbs:
-  - get
-  - list
-- apiGroups:
-  - s3.services.k8s.aws
-  resources:
   - buckets/status
   verbs:
   - get
@@ -319,25 +155,6 @@ rules:
   - services.k8s.aws
   resources:
   - adoptedresources
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - services.k8s.aws
-  resources:
-  - adoptedresources/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - services.k8s.aws
-  resources:
   - fieldexports
   verbs:
   - create
@@ -350,6 +167,7 @@ rules:
 - apiGroups:
   - services.k8s.aws
   resources:
+  - adoptedresources/status
   - fieldexports/status
   verbs:
   - get
