@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.16.2
   name: eventsourcemappings.lambda.services.k8s.aws
 spec:
   group: lambda.services.k8s.aws
@@ -55,22 +55,16 @@ spec:
                   the batch to the function in a single call, up to the payload limit for synchronous
                   invocation (6 MB).
 
-
                     - Amazon Kinesis – Default 100. Max 10,000.
 
-
                     - Amazon DynamoDB Streams – Default 100. Max 10,000.
-
 
                     - Amazon Simple Queue Service – Default 10. For standard queues the
                       max is 10,000. For FIFO queues the max is 10.
 
-
                     - Amazon Managed Streaming for Apache Kafka – Default 100. Max 10,000.
 
-
                     - Self-managed Apache Kafka – Default 100. Max 10,000.
-
 
                     - Amazon MQ (ActiveMQ and RabbitMQ) – Default 100. Max 10,000.
                 format: int64
@@ -103,32 +97,26 @@ spec:
                   When true, the event source mapping is active. When false, Lambda pauses
                   polling and invocation.
 
-
                   Default: True
                 type: boolean
               eventSourceARN:
                 description: |-
                   The Amazon Resource Name (ARN) of the event source.
 
-
                     - Amazon Kinesis – The ARN of the data stream or a stream consumer.
-
 
                     - Amazon DynamoDB Streams – The ARN of the stream.
 
-
                     - Amazon Simple Queue Service – The ARN of the queue.
 
-
                     - Amazon Managed Streaming for Apache Kafka – The ARN of the cluster.
-
 
                     - Amazon MQ – The ARN of the broker.
                 type: string
               eventSourceRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around
                   *AWSResourceReference\ntype to provide more user friendly syntax
-                  for references using 'from' field\nEx:\nAPIIDRef:\n\n\n\tfrom:\n\t
+                  for references using 'from' field\nEx:\nAPIIDRef:\n\n\tfrom:\n\t
                   \ name: my-api"
                 properties:
                   from:
@@ -163,21 +151,15 @@ spec:
                 description: |-
                   The name of the Lambda function.
 
-
                   Name formats
-
 
                     - Function name – MyFunction.
 
-
                     - Function ARN – arn:aws:lambda:us-west-2:123456789012:function:MyFunction.
-
 
                     - Version or Alias ARN – arn:aws:lambda:us-west-2:123456789012:function:MyFunction:PROD.
 
-
                     - Partial ARN – 123456789012:function:MyFunction.
-
 
                   The length constraint applies only to the full ARN. If you specify only the
                   function name, it's limited to 64 characters in length.
@@ -185,7 +167,7 @@ spec:
               functionRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around
                   *AWSResourceReference\ntype to provide more user friendly syntax
-                  for references using 'from' field\nEx:\nAPIIDRef:\n\n\n\tfrom:\n\t
+                  for references using 'from' field\nEx:\nAPIIDRef:\n\n\tfrom:\n\t
                   \ name: my-api"
                 properties:
                   from:
@@ -212,7 +194,6 @@ spec:
                   before invoking the function. You can configure MaximumBatchingWindowInSeconds
                   to any value from 0 seconds to 300 seconds in increments of seconds.
 
-
                   For streams and Amazon SQS event sources, the default batching window is
                   0 seconds. For Amazon MSK, Self-managed Apache Kafka, and Amazon MQ event
                   sources, the default batching window is 500 ms. Note that because you can
@@ -220,7 +201,6 @@ spec:
                   cannot revert back to the 500 ms default batching window after you have changed
                   it. To restore the default batching window, you must create a new event source
                   mapping.
-
 
                   Related setting: For streams and Amazon SQS event sources, when you set BatchSize
                   to a value greater than 10, you must set MaximumBatchingWindowInSeconds to
@@ -249,7 +229,7 @@ spec:
                 items:
                   description: "AWSResourceReferenceWrapper provides a wrapper around
                     *AWSResourceReference\ntype to provide more user friendly syntax
-                    for references using 'from' field\nEx:\nAPIIDRef:\n\n\n\tfrom:\n\t
+                    for references using 'from' field\nEx:\nAPIIDRef:\n\n\tfrom:\n\t
                     \ name: my-api"
                   properties:
                     from:
@@ -353,7 +333,6 @@ spec:
                       when it has verified that an "adopted" resource (a resource where the
                       ARN annotation was set by the Kubernetes user on the CR) exists and
                       matches the supplied CR's Spec field values.
-                      TODO(vijat@): Find a better strategy for resources that do not have ARN in CreateOutputResponse
                       https://github.com/aws/aws-controllers-k8s/issues/270
                     type: string
                   ownerAccountID:
