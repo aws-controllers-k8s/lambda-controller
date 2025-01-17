@@ -56,6 +56,20 @@ func isFunctionPending(r *resource) bool {
 	return state == string(svcapitypes.State_Pending)
 }
 
+func hasCodeChanged(delta *ackcompare.Delta) bool {
+	return delta.DifferentAt("Spec.Code.ImageURI") || delta.DifferentAt("Spec.Code.SHA256") || delta.DifferentAt("Spec.Architectures")
+}
+
+func hasConfigurationChanged(delta *ackcompare.Delta) bool {
+	return delta.DifferentExcept(
+		"Spec.Code",
+		"Spec.Tags",
+		"Spec.ReservedConcurrentExecutions",
+		"Spec.FunctionEventInvokeConfig",
+		"Spec.CodeSigningConfigARN",
+	)
+}
+
 // customUpdateFunction patches each of the resource properties in the backend AWS
 // service API and returns a new resource with updated fields.
 func (rm *resourceManager) customUpdateFunction(
@@ -107,8 +121,7 @@ func (rm *resourceManager) customUpdateFunction(
 	// not correct to sequentially call UpdateFunctionConfiguration and
 	// UpdateFunctionCode because both of them can put the function in a
 	// Pending state.
-	switch {
-	case delta.DifferentAt("Spec.Code.ImageURI") || delta.DifferentAt("Spec.Code.SHA256") || delta.DifferentAt("Spec.Architectures"):
+	if hasConfigurationChanged(delta) && hasCodeChanged(delta) {
 		err = rm.updateFunctionCode(ctx, desired, delta, latest)
 		if err != nil {
 			if strings.Contains(err.Error(), "Provide a valid source image.") {
@@ -117,15 +130,20 @@ func (rm *resourceManager) customUpdateFunction(
 				return nil, err
 			}
 		}
-	case delta.DifferentExcept(
-		"Spec.Code",
-		"Spec.Tags",
-		"Spec.ReservedConcurrentExecutions",
-		"Spec.FunctionEventInvokeConfig",
-		"Spec.CodeSigningConfigARN"):
+		return nil, requeueWaitWhilePending
+	} else if hasConfigurationChanged(delta) {
 		err = rm.updateFunctionConfiguration(ctx, desired, delta)
 		if err != nil {
 			return nil, err
+		}
+	} else if hasCodeChanged(delta) {
+		err := rm.updateFunctionCode(ctx, desired, delta, latest)
+		if err != nil {
+			if strings.Contains(err.Error(), "Provide a valid source image.") {
+				return nil, requeueWaitWhileSourceImageDoesNotExist
+			} else {
+				return nil, err
+			}
 		}
 	}
 
