@@ -149,7 +149,6 @@ func (rm *resourceManager) customUpdateFunction(
 				return nil, err
 			}
 		}
-
 		err = rm.isLastUpdateStatusSuccessful(ctx, desired)
 		if err != nil {
 			return nil, err
