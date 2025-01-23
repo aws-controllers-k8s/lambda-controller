@@ -1105,7 +1105,7 @@ class TestFunction:
         
         # Update cr configuration
         cr["spec"]["description"] = "Updated description"
-        cr["spec"]["timeout"] = 10
+        cr["spec"]["timeout"] = 1000000000
 
         # Patch k8s resource
         k8s.patch_custom_resource(ref, cr)
