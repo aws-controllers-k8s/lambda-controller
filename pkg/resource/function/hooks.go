@@ -130,11 +130,7 @@ func (rm *resourceManager) customUpdateFunction(
 				return nil, err
 			}
 		}
-		readOneLatest, err := rm.ReadOne(ctx, desired)
-		if err != nil {
-			return nil, err
-		}
-		return rm.concreteResource(readOneLatest), requeueWaitWhilePending
+		return nil, requeueWaitWhilePending
 	} else if hasConfigurationChanged(delta) {
 		err = rm.updateFunctionConfiguration(ctx, desired, delta)
 		if err != nil {
