@@ -1037,3 +1037,92 @@ class TestFunction:
 
         # Check Lambda function doesn't exist
         assert not lambda_validator.function_exists(resource_name)
+
+    def test_function_update_code_and_configuration(self, lambda_client):
+        resource_name = random_suffix_name("functionupdatecode", 24)
+
+        resources = get_bootstrap_resources()
+        logging.debug(resources)
+
+        archive_1 = open(LAMBDA_FUNCTION_FILE_PATH_ZIP, 'rb') 
+        readFile_1 = archive_1.read() 
+        hash_1 = hashlib.sha256(readFile_1) 
+        binary_hash_1 = hash_1.digest() 
+        base64_hash_1 = base64.b64encode(binary_hash_1).decode('utf-8')
+
+        archive_2 = open(LAMBDA_FUNCTION_UPDATED_FILE_PATH_ZIP, 'rb') 
+        readFile_2 = archive_2.read() 
+        hash_2 = hashlib.sha256(readFile_2) 
+        binary_hash_2 = hash_2.digest() 
+        base64_hash_2 = base64.b64encode(binary_hash_2).decode('utf-8')
+
+        replacements = REPLACEMENT_VALUES.copy()
+        replacements["FUNCTION_NAME"] = resource_name
+        replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
+        replacements["LAMBDA_ROLE"] = resources.BasicRole.arn
+        replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
+        replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "0"
+        replacements["CODE_SIGNING_CONFIG_ARN"] = ""
+        replacements["AWS_REGION"] = get_region()
+        replacements["ARCHITECTURES"] = 'x86_64'
+        replacements["HASH"] = base64_hash_1
+
+        # Load Lambda CR
+        resource_data = load_lambda_resource(
+            "function_code_s3",
+            additional_replacements=replacements,
+        )
+        logging.debug(resource_data)
+
+        # Create k8s resource
+        ref = k8s.CustomResourceReference(
+            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            resource_name, namespace="default",
+        )
+        k8s.create_custom_resource(ref, resource_data)
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        assert cr is not None
+        assert k8s.get_resource_exists(ref)
+
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        lambda_validator = LambdaValidator(lambda_client)
+
+        # Assert that the original code.s3Bucket and code.s3Key is still part of
+        # the function's CR
+        assert cr["spec"]["code"]["s3Bucket"] == resources.FunctionsBucket.name
+        assert cr["spec"]["code"]["s3Key"] == LAMBDA_FUNCTION_FILE_ZIP
+
+        # Check Lambda function exists
+        assert lambda_validator.function_exists(resource_name)
+
+        # Update cr code
+        cr["spec"]["code"]["sha256"] = base64_hash_2
+        cr["spec"]["code"]["s3Key"] = LAMBDA_FUNCTION_UPDATED_FILE_ZIP
+        
+        # Update cr configuration
+        cr["spec"]["description"] = "Updated description"
+        cr["spec"]["timeout"] = 10
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        # Check function updated fields
+        function = lambda_validator.get_function(resource_name)
+        assert function is not None
+        assert function["Configuration"]["CodeSha256"] == base64_hash_2
+        assert function["Configuration"]["Description"] == "Updated description"
+        assert function["Configuration"]["Timeout"] == 10
+
+        # Delete k8s resource
+        _, deleted = k8s.delete_custom_resource(ref)
+        assert deleted is True
+
+        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+
+        # Check Lambda function doesn't exist
+        assert not lambda_validator.function_exists(resource_name)
