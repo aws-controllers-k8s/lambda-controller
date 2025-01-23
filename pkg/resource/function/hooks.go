@@ -46,6 +46,8 @@ var (
 	)
 )
 
+const isLastUpdateStatusSuccessfulCheckInterval = 30 * time.Second
+
 // isFunctionPending returns true if the supplied Lambda Function is in a pending
 // state
 func isFunctionPending(r *resource) bool {
@@ -68,6 +70,23 @@ func hasConfigurationChanged(delta *ackcompare.Delta) bool {
 		"Spec.FunctionEventInvokeConfig",
 		"Spec.CodeSigningConfigARN",
 	)
+}
+
+func (rm *resourceManager) isLastUpdateStatusSuccessful(ctx context.Context, res *resource) error {
+	// LastUpdateStatus must be Successful before running UpdateFunction*
+	// https://docs.aws.amazon.com/lambda/latest/dg/functions-states.html
+	// https://aws.amazon.com/blogs/compute/coming-soon-expansion-of-aws-lambda-states-to-all-functions/
+	for {
+		out, err := rm.ReadOne(ctx, res)
+		if err != nil {
+			return err
+		}
+		l := rm.concreteResource(out)
+		if aws.StringValue(l.ko.Status.LastUpdateStatus) == svcsdk.LastUpdateStatusSuccessful {
+			return nil
+		}
+		time.Sleep(isLastUpdateStatusSuccessfulCheckInterval)
+	}
 }
 
 // customUpdateFunction patches each of the resource properties in the backend AWS
@@ -130,7 +149,15 @@ func (rm *resourceManager) customUpdateFunction(
 				return nil, err
 			}
 		}
-		return nil, requeueWaitWhilePending
+
+		err = rm.isLastUpdateStatusSuccessful(ctx, desired)
+		if err != nil {
+			return nil, err
+		}
+		err = rm.updateFunctionConfiguration(ctx, desired, delta)
+		if err != nil {
+			return nil, err
+		}
 	} else if hasConfigurationChanged(delta) {
 		err = rm.updateFunctionConfiguration(ctx, desired, delta)
 		if err != nil {
