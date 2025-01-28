@@ -141,6 +141,7 @@ func (rm *resourceManager) customUpdateFunction(
 	// UpdateFunctionCode because both of them can put the function in a
 	// Pending state.
 	if hasConfigurationChanged(delta) && hasCodeChanged(delta) {
+		rlog.Info("detected both Spec.Code and Spec.Configuration changes, updating both")
 		err = rm.updateFunctionCode(ctx, desired, delta, latest)
 		if err != nil {
 			if strings.Contains(err.Error(), "Provide a valid source image.") {
@@ -158,11 +159,13 @@ func (rm *resourceManager) customUpdateFunction(
 			return nil, err
 		}
 	} else if hasConfigurationChanged(delta) {
+		rlog.Info("detected Spec.Configuration change, updating configuration")
 		err = rm.updateFunctionConfiguration(ctx, desired, delta)
 		if err != nil {
 			return nil, err
 		}
 	} else if hasCodeChanged(delta) {
+		rlog.Info("detected Spec.Code change, updating code")
 		err := rm.updateFunctionCode(ctx, desired, delta, latest)
 		if err != nil {
 			if strings.Contains(err.Error(), "Provide a valid source image.") {
