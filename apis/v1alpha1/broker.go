@@ -22,33 +22,97 @@ import (
 
 // BrokerSpec defines the desired state of Broker.
 type BrokerSpec struct {
+
+	// Optional. The authentication strategy used to secure the broker. The default
+	// is SIMPLE.
 	AuthenticationStrategy *string `json:"authenticationStrategy,omitempty"`
+	// Enables automatic upgrades to new patch versions for brokers as new versions
+	// are released and supported by Amazon MQ. Automatic upgrades occur during
+	// the scheduled maintenance window or after a manual broker reboot. Set to
+	// true by default, if no value is specified.
+	//
+	// Must be set to true for ActiveMQ brokers version 5.18 and above and for RabbitMQ
+	// brokers version 3.13 and above.
+	AutoMinorVersionUpgrade *bool `json:"autoMinorVersionUpgrade,omitempty"`
+	// A list of information about the configuration.
+	Configuration *ConfigurationID `json:"configuration,omitempty"`
+	// The unique ID that the requester receives for the created broker. Amazon
+	// MQ passes your ID with the API action.
+	//
+	// We recommend using a Universally Unique Identifier (UUID) for the creatorRequestId.
+	// You may omit the creatorRequestId if your application doesn't require idempotency.
+	CreatorRequestID *string `json:"creatorRequestID,omitempty"`
+	// Required. The broker's deployment mode.
 	// +kubebuilder:validation:Required
-	AutoMinorVersionUpgrade *bool            `json:"autoMinorVersionUpgrade"`
-	Configuration           *ConfigurationID `json:"configuration,omitempty"`
-	CreatorRequestID        *string          `json:"creatorRequestID,omitempty"`
-	// +kubebuilder:validation:Required
-	DeploymentMode    *string            `json:"deploymentMode"`
+	DeploymentMode *string `json:"deploymentMode"`
+	// Encryption options for the broker.
 	EncryptionOptions *EncryptionOptions `json:"encryptionOptions,omitempty"`
+	// Required. The type of broker engine. Currently, Amazon MQ supports ACTIVEMQ
+	// and RABBITMQ.
 	// +kubebuilder:validation:Required
 	EngineType *string `json:"engineType"`
+	// The broker engine version. Defaults to the latest available version for the
+	// specified broker engine type. For more information, see the ActiveMQ version
+	// management (https://docs.aws.amazon.com//amazon-mq/latest/developer-guide/activemq-version-management.html)
+	// and the RabbitMQ version management (https://docs.aws.amazon.com//amazon-mq/latest/developer-guide/rabbitmq-version-management.html)
+	// sections in the Amazon MQ Developer Guide.
+	EngineVersion *string `json:"engineVersion,omitempty"`
+	// Required. The broker's instance type.
 	// +kubebuilder:validation:Required
-	EngineVersion *string `json:"engineVersion"`
-	// +kubebuilder:validation:Required
-	HostInstanceType           *string                  `json:"hostInstanceType"`
-	LDAPServerMetadata         *LDAPServerMetadataInput `json:"ldapServerMetadata,omitempty"`
-	Logs                       *Logs                    `json:"logs,omitempty"`
-	MaintenanceWindowStartTime *WeeklyStartTime         `json:"maintenanceWindowStartTime,omitempty"`
+	HostInstanceType *string `json:"hostInstanceType"`
+	// Optional. The metadata of the LDAP server used to authenticate and authorize
+	// connections to the broker. Does not apply to RabbitMQ brokers.
+	LDAPServerMetadata *LDAPServerMetadataInput `json:"ldapServerMetadata,omitempty"`
+	// Enables Amazon CloudWatch logging for brokers.
+	Logs *Logs `json:"logs,omitempty"`
+	// The parameters that determine the WeeklyStartTime.
+	MaintenanceWindowStartTime *WeeklyStartTime `json:"maintenanceWindowStartTime,omitempty"`
+	// Required. The broker's name. This value must be unique in your Amazon Web
+	// Services account, 1-50 characters long, must contain only letters, numbers,
+	// dashes, and underscores, and must not contain white spaces, brackets, wildcard
+	// characters, or special characters.
+	//
+	// Do not add personally identifiable information (PII) or other confidential
+	// or sensitive information in broker names. Broker names are accessible to
+	// other Amazon Web Services services, including CloudWatch Logs. Broker names
+	// are not intended to be used for private or sensitive data.
 	// +kubebuilder:validation:Required
 	Name *string `json:"name"`
+	// Enables connections from applications outside of the VPC that hosts the broker's
+	// subnets. Set to false by default, if no value is provided.
 	// +kubebuilder:validation:Required
 	PubliclyAccessible *bool                                      `json:"publiclyAccessible"`
 	SecurityGroupRefs  []*ackv1alpha1.AWSResourceReferenceWrapper `json:"securityGroupRefs,omitempty"`
-	SecurityGroups     []*string                                  `json:"securityGroups,omitempty"`
-	StorageType        *string                                    `json:"storageType,omitempty"`
-	SubnetIDs          []*string                                  `json:"subnetIDs,omitempty"`
-	SubnetRefs         []*ackv1alpha1.AWSResourceReferenceWrapper `json:"subnetRefs,omitempty"`
-	Tags               map[string]*string                         `json:"tags,omitempty"`
+	// The list of rules (1 minimum, 125 maximum) that authorize connections to
+	// brokers.
+	SecurityGroups []*string `json:"securityGroups,omitempty"`
+	// The broker's storage type.
+	StorageType *string `json:"storageType,omitempty"`
+	// The list of groups that define which subnets and IP ranges the broker can
+	// use from different Availability Zones. If you specify more than one subnet,
+	// the subnets must be in different Availability Zones. Amazon MQ will not be
+	// able to create VPC endpoints for your broker with multiple subnets in the
+	// same Availability Zone. A SINGLE_INSTANCE deployment requires one subnet
+	// (for example, the default subnet). An ACTIVE_STANDBY_MULTI_AZ Amazon MQ for
+	// ActiveMQ deployment requires two subnets. A CLUSTER_MULTI_AZ Amazon MQ for
+	// RabbitMQ deployment has no subnet requirements when deployed with public
+	// accessibility. Deployment without public accessibility requires at least
+	// one subnet.
+	//
+	// If you specify subnets in a shared VPC (https://docs.aws.amazon.com/vpc/latest/userguide/vpc-sharing.html)
+	// for a RabbitMQ broker, the associated VPC to which the specified subnets
+	// belong must be owned by your Amazon Web Services account. Amazon MQ will
+	// not be able to create VPC endpoints in VPCs that are not owned by your Amazon
+	// Web Services account.
+	SubnetIDs  []*string                                  `json:"subnetIDs,omitempty"`
+	SubnetRefs []*ackv1alpha1.AWSResourceReferenceWrapper `json:"subnetRefs,omitempty"`
+	// Create tags when creating the broker.
+	Tags map[string]*string `json:"tags,omitempty"`
+	// The list of broker users (persons or applications) who can access queues
+	// and topics. For Amazon MQ for RabbitMQ brokers, one and only one administrative
+	// user is accepted and created when a broker is first provisioned. All subsequent
+	// broker users are created by making RabbitMQ API calls directly to brokers
+	// or via the RabbitMQ web console.
 	// +kubebuilder:validation:Required
 	Users []*User `json:"users"`
 }
@@ -66,10 +130,13 @@ type BrokerStatus struct {
 	// resource
 	// +kubebuilder:validation:Optional
 	Conditions []*ackv1alpha1.Condition `json:"conditions"`
+	// The unique ID that Amazon MQ generates for the broker.
 	// +kubebuilder:validation:Optional
 	BrokerID *string `json:"brokerID,omitempty"`
+	// A list of information about allocated brokers.
 	// +kubebuilder:validation:Optional
 	BrokerInstances []*BrokerInstance `json:"brokerInstances,omitempty"`
+	// The broker's status.
 	// +kubebuilder:validation:Optional
 	BrokerState *string `json:"brokerState,omitempty"`
 }

@@ -18,19 +18,20 @@ package v1alpha1
 type AuthenticationStrategy string
 
 const (
-	AuthenticationStrategy_SIMPLE AuthenticationStrategy = "SIMPLE"
 	AuthenticationStrategy_LDAP   AuthenticationStrategy = "LDAP"
+	AuthenticationStrategy_SIMPLE AuthenticationStrategy = "SIMPLE"
 )
 
 type BrokerState string
 
 const (
-	BrokerState_CREATION_IN_PROGRESS     BrokerState = "CREATION_IN_PROGRESS"
 	BrokerState_CREATION_FAILED          BrokerState = "CREATION_FAILED"
-	BrokerState_DELETION_IN_PROGRESS     BrokerState = "DELETION_IN_PROGRESS"
-	BrokerState_RUNNING                  BrokerState = "RUNNING"
-	BrokerState_REBOOT_IN_PROGRESS       BrokerState = "REBOOT_IN_PROGRESS"
+	BrokerState_CREATION_IN_PROGRESS     BrokerState = "CREATION_IN_PROGRESS"
 	BrokerState_CRITICAL_ACTION_REQUIRED BrokerState = "CRITICAL_ACTION_REQUIRED"
+	BrokerState_DELETION_IN_PROGRESS     BrokerState = "DELETION_IN_PROGRESS"
+	BrokerState_REBOOT_IN_PROGRESS       BrokerState = "REBOOT_IN_PROGRESS"
+	BrokerState_REPLICA                  BrokerState = "REPLICA"
+	BrokerState_RUNNING                  BrokerState = "RUNNING"
 )
 
 type BrokerStorageType string
@@ -44,28 +45,35 @@ type ChangeType string
 
 const (
 	ChangeType_CREATE ChangeType = "CREATE"
-	ChangeType_UPDATE ChangeType = "UPDATE"
 	ChangeType_DELETE ChangeType = "DELETE"
+	ChangeType_UPDATE ChangeType = "UPDATE"
+)
+
+type DataReplicationMode string
+
+const (
+	DataReplicationMode_CRDR DataReplicationMode = "CRDR"
+	DataReplicationMode_NONE DataReplicationMode = "NONE"
 )
 
 type DayOfWeek string
 
 const (
-	DayOfWeek_MONDAY    DayOfWeek = "MONDAY"
-	DayOfWeek_TUESDAY   DayOfWeek = "TUESDAY"
-	DayOfWeek_WEDNESDAY DayOfWeek = "WEDNESDAY"
-	DayOfWeek_THURSDAY  DayOfWeek = "THURSDAY"
 	DayOfWeek_FRIDAY    DayOfWeek = "FRIDAY"
+	DayOfWeek_MONDAY    DayOfWeek = "MONDAY"
 	DayOfWeek_SATURDAY  DayOfWeek = "SATURDAY"
 	DayOfWeek_SUNDAY    DayOfWeek = "SUNDAY"
+	DayOfWeek_THURSDAY  DayOfWeek = "THURSDAY"
+	DayOfWeek_TUESDAY   DayOfWeek = "TUESDAY"
+	DayOfWeek_WEDNESDAY DayOfWeek = "WEDNESDAY"
 )
 
 type DeploymentMode string
 
 const (
-	DeploymentMode_SINGLE_INSTANCE         DeploymentMode = "SINGLE_INSTANCE"
 	DeploymentMode_ACTIVE_STANDBY_MULTI_AZ DeploymentMode = "ACTIVE_STANDBY_MULTI_AZ"
 	DeploymentMode_CLUSTER_MULTI_AZ        DeploymentMode = "CLUSTER_MULTI_AZ"
+	DeploymentMode_SINGLE_INSTANCE         DeploymentMode = "SINGLE_INSTANCE"
 )
 
 type EngineType string
@@ -75,10 +83,17 @@ const (
 	EngineType_RABBITMQ EngineType = "RABBITMQ"
 )
 
+type PromoteMode string
+
+const (
+	PromoteMode_FAILOVER   PromoteMode = "FAILOVER"
+	PromoteMode_SWITCHOVER PromoteMode = "SWITCHOVER"
+)
+
 type SanitizationWarningReason string
 
 const (
-	SanitizationWarningReason_DISALLOWED_ELEMENT_REMOVED      SanitizationWarningReason = "DISALLOWED_ELEMENT_REMOVED"
 	SanitizationWarningReason_DISALLOWED_ATTRIBUTE_REMOVED    SanitizationWarningReason = "DISALLOWED_ATTRIBUTE_REMOVED"
+	SanitizationWarningReason_DISALLOWED_ELEMENT_REMOVED      SanitizationWarningReason = "DISALLOWED_ELEMENT_REMOVED"
 	SanitizationWarningReason_INVALID_ATTRIBUTE_VALUE_REMOVED SanitizationWarningReason = "INVALID_ATTRIBUTE_VALUE_REMOVED"
 )

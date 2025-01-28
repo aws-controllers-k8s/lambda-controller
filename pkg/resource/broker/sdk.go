@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
 	"strings"
 
@@ -28,8 +29,10 @@ import (
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
-	"github.com/aws/aws-sdk-go/aws"
-	svcsdk "github.com/aws/aws-sdk-go/service/mq"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	svcsdk "github.com/aws/aws-sdk-go-v2/service/mq"
+	svcsdktypes "github.com/aws/aws-sdk-go-v2/service/mq/types"
+	smithy "github.com/aws/smithy-go"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -40,8 +43,7 @@ import (
 var (
 	_ = &metav1.Time{}
 	_ = strings.ToLower("")
-	_ = &aws.JSONValue{}
-	_ = &svcsdk.MQ{}
+	_ = &svcsdk.Client{}
 	_ = &svcapitypes.Broker{}
 	_ = ackv1alpha1.AWSAccountID("")
 	_ = &ackerr.NotFound
@@ -49,6 +51,7 @@ var (
 	_ = &reflect.Value{}
 	_ = fmt.Sprintf("")
 	_ = &ackrequeue.NoRequeue{}
+	_ = &aws.Config{}
 )
 
 // sdkFind returns SDK-specific information about a supplied resource
@@ -73,14 +76,12 @@ func (rm *resourceManager) sdkFind(
 		return nil, err
 	}
 
-	var resp *svcsdk.DescribeBrokerResponse
-	resp, err = rm.sdkapi.DescribeBrokerWithContext(ctx, input)
+	var resp *svcsdk.DescribeBrokerOutput
+	resp, err = rm.sdkapi.DescribeBroker(ctx, input)
 	rm.metrics.RecordAPICall("READ_ONE", "DescribeBroker", err)
 	if err != nil {
-		if reqErr, ok := ackerr.AWSRequestFailure(err); ok && reqErr.StatusCode() == 404 {
-			return nil, ackerr.NotFound
-		}
-		if awsErr, ok := ackerr.AWSError(err); ok && awsErr.Code() == "NotFoundException" {
+		var awsErr smithy.APIError
+		if errors.As(err, &awsErr) && awsErr.ErrorCode() == "NotFoundException" {
 			return nil, ackerr.NotFound
 		}
 		return nil, err
@@ -90,8 +91,8 @@ func (rm *resourceManager) sdkFind(
 	// the original Kubernetes object we passed to the function
 	ko := r.ko.DeepCopy()
 
-	if resp.AuthenticationStrategy != nil {
-		ko.Spec.AuthenticationStrategy = resp.AuthenticationStrategy
+	if resp.AuthenticationStrategy != "" {
+		ko.Spec.AuthenticationStrategy = aws.String(string(resp.AuthenticationStrategy))
 	} else {
 		ko.Spec.AuthenticationStrategy = nil
 	}
@@ -120,13 +121,7 @@ func (rm *resourceManager) sdkFind(
 				f5elem.ConsoleURL = f5iter.ConsoleURL
 			}
 			if f5iter.Endpoints != nil {
-				f5elemf1 := []*string{}
-				for _, f5elemf1iter := range f5iter.Endpoints {
-					var f5elemf1elem string
-					f5elemf1elem = *f5elemf1iter
-					f5elemf1 = append(f5elemf1, &f5elemf1elem)
-				}
-				f5elem.Endpoints = f5elemf1
+				f5elem.Endpoints = aws.StringSlice(f5iter.Endpoints)
 			}
 			if f5iter.IpAddress != nil {
 				f5elem.IPAddress = f5iter.IpAddress
@@ -137,30 +132,30 @@ func (rm *resourceManager) sdkFind(
 	} else {
 		ko.Status.BrokerInstances = nil
 	}
-	if resp.BrokerState != nil {
-		ko.Status.BrokerState = resp.BrokerState
+	if resp.BrokerState != "" {
+		ko.Status.BrokerState = aws.String(string(resp.BrokerState))
 	} else {
 		ko.Status.BrokerState = nil
 	}
-	if resp.DeploymentMode != nil {
-		ko.Spec.DeploymentMode = resp.DeploymentMode
+	if resp.DeploymentMode != "" {
+		ko.Spec.DeploymentMode = aws.String(string(resp.DeploymentMode))
 	} else {
 		ko.Spec.DeploymentMode = nil
 	}
 	if resp.EncryptionOptions != nil {
-		f11 := &svcapitypes.EncryptionOptions{}
+		f13 := &svcapitypes.EncryptionOptions{}
 		if resp.EncryptionOptions.KmsKeyId != nil {
-			f11.KMSKeyID = resp.EncryptionOptions.KmsKeyId
+			f13.KMSKeyID = resp.EncryptionOptions.KmsKeyId
 		}
 		if resp.EncryptionOptions.UseAwsOwnedKey != nil {
-			f11.UseAWSOwnedKey = resp.EncryptionOptions.UseAwsOwnedKey
+			f13.UseAWSOwnedKey = resp.EncryptionOptions.UseAwsOwnedKey
 		}
-		ko.Spec.EncryptionOptions = f11
+		ko.Spec.EncryptionOptions = f13
 	} else {
 		ko.Spec.EncryptionOptions = nil
 	}
-	if resp.EngineType != nil {
-		ko.Spec.EngineType = resp.EngineType
+	if resp.EngineType != "" {
+		ko.Spec.EngineType = aws.String(string(resp.EngineType))
 	} else {
 		ko.Spec.EngineType = nil
 	}
@@ -175,71 +170,65 @@ func (rm *resourceManager) sdkFind(
 		ko.Spec.HostInstanceType = nil
 	}
 	if resp.LdapServerMetadata != nil {
-		f15 := &svcapitypes.LDAPServerMetadataInput{}
+		f17 := &svcapitypes.LDAPServerMetadataInput{}
 		if resp.LdapServerMetadata.Hosts != nil {
-			f15f0 := []*string{}
-			for _, f15f0iter := range resp.LdapServerMetadata.Hosts {
-				var f15f0elem string
-				f15f0elem = *f15f0iter
-				f15f0 = append(f15f0, &f15f0elem)
-			}
-			f15.Hosts = f15f0
+			f17.Hosts = aws.StringSlice(resp.LdapServerMetadata.Hosts)
 		}
 		if resp.LdapServerMetadata.RoleBase != nil {
-			f15.RoleBase = resp.LdapServerMetadata.RoleBase
+			f17.RoleBase = resp.LdapServerMetadata.RoleBase
 		}
 		if resp.LdapServerMetadata.RoleName != nil {
-			f15.RoleName = resp.LdapServerMetadata.RoleName
+			f17.RoleName = resp.LdapServerMetadata.RoleName
 		}
 		if resp.LdapServerMetadata.RoleSearchMatching != nil {
-			f15.RoleSearchMatching = resp.LdapServerMetadata.RoleSearchMatching
+			f17.RoleSearchMatching = resp.LdapServerMetadata.RoleSearchMatching
 		}
 		if resp.LdapServerMetadata.RoleSearchSubtree != nil {
-			f15.RoleSearchSubtree = resp.LdapServerMetadata.RoleSearchSubtree
+			f17.RoleSearchSubtree = resp.LdapServerMetadata.RoleSearchSubtree
 		}
 		if resp.LdapServerMetadata.ServiceAccountUsername != nil {
-			f15.ServiceAccountUsername = resp.LdapServerMetadata.ServiceAccountUsername
+			f17.ServiceAccountUsername = resp.LdapServerMetadata.ServiceAccountUsername
 		}
 		if resp.LdapServerMetadata.UserBase != nil {
-			f15.UserBase = resp.LdapServerMetadata.UserBase
+			f17.UserBase = resp.LdapServerMetadata.UserBase
 		}
 		if resp.LdapServerMetadata.UserRoleName != nil {
-			f15.UserRoleName = resp.LdapServerMetadata.UserRoleName
+			f17.UserRoleName = resp.LdapServerMetadata.UserRoleName
 		}
 		if resp.LdapServerMetadata.UserSearchMatching != nil {
-			f15.UserSearchMatching = resp.LdapServerMetadata.UserSearchMatching
+			f17.UserSearchMatching = resp.LdapServerMetadata.UserSearchMatching
 		}
 		if resp.LdapServerMetadata.UserSearchSubtree != nil {
-			f15.UserSearchSubtree = resp.LdapServerMetadata.UserSearchSubtree
+			f17.UserSearchSubtree = resp.LdapServerMetadata.UserSearchSubtree
 		}
-		ko.Spec.LDAPServerMetadata = f15
+		ko.Spec.LDAPServerMetadata = f17
 	} else {
 		ko.Spec.LDAPServerMetadata = nil
 	}
 	if resp.Logs != nil {
-		f16 := &svcapitypes.Logs{}
+		f18 := &svcapitypes.Logs{}
 		if resp.Logs.Audit != nil {
-			f16.Audit = resp.Logs.Audit
+			f18.Audit = resp.Logs.Audit
 		}
 		if resp.Logs.General != nil {
-			f16.General = resp.Logs.General
+			f18.General = resp.Logs.General
 		}
-		ko.Spec.Logs = f16
+		ko.Spec.Logs = f18
 	} else {
 		ko.Spec.Logs = nil
 	}
 	if resp.MaintenanceWindowStartTime != nil {
-		f17 := &svcapitypes.WeeklyStartTime{}
-		if resp.MaintenanceWindowStartTime.DayOfWeek != nil {
-			f17.DayOfWeek = resp.MaintenanceWindowStartTime.DayOfWeek
+		f19 := &svcapitypes.WeeklyStartTime{}
+		if resp.MaintenanceWindowStartTime.DayOfWeek != "" {
+			f19.DayOfWeek = aws.String(string(resp.MaintenanceWindowStartTime.DayOfWeek))
 		}
 		if resp.MaintenanceWindowStartTime.TimeOfDay != nil {
-			f17.TimeOfDay = resp.MaintenanceWindowStartTime.TimeOfDay
+			f19.TimeOfDay = resp.MaintenanceWindowStartTime.TimeOfDay
 		}
 		if resp.MaintenanceWindowStartTime.TimeZone != nil {
-			f17.TimeZone = resp.MaintenanceWindowStartTime.TimeZone
+			f19.TimeZone = resp.MaintenanceWindowStartTime.TimeZone
 		}
-		ko.Spec.MaintenanceWindowStartTime = f17
+		ko.Spec.MaintenanceWindowStartTime = f19
 	} else {
 		ko.Spec.MaintenanceWindowStartTime = nil
 	}
@@ -249,53 +238,35 @@ func (rm *resourceManager) sdkFind(
 		ko.Spec.PubliclyAccessible = nil
 	}
 	if resp.SecurityGroups != nil {
-		f24 := []*string{}
-		for _, f24iter := range resp.SecurityGroups {
-			var f24elem string
-			f24elem = *f24iter
-			f24 = append(f24, &f24elem)
-		}
-		ko.Spec.SecurityGroups = f24
+		ko.Spec.SecurityGroups = aws.StringSlice(resp.SecurityGroups)
 	} else {
 		ko.Spec.SecurityGroups = nil
 	}
-	if resp.StorageType != nil {
-		ko.Spec.StorageType = resp.StorageType
+	if resp.StorageType != "" {
+		ko.Spec.StorageType = aws.String(string(resp.StorageType))
 	} else {
 		ko.Spec.StorageType = nil
 	}
 	if resp.SubnetIds != nil {
-		f26 := []*string{}
-		for _, f26iter := range resp.SubnetIds {
-			var f26elem string
-			f26elem = *f26iter
-			f26 = append(f26, &f26elem)
-		}
-		ko.Spec.SubnetIDs = f26
+		ko.Spec.SubnetIDs = aws.StringSlice(resp.SubnetIds)
 	} else {
 		ko.Spec.SubnetIDs = nil
 	}
 	if resp.Tags != nil {
-		f27 := map[string]*string{}
-		for f27key, f27valiter := range resp.Tags {
-			var f27val string
-			f27val = *f27valiter
-			f27[f27key] = &f27val
-		}
-		ko.Spec.Tags = f27
+		ko.Spec.Tags = aws.StringMap(resp.Tags)
 	} else {
 		ko.Spec.Tags = nil
 	}
 	if resp.Users != nil {
-		f28 := []*svcapitypes.User{}
-		for _, f28iter := range resp.Users {
-			f28elem := &svcapitypes.User{}
-			if f28iter.Username != nil {
-				f28elem.Username = f28iter.Username
+		f32 := []*svcapitypes.User{}
+		for _, f32iter := range resp.Users {
+			f32elem := &svcapitypes.User{}
+			if f32iter.Username != nil {
+				f32elem.Username = f32iter.Username
 			}
-			f28 = append(f28, f28elem)
+			f32 = append(f32, f32elem)
 		}
-		ko.Spec.Users = f28
+		ko.Spec.Users = f32
 	} else {
 		ko.Spec.Users = nil
 	}
@@ -325,7 +296,7 @@ func (rm *resourceManager) newDescribeRequestPayload(
 	res := &svcsdk.DescribeBrokerInput{}
 
 	if r.ko.Status.BrokerID != nil {
-		res.SetBrokerId(*r.ko.Status.BrokerID)
+		res.BrokerId = r.ko.Status.BrokerID
 	}
 
 	return res, nil
@@ -348,9 +319,9 @@ func (rm *resourceManager) sdkCreate(
 		return nil, err
 	}
 
-	var resp *svcsdk.CreateBrokerResponse
+	var resp *svcsdk.CreateBrokerOutput
 	_ = resp
-	resp, err = rm.sdkapi.CreateBrokerWithContext(ctx, input)
+	resp, err = rm.sdkapi.CreateBroker(ctx, input)
 	rm.metrics.RecordAPICall("CREATE", "CreateBroker", err)
 	if err != nil {
 		return nil, err
@@ -381,167 +352,142 @@ func (rm *resourceManager) sdkCreate(
 func (rm *resourceManager) newCreateRequestPayload(
 	ctx context.Context,
 	r *resource,
-) (*svcsdk.CreateBrokerRequest, error) {
-	res := &svcsdk.CreateBrokerRequest{}
+) (*svcsdk.CreateBrokerInput, error) {
+	res := &svcsdk.CreateBrokerInput{}
 
 	if r.ko.Spec.AuthenticationStrategy != nil {
-		res.SetAuthenticationStrategy(*r.ko.Spec.AuthenticationStrategy)
+		res.AuthenticationStrategy = svcsdktypes.AuthenticationStrategy(*r.ko.Spec.AuthenticationStrategy)
 	}
 	if r.ko.Spec.AutoMinorVersionUpgrade != nil {
-		res.SetAutoMinorVersionUpgrade(*r.ko.Spec.AutoMinorVersionUpgrade)
+		res.AutoMinorVersionUpgrade = r.ko.Spec.AutoMinorVersionUpgrade
 	}
 	if r.ko.Spec.Name != nil {
-		res.SetBrokerName(*r.ko.Spec.Name)
+		res.BrokerName = r.ko.Spec.Name
 	}
 	if r.ko.Spec.Configuration != nil {
-		f3 := &svcsdk.ConfigurationId{}
+		f3 := &svcsdktypes.ConfigurationId{}
 		if r.ko.Spec.Configuration.ID != nil {
-			f3.SetId(*r.ko.Spec.Configuration.ID)
+			f3.Id = r.ko.Spec.Configuration.ID
 		}
 		if r.ko.Spec.Configuration.Revision != nil {
-			f3.SetRevision(*r.ko.Spec.Configuration.Revision)
+			revisionCopy0 := *r.ko.Spec.Configuration.Revision
+			if revisionCopy0 > math.MaxInt32 || revisionCopy0 < math.MinInt32 {
+				return nil, fmt.Errorf("error: field Revision is of type int32")
+			}
+			revisionCopy := int32(revisionCopy0)
+			f3.Revision = &revisionCopy
 		}
-		res.SetConfiguration(f3)
+		res.Configuration = f3
 	}
 	if r.ko.Spec.CreatorRequestID != nil {
-		res.SetCreatorRequestId(*r.ko.Spec.CreatorRequestID)
+		res.CreatorRequestId = r.ko.Spec.CreatorRequestID
 	}
 	if r.ko.Spec.DeploymentMode != nil {
-		res.SetDeploymentMode(*r.ko.Spec.DeploymentMode)
+		res.DeploymentMode = svcsdktypes.DeploymentMode(*r.ko.Spec.DeploymentMode)
 	}
 	if r.ko.Spec.EncryptionOptions != nil {
-		f6 := &svcsdk.EncryptionOptions{}
+		f6 := &svcsdktypes.EncryptionOptions{}
 		if r.ko.Spec.EncryptionOptions.KMSKeyID != nil {
-			f6.SetKmsKeyId(*r.ko.Spec.EncryptionOptions.KMSKeyID)
+			f6.KmsKeyId = r.ko.Spec.EncryptionOptions.KMSKeyID
 		}
 		if r.ko.Spec.EncryptionOptions.UseAWSOwnedKey != nil {
-			f6.SetUseAwsOwnedKey(*r.ko.Spec.EncryptionOptions.UseAWSOwnedKey)
+			f6.UseAwsOwnedKey = r.ko.Spec.EncryptionOptions.UseAWSOwnedKey
 		}
-		res.SetEncryptionOptions(f6)
+		res.EncryptionOptions = f6
 	}
 	if r.ko.Spec.EngineType != nil {
-		res.SetEngineType(*r.ko.Spec.EngineType)
+		res.EngineType = svcsdktypes.EngineType(*r.ko.Spec.EngineType)
 	}
 	if r.ko.Spec.EngineVersion != nil {
-		res.SetEngineVersion(*r.ko.Spec.EngineVersion)
+		res.EngineVersion = r.ko.Spec.EngineVersion
 	}
 	if r.ko.Spec.HostInstanceType != nil {
-		res.SetHostInstanceType(*r.ko.Spec.HostInstanceType)
+		res.HostInstanceType = r.ko.Spec.HostInstanceType
 	}
 	if r.ko.Spec.LDAPServerMetadata != nil {
-		f10 := &svcsdk.LdapServerMetadataInput{}
+		f10 := &svcsdktypes.LdapServerMetadataInput{}
 		if r.ko.Spec.LDAPServerMetadata.Hosts != nil {
-			f10f0 := []*string{}
-			for _, f10f0iter := range r.ko.Spec.LDAPServerMetadata.Hosts {
-				var f10f0elem string
-				f10f0elem = *f10f0iter
-				f10f0 = append(f10f0, &f10f0elem)
-			}
-			f10.SetHosts(f10f0)
+			f10.Hosts = aws.ToStringSlice(r.ko.Spec.LDAPServerMetadata.Hosts)
 		}
 		if r.ko.Spec.LDAPServerMetadata.RoleBase != nil {
-			f10.SetRoleBase(*r.ko.Spec.LDAPServerMetadata.RoleBase)
+			f10.RoleBase = r.ko.Spec.LDAPServerMetadata.RoleBase
 		}
 		if r.ko.Spec.LDAPServerMetadata.RoleName != nil {
-			f10.SetRoleName(*r.ko.Spec.LDAPServerMetadata.RoleName)
+			f10.RoleName = r.ko.Spec.LDAPServerMetadata.RoleName
 		}
 		if r.ko.Spec.LDAPServerMetadata.RoleSearchMatching != nil {
-			f10.SetRoleSearchMatching(*r.ko.Spec.LDAPServerMetadata.RoleSearchMatching)
+			f10.RoleSearchMatching = r.ko.Spec.LDAPServerMetadata.RoleSearchMatching
 		}
 		if r.ko.Spec.LDAPServerMetadata.RoleSearchSubtree != nil {
-			f10.SetRoleSearchSubtree(*r.ko.Spec.LDAPServerMetadata.RoleSearchSubtree)
+			f10.RoleSearchSubtree = r.ko.Spec.LDAPServerMetadata.RoleSearchSubtree
 		}
 		if r.ko.Spec.LDAPServerMetadata.ServiceAccountPassword != nil {
-			f10.SetServiceAccountPassword(*r.ko.Spec.LDAPServerMetadata.ServiceAccountPassword)
+			f10.ServiceAccountPassword = r.ko.Spec.LDAPServerMetadata.ServiceAccountPassword
 		}
 		if r.ko.Spec.LDAPServerMetadata.ServiceAccountUsername != nil {
-			f10.SetServiceAccountUsername(*r.ko.Spec.LDAPServerMetadata.ServiceAccountUsername)
+			f10.ServiceAccountUsername = r.ko.Spec.LDAPServerMetadata.ServiceAccountUsername
 		}
 		if r.ko.Spec.LDAPServerMetadata.UserBase != nil {
-			f10.SetUserBase(*r.ko.Spec.LDAPServerMetadata.UserBase)
+			f10.UserBase = r.ko.Spec.LDAPServerMetadata.UserBase
 		}
 		if r.ko.Spec.LDAPServerMetadata.UserRoleName != nil {
-			f10.SetUserRoleName(*r.ko.Spec.LDAPServerMetadata.UserRoleName)
+			f10.UserRoleName = r.ko.Spec.LDAPServerMetadata.UserRoleName
 		}
 		if r.ko.Spec.LDAPServerMetadata.UserSearchMatching != nil {
-			f10.SetUserSearchMatching(*r.ko.Spec.LDAPServerMetadata.UserSearchMatching)
+			f10.UserSearchMatching = r.ko.Spec.LDAPServerMetadata.UserSearchMatching
 		}
 		if r.ko.Spec.LDAPServerMetadata.UserSearchSubtree != nil {
-			f10.SetUserSearchSubtree(*r.ko.Spec.LDAPServerMetadata.UserSearchSubtree)
+			f10.UserSearchSubtree = r.ko.Spec.LDAPServerMetadata.UserSearchSubtree
 		}
-		res.SetLdapServerMetadata(f10)
+		res.LdapServerMetadata = f10
 	}
 	if r.ko.Spec.Logs != nil {
-		f11 := &svcsdk.Logs{}
+		f11 := &svcsdktypes.Logs{}
 		if r.ko.Spec.Logs.Audit != nil {
-			f11.SetAudit(*r.ko.Spec.Logs.Audit)
+			f11.Audit = r.ko.Spec.Logs.Audit
 		}
 		if r.ko.Spec.Logs.General != nil {
-			f11.SetGeneral(*r.ko.Spec.Logs.General)
+			f11.General = r.ko.Spec.Logs.General
 		}
-		res.SetLogs(f11)
+		res.Logs = f11
 	}
 	if r.ko.Spec.MaintenanceWindowStartTime != nil {
-		f12 := &svcsdk.WeeklyStartTime{}
+		f12 := &svcsdktypes.WeeklyStartTime{}
 		if r.ko.Spec.MaintenanceWindowStartTime.DayOfWeek != nil {
-			f12.SetDayOfWeek(*r.ko.Spec.MaintenanceWindowStartTime.DayOfWeek)
+			f12.DayOfWeek = svcsdktypes.DayOfWeek(*r.ko.Spec.MaintenanceWindowStartTime.DayOfWeek)
 		}
 		if r.ko.Spec.MaintenanceWindowStartTime.TimeOfDay != nil {
-			f12.SetTimeOfDay(*r.ko.Spec.MaintenanceWindowStartTime.TimeOfDay)
+			f12.TimeOfDay = r.ko.Spec.MaintenanceWindowStartTime.TimeOfDay
 		}
 		if r.ko.Spec.MaintenanceWindowStartTime.TimeZone != nil {
-			f12.SetTimeZone(*r.ko.Spec.MaintenanceWindowStartTime.TimeZone)
+			f12.TimeZone = r.ko.Spec.MaintenanceWindowStartTime.TimeZone
 		}
-		res.SetMaintenanceWindowStartTime(f12)
+		res.MaintenanceWindowStartTime = f12
 	}
 	if r.ko.Spec.PubliclyAccessible != nil {
-		res.SetPubliclyAccessible(*r.ko.Spec.PubliclyAccessible)
+		res.PubliclyAccessible = r.ko.Spec.PubliclyAccessible
 	}
 	if r.ko.Spec.SecurityGroups != nil {
-		f14 := []*string{}
-		for _, f14iter := range r.ko.Spec.SecurityGroups {
-			var f14elem string
-			f14elem = *f14iter
-			f14 = append(f14, &f14elem)
-		}
-		res.SetSecurityGroups(f14)
+		res.SecurityGroups = aws.ToStringSlice(r.ko.Spec.SecurityGroups)
 	}
 	if r.ko.Spec.StorageType != nil {
-		res.SetStorageType(*r.ko.Spec.StorageType)
+		res.StorageType = svcsdktypes.BrokerStorageType(*r.ko.Spec.StorageType)
 	}
 	if r.ko.Spec.SubnetIDs != nil {
-		f16 := []*string{}
-		for _, f16iter := range r.ko.Spec.SubnetIDs {
-			var f16elem string
-			f16elem = *f16iter
-			f16 = append(f16, &f16elem)
-		}
-		res.SetSubnetIds(f16)
+		res.SubnetIds = aws.ToStringSlice(r.ko.Spec.SubnetIDs)
 	}
 	if r.ko.Spec.Tags != nil {
-		f17 := map[string]*string{}
-		for f17key, f17valiter := range r.ko.Spec.Tags {
-			var f17val string
-			f17val = *f17valiter
-			f17[f17key] = &f17val
-		}
-		res.SetTags(f17)
+		res.Tags = aws.ToStringMap(r.ko.Spec.Tags)
 	}
 	if r.ko.Spec.Users != nil {
-		f18 := []*svcsdk.User{}
+		f18 := []svcsdktypes.User{}
 		for _, f18iter := range r.ko.Spec.Users {
-			f18elem := &svcsdk.User{}
+			f18elem := &svcsdktypes.User{}
 			if f18iter.ConsoleAccess != nil {
-				f18elem.SetConsoleAccess(*f18iter.ConsoleAccess)
+				f18elem.ConsoleAccess = f18iter.ConsoleAccess
 			}
 			if f18iter.Groups != nil {
-				f18elemf1 := []*string{}
-				for _, f18elemf1iter := range f18iter.Groups {
-					var f18elemf1elem string
-					f18elemf1elem = *f18elemf1iter
-					f18elemf1 = append(f18elemf1, &f18elemf1elem)
-				}
-				f18elem.SetGroups(f18elemf1)
+				f18elem.Groups = aws.ToStringSlice(f18iter.Groups)
 			}
 			if f18iter.Password != nil {
 				tmpSecret, err := rm.rr.SecretValueFromReference(ctx, f18iter.Password)
@@ -549,15 +495,18 @@ func (rm *resourceManager) newCreateRequestPayload(
 					return nil, ackrequeue.Needed(err)
 				}
 				if tmpSecret != "" {
-					f18elem.SetPassword(tmpSecret)
+					f18elem.Password = aws.String(tmpSecret)
 				}
 			}
-			if f18iter.Username != nil {
-				f18elem.SetUsername(*f18iter.Username)
+			if f18iter.ReplicationUser != nil {
+				f18elem.ReplicationUser = f18iter.ReplicationUser
 			}
-			f18 = append(f18, f18elem)
+			if f18iter.Username != nil {
+				f18elem.Username = f18iter.Username
+			}
+			f18 = append(f18, *f18elem)
 		}
-		res.SetUsers(f18)
+		res.Users = f18
 	}
 
 	return res, nil
@@ -598,9 +547,9 @@ func (rm *resourceManager) sdkUpdate(
 		return nil, err
 	}
 
-	var resp *svcsdk.UpdateBrokerResponse
+	var resp *svcsdk.UpdateBrokerOutput
 	_ = resp
-	resp, err = rm.sdkapi.UpdateBrokerWithContext(ctx, input)
+	resp, err = rm.sdkapi.UpdateBroker(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateBroker", err)
 	if err != nil {
 		return nil, err
@@ -612,8 +561,8 @@ func (rm *resourceManager) sdkUpdate(
 	latestKOStatus := latest.ko.DeepCopy().Status
 	ko.Status = latestKOStatus
 
-	if resp.AuthenticationStrategy != nil {
-		ko.Spec.AuthenticationStrategy = resp.AuthenticationStrategy
+	if resp.AuthenticationStrategy != "" {
+		ko.Spec.AuthenticationStrategy = aws.String(string(resp.AuthenticationStrategy))
 	} else {
 		ko.Spec.AuthenticationStrategy = nil
 	}
@@ -633,7 +582,8 @@ func (rm *resourceManager) sdkUpdate(
 			f3.ID = resp.Configuration.Id
 		}
 		if resp.Configuration.Revision != nil {
-			f3.Revision = resp.Configuration.Revision
+			revisionCopy := int64(*resp.Configuration.Revision)
+			f3.Revision = &revisionCopy
 		}
 		ko.Spec.Configuration = f3
 	} else {
@@ -650,82 +600,70 @@ func (rm *resourceManager) sdkUpdate(
 		ko.Spec.HostInstanceType = nil
 	}
 	if resp.LdapServerMetadata != nil {
-		f6 := &svcapitypes.LDAPServerMetadataInput{}
+		f8 := &svcapitypes.LDAPServerMetadataInput{}
 		if resp.LdapServerMetadata.Hosts != nil {
-			f6f0 := []*string{}
-			for _, f6f0iter := range resp.LdapServerMetadata.Hosts {
-				var f6f0elem string
-				f6f0elem = *f6f0iter
-				f6f0 = append(f6f0, &f6f0elem)
-			}
-			f6.Hosts = f6f0
+			f8.Hosts = aws.StringSlice(resp.LdapServerMetadata.Hosts)
 		}
 		if resp.LdapServerMetadata.RoleBase != nil {
-			f6.RoleBase = resp.LdapServerMetadata.RoleBase
+			f8.RoleBase = resp.LdapServerMetadata.RoleBase
 		}
 		if resp.LdapServerMetadata.RoleName != nil {
-			f6.RoleName = resp.LdapServerMetadata.RoleName
+			f8.RoleName = resp.LdapServerMetadata.RoleName
 		}
 		if resp.LdapServerMetadata.RoleSearchMatching != nil {
-			f6.RoleSearchMatching = resp.LdapServerMetadata.RoleSearchMatching
+			f8.RoleSearchMatching = resp.LdapServerMetadata.RoleSearchMatching
 		}
 		if resp.LdapServerMetadata.RoleSearchSubtree != nil {
-			f6.RoleSearchSubtree = resp.LdapServerMetadata.RoleSearchSubtree
+			f8.RoleSearchSubtree = resp.LdapServerMetadata.RoleSearchSubtree
 		}
 		if resp.LdapServerMetadata.ServiceAccountUsername != nil {
-			f6.ServiceAccountUsername = resp.LdapServerMetadata.ServiceAccountUsername
+			f8.ServiceAccountUsername = resp.LdapServerMetadata.ServiceAccountUsername
 		}
 		if resp.LdapServerMetadata.UserBase != nil {
-			f6.UserBase = resp.LdapServerMetadata.UserBase
+			f8.UserBase = resp.LdapServerMetadata.UserBase
 		}
 		if resp.LdapServerMetadata.UserRoleName != nil {
-			f6.UserRoleName = resp.LdapServerMetadata.UserRoleName
+			f8.UserRoleName = resp.LdapServerMetadata.UserRoleName
 		}
 		if resp.LdapServerMetadata.UserSearchMatching != nil {
-			f6.UserSearchMatching = resp.LdapServerMetadata.UserSearchMatching
+			f8.UserSearchMatching = resp.LdapServerMetadata.UserSearchMatching
 		}
 		if resp.LdapServerMetadata.UserSearchSubtree != nil {
-			f6.UserSearchSubtree = resp.LdapServerMetadata.UserSearchSubtree
+			f8.UserSearchSubtree = resp.LdapServerMetadata.UserSearchSubtree
 		}
-		ko.Spec.LDAPServerMetadata = f6
+		ko.Spec.LDAPServerMetadata = f8
 	} else {
 		ko.Spec.LDAPServerMetadata = nil
 	}
 	if resp.Logs != nil {
-		f7 := &svcapitypes.Logs{}
+		f9 := &svcapitypes.Logs{}
 		if resp.Logs.Audit != nil {
-			f7.Audit = resp.Logs.Audit
+			f9.Audit = resp.Logs.Audit
 		}
 		if resp.Logs.General != nil {
-			f7.General = resp.Logs.General
+			f9.General = resp.Logs.General
 		}
-		ko.Spec.Logs = f7
+		ko.Spec.Logs = f9
 	} else {
 		ko.Spec.Logs = nil
 	}
 	if resp.MaintenanceWindowStartTime != nil {
-		f8 := &svcapitypes.WeeklyStartTime{}
-		if resp.MaintenanceWindowStartTime.DayOfWeek != nil {
-			f8.DayOfWeek = resp.MaintenanceWindowStartTime.DayOfWeek
+		f10 := &svcapitypes.WeeklyStartTime{}
+		if resp.MaintenanceWindowStartTime.DayOfWeek != "" {
+			f10.DayOfWeek = aws.String(string(resp.MaintenanceWindowStartTime.DayOfWeek))
 		}
 		if resp.MaintenanceWindowStartTime.TimeOfDay != nil {
-			f8.TimeOfDay = resp.MaintenanceWindowStartTime.TimeOfDay
+			f10.TimeOfDay = resp.MaintenanceWindowStartTime.TimeOfDay
 		}
 		if resp.MaintenanceWindowStartTime.TimeZone != nil {
-			f8.TimeZone = resp.MaintenanceWindowStartTime.TimeZone
+			f10.TimeZone = resp.MaintenanceWindowStartTime.TimeZone
 		}
-		ko.Spec.MaintenanceWindowStartTime = f8
+		ko.Spec.MaintenanceWindowStartTime = f10
 	} else {
 		ko.Spec.MaintenanceWindowStartTime = nil
 	}
 	if resp.SecurityGroups != nil {
-		f9 := []*string{}
-		for _, f9iter := range resp.SecurityGroups {
-			var f9elem string
-			f9elem = *f9iter
-			f9 = append(f9, &f9elem)
-		}
-		ko.Spec.SecurityGroups = f9
+		ko.Spec.SecurityGroups = aws.StringSlice(resp.SecurityGroups)
 	} else {
 		ko.Spec.SecurityGroups = nil
 	}
@@ -740,108 +678,101 @@ func (rm *resourceManager) newUpdateRequestPayload(
 	ctx context.Context,
 	r *resource,
 	delta *ackcompare.Delta,
-) (*svcsdk.UpdateBrokerRequest, error) {
-	res := &svcsdk.UpdateBrokerRequest{}
+) (*svcsdk.UpdateBrokerInput, error) {
+	res := &svcsdk.UpdateBrokerInput{}
 
 	if r.ko.Spec.AuthenticationStrategy != nil {
-		res.SetAuthenticationStrategy(*r.ko.Spec.AuthenticationStrategy)
+		res.AuthenticationStrategy = svcsdktypes.AuthenticationStrategy(*r.ko.Spec.AuthenticationStrategy)
 	}
 	if r.ko.Spec.AutoMinorVersionUpgrade != nil {
-		res.SetAutoMinorVersionUpgrade(*r.ko.Spec.AutoMinorVersionUpgrade)
+		res.AutoMinorVersionUpgrade = r.ko.Spec.AutoMinorVersionUpgrade
 	}
 	if r.ko.Status.BrokerID != nil {
-		res.SetBrokerId(*r.ko.Status.BrokerID)
+		res.BrokerId = r.ko.Status.BrokerID
 	}
 	if r.ko.Spec.Configuration != nil {
-		f3 := &svcsdk.ConfigurationId{}
+		f3 := &svcsdktypes.ConfigurationId{}
 		if r.ko.Spec.Configuration.ID != nil {
-			f3.SetId(*r.ko.Spec.Configuration.ID)
+			f3.Id = r.ko.Spec.Configuration.ID
 		}
 		if r.ko.Spec.Configuration.Revision != nil {
-			f3.SetRevision(*r.ko.Spec.Configuration.Revision)
+			revisionCopy0 := *r.ko.Spec.Configuration.Revision
+			if revisionCopy0 > math.MaxInt32 || revisionCopy0 < math.MinInt32 {
+				return nil, fmt.Errorf("error: field Revision is of type int32")
+			}
+			revisionCopy := int32(revisionCopy0)
+			f3.Revision = &revisionCopy
 		}
-		res.SetConfiguration(f3)
+		res.Configuration = f3
 	}
 	if r.ko.Spec.EngineVersion != nil {
-		res.SetEngineVersion(*r.ko.Spec.EngineVersion)
+		res.EngineVersion = r.ko.Spec.EngineVersion
 	}
 	if r.ko.Spec.HostInstanceType != nil {
-		res.SetHostInstanceType(*r.ko.Spec.HostInstanceType)
+		res.HostInstanceType = r.ko.Spec.HostInstanceType
 	}
 	if r.ko.Spec.LDAPServerMetadata != nil {
-		f6 := &svcsdk.LdapServerMetadataInput{}
+		f7 := &svcsdktypes.LdapServerMetadataInput{}
 		if r.ko.Spec.LDAPServerMetadata.Hosts != nil {
-			f6f0 := []*string{}
-			for _, f6f0iter := range r.ko.Spec.LDAPServerMetadata.Hosts {
-				var f6f0elem string
-				f6f0elem = *f6f0iter
-				f6f0 = append(f6f0, &f6f0elem)
-			}
-			f6.SetHosts(f6f0)
+			f7.Hosts = aws.ToStringSlice(r.ko.Spec.LDAPServerMetadata.Hosts)
 		}
 		if r.ko.Spec.LDAPServerMetadata.RoleBase != nil {
-			f6.SetRoleBase(*r.ko.Spec.LDAPServerMetadata.RoleBase)
+			f7.RoleBase = r.ko.Spec.LDAPServerMetadata.RoleBase
 		}
 		if r.ko.Spec.LDAPServerMetadata.RoleName != nil {
-			f6.SetRoleName(*r.ko.Spec.LDAPServerMetadata.RoleName)
+			f7.RoleName = r.ko.Spec.LDAPServerMetadata.RoleName
 		}
 		if r.ko.Spec.LDAPServerMetadata.RoleSearchMatching != nil {
-			f6.SetRoleSearchMatching(*r.ko.Spec.LDAPServerMetadata.RoleSearchMatching)
+			f7.RoleSearchMatching = r.ko.Spec.LDAPServerMetadata.RoleSearchMatching
 		}
 		if r.ko.Spec.LDAPServerMetadata.RoleSearchSubtree != nil {
-			f6.SetRoleSearchSubtree(*r.ko.Spec.LDAPServerMetadata.RoleSearchSubtree)
+			f7.RoleSearchSubtree = r.ko.Spec.LDAPServerMetadata.RoleSearchSubtree
 		}
 		if r.ko.Spec.LDAPServerMetadata.ServiceAccountPassword != nil {
-			f6.SetServiceAccountPassword(*r.ko.Spec.LDAPServerMetadata.ServiceAccountPassword)
+			f7.ServiceAccountPassword = r.ko.Spec.LDAPServerMetadata.ServiceAccountPassword
 		}
 		if r.ko.Spec.LDAPServerMetadata.ServiceAccountUsername != nil {
-			f6.SetServiceAccountUsername(*r.ko.Spec.LDAPServerMetadata.ServiceAccountUsername)
+			f7.ServiceAccountUsername = r.ko.Spec.LDAPServerMetadata.ServiceAccountUsername
 		}
 		if r.ko.Spec.LDAPServerMetadata.UserBase != nil {
-			f6.SetUserBase(*r.ko.Spec.LDAPServerMetadata.UserBase)
+			f7.UserBase = r.ko.Spec.LDAPServerMetadata.UserBase
 		}
 		if r.ko.Spec.LDAPServerMetadata.UserRoleName != nil {
-			f6.SetUserRoleName(*r.ko.Spec.LDAPServerMetadata.UserRoleName)
+			f7.UserRoleName = r.ko.Spec.LDAPServerMetadata.UserRoleName
 		}
 		if r.ko.Spec.LDAPServerMetadata.UserSearchMatching != nil {
-			f6.SetUserSearchMatching(*r.ko.Spec.LDAPServerMetadata.UserSearchMatching)
+			f7.UserSearchMatching = r.ko.Spec.LDAPServerMetadata.UserSearchMatching
 		}
 		if r.ko.Spec.LDAPServerMetadata.UserSearchSubtree != nil {
-			f6.SetUserSearchSubtree(*r.ko.Spec.LDAPServerMetadata.UserSearchSubtree)
+			f7.UserSearchSubtree = r.ko.Spec.LDAPServerMetadata.UserSearchSubtree
 		}
-		res.SetLdapServerMetadata(f6)
+		res.LdapServerMetadata = f7
 	}
 	if r.ko.Spec.Logs != nil {
-		f7 := &svcsdk.Logs{}
+		f8 := &svcsdktypes.Logs{}
 		if r.ko.Spec.Logs.Audit != nil {
-			f7.SetAudit(*r.ko.Spec.Logs.Audit)
+			f8.Audit = r.ko.Spec.Logs.Audit
 		}
 		if r.ko.Spec.Logs.General != nil {
-			f7.SetGeneral(*r.ko.Spec.Logs.General)
+			f8.General = r.ko.Spec.Logs.General
 		}
-		res.SetLogs(f7)
+		res.Logs = f8
 	}
 	if r.ko.Spec.MaintenanceWindowStartTime != nil {
-		f8 := &svcsdk.WeeklyStartTime{}
+		f9 := &svcsdktypes.WeeklyStartTime{}
 		if r.ko.Spec.MaintenanceWindowStartTime.DayOfWeek != nil {
-			f8.SetDayOfWeek(*r.ko.Spec.MaintenanceWindowStartTime.DayOfWeek)
+			f9.DayOfWeek = svcsdktypes.DayOfWeek(*r.ko.Spec.MaintenanceWindowStartTime.DayOfWeek)
 		}
 		if r.ko.Spec.MaintenanceWindowStartTime.TimeOfDay != nil {
-			f8.SetTimeOfDay(*r.ko.Spec.MaintenanceWindowStartTime.TimeOfDay)
+			f9.TimeOfDay = r.ko.Spec.MaintenanceWindowStartTime.TimeOfDay
 		}
 		if r.ko.Spec.MaintenanceWindowStartTime.TimeZone != nil {
-			f8.SetTimeZone(*r.ko.Spec.MaintenanceWindowStartTime.TimeZone)
+			f9.TimeZone = r.ko.Spec.MaintenanceWindowStartTime.TimeZone
 		}
-		res.SetMaintenanceWindowStartTime(f8)
+		res.MaintenanceWindowStartTime = f9
 	}
 	if r.ko.Spec.SecurityGroups != nil {
-		f9 := []*string{}
-		for _, f9iter := range r.ko.Spec.SecurityGroups {
-			var f9elem string
-			f9elem = *f9iter
-			f9 = append(f9, &f9elem)
-		}
-		res.SetSecurityGroups(f9)
+		res.SecurityGroups = aws.ToStringSlice(r.ko.Spec.SecurityGroups)
 	}
 
 	return res, nil
@@ -865,9 +796,9 @@ func (rm *resourceManager) sdkDelete(
 	if err != nil {
 		return nil, err
 	}
-	var resp *svcsdk.DeleteBrokerResponse
+	var resp *svcsdk.DeleteBrokerOutput
 	_ = resp
-	resp, err = rm.sdkapi.DeleteBrokerWithContext(ctx, input)
+	resp, err = rm.sdkapi.DeleteBroker(ctx, input)
 	rm.metrics.RecordAPICall("DELETE", "DeleteBroker", err)
 	return nil, err
 }
@@ -880,7 +811,7 @@ func (rm *resourceManager) newDeleteRequestPayload(
 	res := &svcsdk.DeleteBrokerInput{}
 
 	if r.ko.Status.BrokerID != nil {
-		res.SetBrokerId(*r.ko.Status.BrokerID)
+		res.BrokerId = r.ko.Status.BrokerID
 	}
 
 	return res, nil

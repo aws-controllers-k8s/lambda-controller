@@ -28,8 +28,7 @@ var (
 	_ = ackv1alpha1.AWSAccountID("")
 )
 
-// The action required to resolve a broker issue when the broker is in a CRITICAL_ACTION_REQUIRED
-// state.
+// Action required for a broker.
 type ActionRequired struct {
 	ActionRequiredCode *string `json:"actionRequiredCode,omitempty"`
 	ActionRequiredInfo *string `json:"actionRequiredInfo,omitempty"`
@@ -97,8 +96,6 @@ type Configuration struct {
 }
 
 // A list of information about the configuration.
-//
-// Does not apply to RabbitMQ brokers.
 type ConfigurationID struct {
 	ID       *string `json:"id,omitempty"`
 	Revision *int64  `json:"revision,omitempty"`
@@ -114,18 +111,26 @@ type ConfigurationRevision struct {
 // Broker configuration information
 type Configurations struct {
 	// A list of information about the configuration.
-	//
-	// Does not apply to RabbitMQ brokers.
 	Current *ConfigurationID   `json:"current,omitempty"`
 	History []*ConfigurationID `json:"history,omitempty"`
 	// A list of information about the configuration.
-	//
-	// Does not apply to RabbitMQ brokers.
 	Pending *ConfigurationID `json:"pending,omitempty"`
 }
 
-// Does not apply to RabbitMQ brokers.
-//
+// Specifies a broker in a data replication pair.
+type DataReplicationCounterpart struct {
+	BrokerID *string `json:"brokerID,omitempty"`
+	Region   *string `json:"region,omitempty"`
+}
+
+// The replication details of the data replication-enabled broker. Only returned
+// if dataReplicationMode or pendingDataReplicationMode is set to CRDR.
+type DataReplicationMetadataOutput struct {
+	// Specifies a broker in a data replication pair.
+	DataReplicationCounterpart *DataReplicationCounterpart `json:"dataReplicationCounterpart,omitempty"`
+	DataReplicationRole        *string                     `json:"dataReplicationRole,omitempty"`
+}
+
 // Encryption options for the broker.
 type EncryptionOptions struct {
 	KMSKeyID       *string `json:"kmsKeyID,omitempty"`
@@ -193,22 +198,23 @@ type PendingLogs struct {
 	General *bool `json:"general,omitempty"`
 }
 
-// Returns information about the XML element or attribute that was sanitized
-// in the configuration.
+// Returns information about the configuration element or attribute that was
+// sanitized in the configuration.
 type SanitizationWarning struct {
 	AttributeName *string `json:"attributeName,omitempty"`
 	ElementName   *string `json:"elementName,omitempty"`
 }
 
-// A user associated with the broker. For RabbitMQ brokers, one and only one
-// administrative user is accepted and created when a broker is first provisioned.
-// All subsequent broker users are created by making RabbitMQ API calls directly
-// to brokers or via the RabbitMQ web console.
+// A user associated with the broker. For Amazon MQ for RabbitMQ brokers, one
+// and only one administrative user is accepted and created when a broker is
+// first provisioned. All subsequent broker users are created by making RabbitMQ
+// API calls directly to brokers or via the RabbitMQ web console.
 type User struct {
-	ConsoleAccess *bool                           `json:"consoleAccess,omitempty"`
-	Groups        []*string                       `json:"groups,omitempty"`
-	Password      *ackv1alpha1.SecretKeyReference `json:"password,omitempty"`
-	Username      *string                         `json:"username,omitempty"`
+	ConsoleAccess   *bool                           `json:"consoleAccess,omitempty"`
+	Groups          []*string                       `json:"groups,omitempty"`
+	Password        *ackv1alpha1.SecretKeyReference `json:"password,omitempty"`
+	ReplicationUser *bool                           `json:"replicationUser,omitempty"`
+	Username        *string                         `json:"username,omitempty"`
 }
 
 // Returns information about the status of the changes pending for the ActiveMQ
