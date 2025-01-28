@@ -97,14 +97,24 @@ func (rm *resourceManager) ReadOne(
 	ctx context.Context,
 	res acktypes.AWSResource,
 ) (acktypes.AWSResource, error) {
+	rlog := ackrtlog.FromContext(ctx)
 	r := rm.concreteResource(res)
 	if r.ko == nil {
 		// Should never happen... if it does, it's buggy code.
 		panic("resource manager's ReadOne() method received resource with nil CR object")
 	}
 	observed, err := rm.sdkFind(ctx, r)
+	rlog.Info("observed", "observed", observed)
+	if observed == nil {
+		rlog.Info("observed is nil")
+	} else {
+		rlog.Info("observed is not nil")
+		rlog.Info("observed's value is ", observed.ko)
+	}
 	if err != nil {
+		rlog.Info("inside read one error", "error", err)
 		if observed != nil {
+			rlog.Info("observed is not nil")
 			return rm.onError(observed, err)
 		}
 		return rm.onError(r, err)
