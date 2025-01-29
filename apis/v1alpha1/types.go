@@ -42,7 +42,7 @@ type AccountUsage struct {
 	TotalCodeSize *int64 `json:"totalCodeSize,omitempty"`
 }
 
-// Provides configuration information about a Lambda function alias (https://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html).
+// Provides configuration information about a Lambda function alias (https://docs.aws.amazon.com/lambda/latest/dg/configuration-aliases.html).
 type AliasConfiguration struct {
 	AliasARN        *string `json:"aliasARN,omitempty"`
 	Description     *string `json:"description,omitempty"`
@@ -115,7 +115,18 @@ type DestinationConfig struct {
 	// A destination for events that failed processing.
 	OnFailure *OnFailure `json:"onFailure,omitempty"`
 	// A destination for events that were processed successfully.
+	//
+	// To retain records of successful asynchronous invocations (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#invocation-async-destinations),
+	// you can configure an Amazon SNS topic, Amazon SQS queue, Lambda function,
+	// or Amazon EventBridge event bus as the destination.
 	OnSuccess *OnSuccess `json:"onSuccess,omitempty"`
+}
+
+// Specific configuration settings for a DocumentDB event source.
+type DocumentDBEventSourceConfig struct {
+	CollectionName *string `json:"collectionName,omitempty"`
+	DatabaseName   *string `json:"databaseName,omitempty"`
+	FullDocument   *string `json:"fullDocument,omitempty"`
 }
 
 // A function's environment variable settings. You can use environment variables
@@ -142,7 +153,8 @@ type EnvironmentResponse struct {
 }
 
 // The size of the function's /tmp directory in MB. The default value is 512,
-// but it can be any whole number between 512 and 10,240 MB.
+// but can be any whole number between 512 and 10,240 MB. For more information,
+// see Configuring ephemeral storage (console) (https://docs.aws.amazon.com/lambda/latest/dg/configuration-function-common.html#configuration-ephemeral-storage).
 type EphemeralStorage struct {
 	Size *int64 `json:"size,omitempty"`
 }
@@ -158,18 +170,33 @@ type EventSourceMappingConfiguration struct {
 	// A configuration object that specifies the destination of an event after Lambda
 	// processes it.
 	DestinationConfig *DestinationConfig `json:"destinationConfig,omitempty"`
-	EventSourceARN    *string            `json:"eventSourceARN,omitempty"`
+	// Specific configuration settings for a DocumentDB event source.
+	DocumentDBEventSourceConfig *DocumentDBEventSourceConfig `json:"documentDBEventSourceConfig,omitempty"`
+	EventSourceARN              *string                      `json:"eventSourceARN,omitempty"`
+	EventSourceMappingARN       *string                      `json:"eventSourceMappingARN,omitempty"`
 	// An object that contains the filters for an event source.
-	FilterCriteria                 *FilterCriteria `json:"filterCriteria,omitempty"`
-	FunctionARN                    *string         `json:"functionARN,omitempty"`
-	FunctionResponseTypes          []*string       `json:"functionResponseTypes,omitempty"`
-	LastModified                   *metav1.Time    `json:"lastModified,omitempty"`
-	LastProcessingResult           *string         `json:"lastProcessingResult,omitempty"`
-	MaximumBatchingWindowInSeconds *int64          `json:"maximumBatchingWindowInSeconds,omitempty"`
-	MaximumRecordAgeInSeconds      *int64          `json:"maximumRecordAgeInSeconds,omitempty"`
-	MaximumRetryAttempts           *int64          `json:"maximumRetryAttempts,omitempty"`
-	ParallelizationFactor          *int64          `json:"parallelizationFactor,omitempty"`
-	Queues                         []*string       `json:"queues,omitempty"`
+	FilterCriteria *FilterCriteria `json:"filterCriteria,omitempty"`
+	// An object that contains details about an error related to filter criteria
+	// encryption.
+	FilterCriteriaError            *FilterCriteriaError `json:"filterCriteriaError,omitempty"`
+	FunctionARN                    *string              `json:"functionARN,omitempty"`
+	FunctionResponseTypes          []*string            `json:"functionResponseTypes,omitempty"`
+	KMSKeyARN                      *string              `json:"kmsKeyARN,omitempty"`
+	LastModified                   *metav1.Time         `json:"lastModified,omitempty"`
+	LastProcessingResult           *string              `json:"lastProcessingResult,omitempty"`
+	MaximumBatchingWindowInSeconds *int64               `json:"maximumBatchingWindowInSeconds,omitempty"`
+	MaximumRecordAgeInSeconds      *int64               `json:"maximumRecordAgeInSeconds,omitempty"`
+	MaximumRetryAttempts           *int64               `json:"maximumRetryAttempts,omitempty"`
+	// The metrics configuration for your event source. Use this configuration object
+	// to define which metrics you want your event source mapping to produce.
+	MetricsConfig         *EventSourceMappingMetricsConfig `json:"metricsConfig,omitempty"`
+	ParallelizationFactor *int64                           `json:"parallelizationFactor,omitempty"`
+	// The Provisioned Mode (https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventsourcemapping.html#invocation-eventsourcemapping-provisioned-mode)
+	// configuration for the event source. Use Provisioned Mode to customize the
+	// minimum and maximum number of event pollers for your event source. An event
+	// poller is a compute unit that provides approximately 5 MBps of throughput.
+	ProvisionedPollerConfig *ProvisionedPollerConfig `json:"provisionedPollerConfig,omitempty"`
+	Queues                  []*string                `json:"queues,omitempty"`
 	// (Amazon SQS only) The scaling configuration for the event source. To remove
 	// the configuration, pass an empty value.
 	ScalingConfig *ScalingConfig `json:"scalingConfig,omitempty"`
@@ -185,6 +212,12 @@ type EventSourceMappingConfiguration struct {
 	Topics                            []*string                          `json:"topics,omitempty"`
 	TumblingWindowInSeconds           *int64                             `json:"tumblingWindowInSeconds,omitempty"`
 	UUID                              *string                            `json:"uuid,omitempty"`
+}
+
+// The metrics configuration for your event source. Use this configuration object
+// to define which metrics you want your event source mapping to produce.
+type EventSourceMappingMetricsConfig struct {
+	Metrics []*string `json:"metrics,omitempty"`
 }
 
 // Details about the connection between a Lambda function and an Amazon EFS
@@ -203,6 +236,13 @@ type Filter struct {
 // An object that contains the filters for an event source.
 type FilterCriteria struct {
 	Filters []*Filter `json:"filters,omitempty"`
+}
+
+// An object that contains details about an error related to filter criteria
+// encryption.
+type FilterCriteriaError struct {
+	ErrorCode *string `json:"errorCode,omitempty"`
+	Message   *string `json:"message,omitempty"`
 }
 
 // The code for the Lambda function. You can either specify an object in Amazon
@@ -225,6 +265,7 @@ type FunctionCodeLocation struct {
 	Location         *string `json:"location,omitempty"`
 	RepositoryType   *string `json:"repositoryType,omitempty"`
 	ResolvedImageURI *string `json:"resolvedImageURI,omitempty"`
+	SourceKMSKeyARN  *string `json:"sourceKMSKeyARN,omitempty"`
 }
 
 // Details about a function's configuration.
@@ -241,7 +282,8 @@ type FunctionConfiguration struct {
 	// fails, the response contains details about the error.
 	Environment *EnvironmentResponse `json:"environment,omitempty"`
 	// The size of the function's /tmp directory in MB. The default value is 512,
-	// but it can be any whole number between 512 and 10,240 MB.
+	// but can be any whole number between 512 and 10,240 MB. For more information,
+	// see Configuring ephemeral storage (console) (https://docs.aws.amazon.com/lambda/latest/dg/configuration-function-common.html#configuration-ephemeral-storage).
 	EphemeralStorage  *EphemeralStorage   `json:"ephemeralStorage,omitempty"`
 	FileSystemConfigs []*FileSystemConfig `json:"fileSystemConfigs,omitempty"`
 	FunctionARN       *string             `json:"functionARN,omitempty"`
@@ -255,14 +297,18 @@ type FunctionConfiguration struct {
 	LastUpdateStatusReason     *string              `json:"lastUpdateStatusReason,omitempty"`
 	LastUpdateStatusReasonCode *string              `json:"lastUpdateStatusReasonCode,omitempty"`
 	Layers                     []*Layer             `json:"layers,omitempty"`
-	MasterARN                  *string              `json:"masterARN,omitempty"`
-	MemorySize                 *int64               `json:"memorySize,omitempty"`
-	PackageType                *string              `json:"packageType,omitempty"`
-	RevisionID                 *string              `json:"revisionID,omitempty"`
-	Role                       *string              `json:"role,omitempty"`
-	Runtime                    *string              `json:"runtime,omitempty"`
-	SigningJobARN              *string              `json:"signingJobARN,omitempty"`
-	SigningProfileVersionARN   *string              `json:"signingProfileVersionARN,omitempty"`
+	// The function's Amazon CloudWatch Logs configuration settings.
+	LoggingConfig *LoggingConfig `json:"loggingConfig,omitempty"`
+	MasterARN     *string        `json:"masterARN,omitempty"`
+	MemorySize    *int64         `json:"memorySize,omitempty"`
+	PackageType   *string        `json:"packageType,omitempty"`
+	RevisionID    *string        `json:"revisionID,omitempty"`
+	Role          *string        `json:"role,omitempty"`
+	Runtime       *string        `json:"runtime,omitempty"`
+	// The ARN of the runtime and any errors that occured.
+	RuntimeVersionConfig     *RuntimeVersionConfig `json:"runtimeVersionConfig,omitempty"`
+	SigningJobARN            *string               `json:"signingJobARN,omitempty"`
+	SigningProfileVersionARN *string               `json:"signingProfileVersionARN,omitempty"`
 	// The function's SnapStart (https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html)
 	// setting.
 	SnapStart       *SnapStartResponse `json:"snapStart,omitempty"`
@@ -298,6 +344,7 @@ type FunctionURLConfig_SDK struct {
 	CreationTime     *string `json:"creationTime,omitempty"`
 	FunctionARN      *string `json:"functionARN,omitempty"`
 	FunctionURL      *string `json:"functionURL,omitempty"`
+	InvokeMode       *string `json:"invokeMode,omitempty"`
 	LastModifiedTime *string `json:"lastModifiedTime,omitempty"`
 }
 
@@ -322,6 +369,18 @@ type ImageConfigResponse struct {
 	// Configuration values that override the container image Dockerfile settings.
 	// For more information, see Container image settings (https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#images-parms).
 	ImageConfig *ImageConfig `json:"imageConfig,omitempty"`
+}
+
+// A chunk of the streamed response payload.
+type InvokeResponseStreamUpdate struct {
+	Payload []byte `json:"payload,omitempty"`
+}
+
+// A response confirming that the event stream is complete.
+type InvokeWithResponseStreamCompleteEvent struct {
+	ErrorCode    *string `json:"errorCode,omitempty"`
+	ErrorDetails *string `json:"errorDetails,omitempty"`
+	LogResult    *string `json:"logResult,omitempty"`
 }
 
 // An Lambda layer (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html).
@@ -369,12 +428,24 @@ type LayersListItem struct {
 	LayerName             *string                `json:"layerName,omitempty"`
 }
 
+// The function's Amazon CloudWatch Logs configuration settings.
+type LoggingConfig struct {
+	ApplicationLogLevel *string `json:"applicationLogLevel,omitempty"`
+	LogFormat           *string `json:"logFormat,omitempty"`
+	LogGroup            *string `json:"logGroup,omitempty"`
+	SystemLogLevel      *string `json:"systemLogLevel,omitempty"`
+}
+
 // A destination for events that failed processing.
 type OnFailure struct {
 	Destination *string `json:"destination,omitempty"`
 }
 
 // A destination for events that were processed successfully.
+//
+// To retain records of successful asynchronous invocations (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#invocation-async-destinations),
+// you can configure an Amazon SNS topic, Amazon SQS queue, Lambda function,
+// or Amazon EventBridge event bus as the destination.
 type OnSuccess struct {
 	Destination *string `json:"destination,omitempty"`
 }
@@ -386,6 +457,15 @@ type ProvisionedConcurrencyConfigListItem struct {
 	LastModified                             *string `json:"lastModified,omitempty"`
 	RequestedProvisionedConcurrentExecutions *int64  `json:"requestedProvisionedConcurrentExecutions,omitempty"`
 	StatusReason                             *string `json:"statusReason,omitempty"`
+}
+
+// The Provisioned Mode (https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventsourcemapping.html#invocation-eventsourcemapping-provisioned-mode)
+// configuration for the event source. Use Provisioned Mode to customize the
+// minimum and maximum number of event pollers for your event source. An event
+// poller is a compute unit that provides approximately 5 MBps of throughput.
+type ProvisionedPollerConfig struct {
+	MaximumPollers *int64 `json:"maximumPollers,omitempty"`
+	MinimumPollers *int64 `json:"minimumPollers,omitempty"`
 }
 
 type PutFunctionConcurrencyOutput struct {
@@ -408,6 +488,21 @@ type PutProvisionedConcurrencyConfigInput struct {
 	Qualifier                       *string `json:"qualifier,omitempty"`
 }
 
+// The ARN of the runtime and any errors that occured.
+type RuntimeVersionConfig struct {
+	// Any error returned when the runtime version information for the function
+	// could not be retrieved.
+	Error             *RuntimeVersionError `json:"error,omitempty"`
+	RuntimeVersionARN *string              `json:"runtimeVersionARN,omitempty"`
+}
+
+// Any error returned when the runtime version information for the function
+// could not be retrieved.
+type RuntimeVersionError struct {
+	ErrorCode *string `json:"errorCode,omitempty"`
+	Message   *string `json:"message,omitempty"`
+}
+
 // (Amazon SQS only) The scaling configuration for the event source. To remove
 // the configuration, pass an empty value.
 type ScalingConfig struct {
@@ -424,12 +519,9 @@ type SelfManagedKafkaEventSourceConfig struct {
 	ConsumerGroupID *string `json:"consumerGroupID,omitempty"`
 }
 
-// The function's Lambda SnapStart setting. Set ApplyOn to PublishedVersions
-// to create a snapshot of the initialized execution environment when you publish
-// a function version.
-//
-// SnapStart is supported with the java11 runtime. For more information, see
-// Improving startup performance with Lambda SnapStart (https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html).
+// The function's Lambda SnapStart (https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html)
+// setting. Set ApplyOn to PublishedVersions to create a snapshot of the initialized
+// execution environment when you publish a function version.
 type SnapStart struct {
 	ApplyOn *string `json:"applyOn,omitempty"`
 }
@@ -448,6 +540,12 @@ type SourceAccessConfiguration struct {
 	URI  *string `json:"uRI,omitempty"`
 }
 
+// An object that contains details about an error related to retrieving tags.
+type TagsError struct {
+	ErrorCode *string `json:"errorCode,omitempty"`
+	Message   *string `json:"message,omitempty"`
+}
+
 // The function's X-Ray (https://docs.aws.amazon.com/lambda/latest/dg/services-xray.html)
 // tracing configuration. To sample and record incoming requests, set Mode to
 // Active.
@@ -464,7 +562,8 @@ type TracingConfigResponse struct {
 // For more information, see Configuring a Lambda function to access resources
 // in a VPC (https://docs.aws.amazon.com/lambda/latest/dg/configuration-vpc.html).
 type VPCConfig struct {
-	SecurityGroupIDs []*string `json:"securityGroupIDs,omitempty"`
+	IPv6AllowedForDualStack *bool     `json:"ipv6AllowedForDualStack,omitempty"`
+	SecurityGroupIDs        []*string `json:"securityGroupIDs,omitempty"`
 	// Reference field for SecurityGroupIDs
 	SecurityGroupRefs []*ackv1alpha1.AWSResourceReferenceWrapper `json:"securityGroupRefs,omitempty"`
 	SubnetIDs         []*string                                  `json:"subnetIDs,omitempty"`

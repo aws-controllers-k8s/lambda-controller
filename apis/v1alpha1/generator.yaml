@@ -6,6 +6,27 @@ ignore:
     # EventSourceMapping
     # FunctionUrlConfig
     # LayerVersion
+  field_paths:
+  - CreateCodeSigningConfigInput.Tags
+  - CreateEventSourceMappingInput.DocumentDBEventSourceConfig
+  - CreateEventSourceMappingInput.KMSKeyArn
+  - CreateEventSourceMappingInput.MetricsConfig
+  - CreateEventSourceMappingInput.ProvisionedPollerConfig
+  - CreateEventSourceMappingInput.Tags
+  - CreateEventSourceMappingOutput.FilterCriteriaError
+  - CreateEventSourceMappingOutput.DocumentDBEventSourceConfig
+  - CreateEventSourceMappingOutput.KMSKeyArn
+  - CreateEventSourceMappingOutput.MetricsConfig
+  - CreateEventSourceMappingOutput.ProvisionedPollerConfig
+  - FunctionCode.SourceKMSKeyArn
+  - CreateFunctionInput.LoggingConfig
+  - CreateFunctionOutput.RuntimeVersionConfig
+  - CreateFunctionOutput.LoggingConfig
+  - CreateFunctionUrlConfigInput.InvokeMode
+  - CreateFunctionUrlConfigOutput.InvokeMode
+  - PublishVersionOutput.LoggingConfig
+  - PublishVersionOutput.RuntimeVersionConfig
+  - PublishVersionOutput.VpcConfig.Ipv6AllowedForDualStack
 operations:
   GetFunction:
     output_wrapper_field_path: Configuration

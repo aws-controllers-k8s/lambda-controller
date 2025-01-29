@@ -28,8 +28,10 @@ import (
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
-	"github.com/aws/aws-sdk-go/aws"
-	svcsdk "github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	svcsdk "github.com/aws/aws-sdk-go-v2/service/lambda"
+	svcsdktypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	smithy "github.com/aws/smithy-go"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -40,8 +42,7 @@ import (
 var (
 	_ = &metav1.Time{}
 	_ = strings.ToLower("")
-	_ = &aws.JSONValue{}
-	_ = &svcsdk.Lambda{}
+	_ = &svcsdk.Client{}
 	_ = &svcapitypes.CodeSigningConfig{}
 	_ = ackv1alpha1.AWSAccountID("")
 	_ = &ackerr.NotFound
@@ -49,6 +50,7 @@ var (
 	_ = &reflect.Value{}
 	_ = fmt.Sprintf("")
 	_ = &ackrequeue.NoRequeue{}
+	_ = &aws.Config{}
 )
 
 // sdkFind returns SDK-specific information about a supplied resource
@@ -74,13 +76,11 @@ func (rm *resourceManager) sdkFind(
 	}
 
 	var resp *svcsdk.GetCodeSigningConfigOutput
-	resp, err = rm.sdkapi.GetCodeSigningConfigWithContext(ctx, input)
+	resp, err = rm.sdkapi.GetCodeSigningConfig(ctx, input)
 	rm.metrics.RecordAPICall("READ_ONE", "GetCodeSigningConfig", err)
 	if err != nil {
-		if reqErr, ok := ackerr.AWSRequestFailure(err); ok && reqErr.StatusCode() == 404 {
-			return nil, ackerr.NotFound
-		}
-		if awsErr, ok := ackerr.AWSError(err); ok && awsErr.Code() == "ResourceNotFoundException" {
+		var awsErr smithy.APIError
+		if errors.As(err, &awsErr) && awsErr.ErrorCode() == "ResourceNotFoundException" {
 			return nil, ackerr.NotFound
 		}
 		return nil, err
@@ -93,13 +93,7 @@ func (rm *resourceManager) sdkFind(
 	if resp.CodeSigningConfig.AllowedPublishers != nil {
 		f0 := &svcapitypes.AllowedPublishers{}
 		if resp.CodeSigningConfig.AllowedPublishers.SigningProfileVersionArns != nil {
-			f0f0 := []*string{}
-			for _, f0f0iter := range resp.CodeSigningConfig.AllowedPublishers.SigningProfileVersionArns {
-				var f0f0elem string
-				f0f0elem = *f0f0iter
-				f0f0 = append(f0f0, &f0f0elem)
-			}
-			f0.SigningProfileVersionARNs = f0f0
+			f0.SigningProfileVersionARNs = aws.StringSlice(resp.CodeSigningConfig.AllowedPublishers.SigningProfileVersionArns)
 		}
 		ko.Spec.AllowedPublishers = f0
 	} else {
@@ -119,8 +113,8 @@ func (rm *resourceManager) sdkFind(
 	}
 	if resp.CodeSigningConfig.CodeSigningPolicies != nil {
 		f3 := &svcapitypes.CodeSigningPolicies{}
-		if resp.CodeSigningConfig.CodeSigningPolicies.UntrustedArtifactOnDeployment != nil {
-			f3.UntrustedArtifactOnDeployment = resp.CodeSigningConfig.CodeSigningPolicies.UntrustedArtifactOnDeployment
+		if resp.CodeSigningConfig.CodeSigningPolicies.UntrustedArtifactOnDeployment != "" {
+			f3.UntrustedArtifactOnDeployment = aws.String(string(resp.CodeSigningConfig.CodeSigningPolicies.UntrustedArtifactOnDeployment))
 		}
 		ko.Spec.CodeSigningPolicies = f3
 	} else {
@@ -159,7 +153,7 @@ func (rm *resourceManager) newDescribeRequestPayload(
 	res := &svcsdk.GetCodeSigningConfigInput{}
 
 	if r.ko.Status.ACKResourceMetadata != nil && r.ko.Status.ACKResourceMetadata.ARN != nil {
-		res.SetCodeSigningConfigArn(string(*r.ko.Status.ACKResourceMetadata.ARN))
+		res.CodeSigningConfigArn = (*string)(r.ko.Status.ACKResourceMetadata.ARN)
 	}
 
 	return res, nil
@@ -184,7 +178,7 @@ func (rm *resourceManager) sdkCreate(
 
 	var resp *svcsdk.CreateCodeSigningConfigOutput
 	_ = resp
-	resp, err = rm.sdkapi.CreateCodeSigningConfigWithContext(ctx, input)
+	resp, err = rm.sdkapi.CreateCodeSigningConfig(ctx, input)
 	rm.metrics.RecordAPICall("CREATE", "CreateCodeSigningConfig", err)
 	if err != nil {
 		return nil, err
@@ -196,13 +190,7 @@ func (rm *resourceManager) sdkCreate(
 	if resp.CodeSigningConfig.AllowedPublishers != nil {
 		f0 := &svcapitypes.AllowedPublishers{}
 		if resp.CodeSigningConfig.AllowedPublishers.SigningProfileVersionArns != nil {
-			f0f0 := []*string{}
-			for _, f0f0iter := range resp.CodeSigningConfig.AllowedPublishers.SigningProfileVersionArns {
-				var f0f0elem string
-				f0f0elem = *f0f0iter
-				f0f0 = append(f0f0, &f0f0elem)
-			}
-			f0.SigningProfileVersionARNs = f0f0
+			f0.SigningProfileVersionARNs = aws.StringSlice(resp.CodeSigningConfig.AllowedPublishers.SigningProfileVersionArns)
 		}
 		ko.Spec.AllowedPublishers = f0
 	} else {
@@ -222,8 +210,8 @@ func (rm *resourceManager) sdkCreate(
 	}
 	if resp.CodeSigningConfig.CodeSigningPolicies != nil {
 		f3 := &svcapitypes.CodeSigningPolicies{}
-		if resp.CodeSigningConfig.CodeSigningPolicies.UntrustedArtifactOnDeployment != nil {
-			f3.UntrustedArtifactOnDeployment = resp.CodeSigningConfig.CodeSigningPolicies.UntrustedArtifactOnDeployment
+		if resp.CodeSigningConfig.CodeSigningPolicies.UntrustedArtifactOnDeployment != "" {
+			f3.UntrustedArtifactOnDeployment = aws.String(string(resp.CodeSigningConfig.CodeSigningPolicies.UntrustedArtifactOnDeployment))
 		}
 		ko.Spec.CodeSigningPolicies = f3
 	} else {
@@ -253,27 +241,21 @@ func (rm *resourceManager) newCreateRequestPayload(
 	res := &svcsdk.CreateCodeSigningConfigInput{}
 
 	if r.ko.Spec.AllowedPublishers != nil {
-		f0 := &svcsdk.AllowedPublishers{}
+		f0 := &svcsdktypes.AllowedPublishers{}
 		if r.ko.Spec.AllowedPublishers.SigningProfileVersionARNs != nil {
-			f0f0 := []*string{}
-			for _, f0f0iter := range r.ko.Spec.AllowedPublishers.SigningProfileVersionARNs {
-				var f0f0elem string
-				f0f0elem = *f0f0iter
-				f0f0 = append(f0f0, &f0f0elem)
-			}
-			f0.SetSigningProfileVersionArns(f0f0)
+			f0.SigningProfileVersionArns = aws.ToStringSlice(r.ko.Spec.AllowedPublishers.SigningProfileVersionARNs)
 		}
-		res.SetAllowedPublishers(f0)
+		res.AllowedPublishers = f0
 	}
 	if r.ko.Spec.CodeSigningPolicies != nil {
-		f1 := &svcsdk.CodeSigningPolicies{}
+		f1 := &svcsdktypes.CodeSigningPolicies{}
 		if r.ko.Spec.CodeSigningPolicies.UntrustedArtifactOnDeployment != nil {
-			f1.SetUntrustedArtifactOnDeployment(*r.ko.Spec.CodeSigningPolicies.UntrustedArtifactOnDeployment)
+			f1.UntrustedArtifactOnDeployment = svcsdktypes.CodeSigningPolicy(*r.ko.Spec.CodeSigningPolicies.UntrustedArtifactOnDeployment)
 		}
-		res.SetCodeSigningPolicies(f1)
+		res.CodeSigningPolicies = f1
 	}
 	if r.ko.Spec.Description != nil {
-		res.SetDescription(*r.ko.Spec.Description)
+		res.Description = r.ko.Spec.Description
 	}
 
 	return res, nil
@@ -299,7 +281,7 @@ func (rm *resourceManager) sdkUpdate(
 
 	var resp *svcsdk.UpdateCodeSigningConfigOutput
 	_ = resp
-	resp, err = rm.sdkapi.UpdateCodeSigningConfigWithContext(ctx, input)
+	resp, err = rm.sdkapi.UpdateCodeSigningConfig(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateCodeSigningConfig", err)
 	if err != nil {
 		return nil, err
@@ -311,13 +293,7 @@ func (rm *resourceManager) sdkUpdate(
 	if resp.CodeSigningConfig.AllowedPublishers != nil {
 		f0 := &svcapitypes.AllowedPublishers{}
 		if resp.CodeSigningConfig.AllowedPublishers.SigningProfileVersionArns != nil {
-			f0f0 := []*string{}
-			for _, f0f0iter := range resp.CodeSigningConfig.AllowedPublishers.SigningProfileVersionArns {
-				var f0f0elem string
-				f0f0elem = *f0f0iter
-				f0f0 = append(f0f0, &f0f0elem)
-			}
-			f0.SigningProfileVersionARNs = f0f0
+			f0.SigningProfileVersionARNs = aws.StringSlice(resp.CodeSigningConfig.AllowedPublishers.SigningProfileVersionArns)
 		}
 		ko.Spec.AllowedPublishers = f0
 	} else {
@@ -337,8 +313,8 @@ func (rm *resourceManager) sdkUpdate(
 	}
 	if resp.CodeSigningConfig.CodeSigningPolicies != nil {
 		f3 := &svcapitypes.CodeSigningPolicies{}
-		if resp.CodeSigningConfig.CodeSigningPolicies.UntrustedArtifactOnDeployment != nil {
-			f3.UntrustedArtifactOnDeployment = resp.CodeSigningConfig.CodeSigningPolicies.UntrustedArtifactOnDeployment
+		if resp.CodeSigningConfig.CodeSigningPolicies.UntrustedArtifactOnDeployment != "" {
+			f3.UntrustedArtifactOnDeployment = aws.String(string(resp.CodeSigningConfig.CodeSigningPolicies.UntrustedArtifactOnDeployment))
 		}
 		ko.Spec.CodeSigningPolicies = f3
 	} else {
@@ -369,30 +345,24 @@ func (rm *resourceManager) newUpdateRequestPayload(
 	res := &svcsdk.UpdateCodeSigningConfigInput{}
 
 	if r.ko.Spec.AllowedPublishers != nil {
-		f0 := &svcsdk.AllowedPublishers{}
+		f0 := &svcsdktypes.AllowedPublishers{}
 		if r.ko.Spec.AllowedPublishers.SigningProfileVersionARNs != nil {
-			f0f0 := []*string{}
-			for _, f0f0iter := range r.ko.Spec.AllowedPublishers.SigningProfileVersionARNs {
-				var f0f0elem string
-				f0f0elem = *f0f0iter
-				f0f0 = append(f0f0, &f0f0elem)
-			}
-			f0.SetSigningProfileVersionArns(f0f0)
+			f0.SigningProfileVersionArns = aws.ToStringSlice(r.ko.Spec.AllowedPublishers.SigningProfileVersionARNs)
 		}
-		res.SetAllowedPublishers(f0)
+		res.AllowedPublishers = f0
 	}
 	if r.ko.Status.ACKResourceMetadata != nil && r.ko.Status.ACKResourceMetadata.ARN != nil {
-		res.SetCodeSigningConfigArn(string(*r.ko.Status.ACKResourceMetadata.ARN))
+		res.CodeSigningConfigArn = (*string)(r.ko.Status.ACKResourceMetadata.ARN)
 	}
 	if r.ko.Spec.CodeSigningPolicies != nil {
-		f2 := &svcsdk.CodeSigningPolicies{}
+		f2 := &svcsdktypes.CodeSigningPolicies{}
 		if r.ko.Spec.CodeSigningPolicies.UntrustedArtifactOnDeployment != nil {
-			f2.SetUntrustedArtifactOnDeployment(*r.ko.Spec.CodeSigningPolicies.UntrustedArtifactOnDeployment)
+			f2.UntrustedArtifactOnDeployment = svcsdktypes.CodeSigningPolicy(*r.ko.Spec.CodeSigningPolicies.UntrustedArtifactOnDeployment)
 		}
-		res.SetCodeSigningPolicies(f2)
+		res.CodeSigningPolicies = f2
 	}
 	if r.ko.Spec.Description != nil {
-		res.SetDescription(*r.ko.Spec.Description)
+		res.Description = r.ko.Spec.Description
 	}
 
 	return res, nil
@@ -414,7 +384,7 @@ func (rm *resourceManager) sdkDelete(
 	}
 	var resp *svcsdk.DeleteCodeSigningConfigOutput
 	_ = resp
-	resp, err = rm.sdkapi.DeleteCodeSigningConfigWithContext(ctx, input)
+	resp, err = rm.sdkapi.DeleteCodeSigningConfig(ctx, input)
 	rm.metrics.RecordAPICall("DELETE", "DeleteCodeSigningConfig", err)
 	return nil, err
 }
@@ -427,7 +397,7 @@ func (rm *resourceManager) newDeleteRequestPayload(
 	res := &svcsdk.DeleteCodeSigningConfigInput{}
 
 	if r.ko.Status.ACKResourceMetadata != nil && r.ko.Status.ACKResourceMetadata.ARN != nil {
-		res.SetCodeSigningConfigArn(string(*r.ko.Status.ACKResourceMetadata.ARN))
+		res.CodeSigningConfigArn = (*string)(r.ko.Status.ACKResourceMetadata.ARN)
 	}
 
 	return res, nil

@@ -44,7 +44,7 @@ type AliasSpec struct {
 	// - MaximumRetryAttempts
 	// The maximum number of times to retry when the function returns an error.
 	FunctionEventInvokeConfig *PutFunctionEventInvokeConfigInput `json:"functionEventInvokeConfig,omitempty"`
-	// The name of the Lambda function.
+	// The name or ARN of the Lambda function.
 	//
 	// Name formats
 	//

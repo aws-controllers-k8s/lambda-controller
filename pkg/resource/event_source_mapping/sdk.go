@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
 	"strings"
 
@@ -28,8 +29,10 @@ import (
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
-	"github.com/aws/aws-sdk-go/aws"
-	svcsdk "github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	svcsdk "github.com/aws/aws-sdk-go-v2/service/lambda"
+	svcsdktypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	smithy "github.com/aws/smithy-go"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -40,8 +43,7 @@ import (
 var (
 	_ = &metav1.Time{}
 	_ = strings.ToLower("")
-	_ = &aws.JSONValue{}
-	_ = &svcsdk.Lambda{}
+	_ = &svcsdk.Client{}
 	_ = &svcapitypes.EventSourceMapping{}
 	_ = ackv1alpha1.AWSAccountID("")
 	_ = &ackerr.NotFound
@@ -49,6 +51,7 @@ var (
 	_ = &reflect.Value{}
 	_ = fmt.Sprintf("")
 	_ = &ackrequeue.NoRequeue{}
+	_ = &aws.Config{}
 )
 
 // sdkFind returns SDK-specific information about a supplied resource
@@ -73,14 +76,12 @@ func (rm *resourceManager) sdkFind(
 		return nil, err
 	}
 
-	var resp *svcsdk.EventSourceMappingConfiguration
-	resp, err = rm.sdkapi.GetEventSourceMappingWithContext(ctx, input)
+	var resp *svcsdk.GetEventSourceMappingOutput
+	resp, err = rm.sdkapi.GetEventSourceMapping(ctx, input)
 	rm.metrics.RecordAPICall("READ_ONE", "GetEventSourceMapping", err)
 	if err != nil {
-		if reqErr, ok := ackerr.AWSRequestFailure(err); ok && reqErr.StatusCode() == 404 {
-			return nil, ackerr.NotFound
-		}
-		if awsErr, ok := ackerr.AWSError(err); ok && awsErr.Code() == "ResourceNotFoundException" {
+		var awsErr smithy.APIError
+		if errors.As(err, &awsErr) && awsErr.ErrorCode() == "ResourceNotFoundException" {
 			return nil, ackerr.NotFound
 		}
 		return nil, err
@@ -100,7 +101,8 @@ func (rm *resourceManager) sdkFind(
 		ko.Spec.AmazonManagedKafkaEventSourceConfig = nil
 	}
 	if resp.BatchSize != nil {
-		ko.Spec.BatchSize = resp.BatchSize
+		batchSizeCopy := int64(*resp.BatchSize)
+		ko.Spec.BatchSize = &batchSizeCopy
 	} else {
 		ko.Spec.BatchSize = nil
 	}
@@ -134,20 +136,27 @@ func (rm *resourceManager) sdkFind(
 	} else {
 		ko.Spec.EventSourceARN = nil
 	}
+	if ko.Status.ACKResourceMetadata == nil {
+		ko.Status.ACKResourceMetadata = &ackv1alpha1.ResourceMetadata{}
+	}
+	if resp.EventSourceMappingArn != nil {
+		arn := ackv1alpha1.AWSResourceName(*resp.EventSourceMappingArn)
+		ko.Status.ACKResourceMetadata.ARN = &arn
+	}
 	if resp.FilterCriteria != nil {
-		f5 := &svcapitypes.FilterCriteria{}
+		f7 := &svcapitypes.FilterCriteria{}
 		if resp.FilterCriteria.Filters != nil {
-			f5f0 := []*svcapitypes.Filter{}
-			for _, f5f0iter := range resp.FilterCriteria.Filters {
-				f5f0elem := &svcapitypes.Filter{}
-				if f5f0iter.Pattern != nil {
-					f5f0elem.Pattern = f5f0iter.Pattern
+			f7f0 := []*svcapitypes.Filter{}
+			for _, f7f0iter := range resp.FilterCriteria.Filters {
+				f7f0elem := &svcapitypes.Filter{}
+				if f7f0iter.Pattern != nil {
+					f7f0elem.Pattern = f7f0iter.Pattern
 				}
-				f5f0 = append(f5f0, f5f0elem)
+				f7f0 = append(f7f0, f7f0elem)
 			}
-			f5.Filters = f5f0
+			f7.Filters = f7f0
 		}
-		ko.Spec.FilterCriteria = f5
+		ko.Spec.FilterCriteria = f7
 	} else {
 		ko.Spec.FilterCriteria = nil
 	}
@@ -157,13 +166,13 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.FunctionARN = nil
 	}
 	if resp.FunctionResponseTypes != nil {
-		f7 := []*string{}
-		for _, f7iter := range resp.FunctionResponseTypes {
-			var f7elem string
-			f7elem = *f7iter
-			f7 = append(f7, &f7elem)
+		f10 := []*string{}
+		for _, f10iter := range resp.FunctionResponseTypes {
+			var f10elem *string
+			f10elem = aws.String(string(f10iter))
+			f10 = append(f10, f10elem)
 		}
-		ko.Spec.FunctionResponseTypes = f7
+		ko.Spec.FunctionResponseTypes = f10
 	} else {
 		ko.Spec.FunctionResponseTypes = nil
 	}
@@ -178,91 +187,84 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.LastProcessingResult = nil
 	}
 	if resp.MaximumBatchingWindowInSeconds != nil {
-		ko.Spec.MaximumBatchingWindowInSeconds = resp.MaximumBatchingWindowInSeconds
+		maximumBatchingWindowInSecondsCopy := int64(*resp.MaximumBatchingWindowInSeconds)
+		ko.Spec.MaximumBatchingWindowInSeconds = &maximumBatchingWindowInSecondsCopy
 	} else {
 		ko.Spec.MaximumBatchingWindowInSeconds = nil
 	}
 	if resp.MaximumRecordAgeInSeconds != nil {
-		ko.Spec.MaximumRecordAgeInSeconds = resp.MaximumRecordAgeInSeconds
+		maximumRecordAgeInSecondsCopy := int64(*resp.MaximumRecordAgeInSeconds)
+		ko.Spec.MaximumRecordAgeInSeconds = &maximumRecordAgeInSecondsCopy
 	} else {
 		ko.Spec.MaximumRecordAgeInSeconds = nil
 	}
 	if resp.MaximumRetryAttempts != nil {
-		ko.Spec.MaximumRetryAttempts = resp.MaximumRetryAttempts
+		maximumRetryAttemptsCopy := int64(*resp.MaximumRetryAttempts)
+		ko.Spec.MaximumRetryAttempts = &maximumRetryAttemptsCopy
 	} else {
 		ko.Spec.MaximumRetryAttempts = nil
 	}
 	if resp.ParallelizationFactor != nil {
-		ko.Spec.ParallelizationFactor = resp.ParallelizationFactor
+		parallelizationFactorCopy := int64(*resp.ParallelizationFactor)
+		ko.Spec.ParallelizationFactor = &parallelizationFactorCopy
 	} else {
 		ko.Spec.ParallelizationFactor = nil
 	}
 	if resp.Queues != nil {
-		f14 := []*string{}
-		for _, f14iter := range resp.Queues {
-			var f14elem string
-			f14elem = *f14iter
-			f14 = append(f14, &f14elem)
-		}
-		ko.Spec.Queues = f14
+		ko.Spec.Queues = aws.StringSlice(resp.Queues)
 	} else {
 		ko.Spec.Queues = nil
 	}
 	if resp.ScalingConfig != nil {
-		f15 := &svcapitypes.ScalingConfig{}
+		f21 := &svcapitypes.ScalingConfig{}
 		if resp.ScalingConfig.MaximumConcurrency != nil {
-			f15.MaximumConcurrency = resp.ScalingConfig.MaximumConcurrency
+			maximumConcurrencyCopy := int64(*resp.ScalingConfig.MaximumConcurrency)
+			f21.MaximumConcurrency = &maximumConcurrencyCopy
 		}
-		ko.Spec.ScalingConfig = f15
+		ko.Spec.ScalingConfig = f21
 	} else {
 		ko.Spec.ScalingConfig = nil
 	}
 	if resp.SelfManagedEventSource != nil {
-		f16 := &svcapitypes.SelfManagedEventSource{}
+		f22 := &svcapitypes.SelfManagedEventSource{}
 		if resp.SelfManagedEventSource.Endpoints != nil {
-			f16f0 := map[string][]*string{}
-			for f16f0key, f16f0valiter := range resp.SelfManagedEventSource.Endpoints {
-				f16f0val := []*string{}
-				for _, f16f0valiter := range f16f0valiter {
-					var f16f0valelem string
-					f16f0valelem = *f16f0valiter
-					f16f0val = append(f16f0val, &f16f0valelem)
-				}
-				f16f0[f16f0key] = f16f0val
+			f22f0 := map[string][]*string{}
+			for f22f0key, f22f0valiter := range resp.SelfManagedEventSource.Endpoints {
+				f22f0[f22f0key] = aws.StringSlice(f22f0valiter)
 			}
-			f16.Endpoints = f16f0
+			f22.Endpoints = f22f0
 		}
-		ko.Spec.SelfManagedEventSource = f16
+		ko.Spec.SelfManagedEventSource = f22
 	} else {
 		ko.Spec.SelfManagedEventSource = nil
 	}
 	if resp.SelfManagedKafkaEventSourceConfig != nil {
-		f17 := &svcapitypes.SelfManagedKafkaEventSourceConfig{}
+		f23 := &svcapitypes.SelfManagedKafkaEventSourceConfig{}
 		if resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId != nil {
-			f17.ConsumerGroupID = resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId
+			f23.ConsumerGroupID = resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId
 		}
-		ko.Spec.SelfManagedKafkaEventSourceConfig = f17
+		ko.Spec.SelfManagedKafkaEventSourceConfig = f23
 	} else {
 		ko.Spec.SelfManagedKafkaEventSourceConfig = nil
 	}
 	if resp.SourceAccessConfigurations != nil {
-		f18 := []*svcapitypes.SourceAccessConfiguration{}
-		for _, f18iter := range resp.SourceAccessConfigurations {
-			f18elem := &svcapitypes.SourceAccessConfiguration{}
-			if f18iter.Type != nil {
-				f18elem.Type = f18iter.Type
+		f24 := []*svcapitypes.SourceAccessConfiguration{}
+		for _, f24iter := range resp.SourceAccessConfigurations {
+			f24elem := &svcapitypes.SourceAccessConfiguration{}
+			if f24iter.Type != "" {
+				f24elem.Type = aws.String(string(f24iter.Type))
 			}
-			if f18iter.URI != nil {
-				f18elem.URI = f18iter.URI
+			if f24iter.URI != nil {
+				f24elem.URI = f24iter.URI
 			}
-			f18 = append(f18, f18elem)
+			f24 = append(f24, f24elem)
 		}
-		ko.Spec.SourceAccessConfigurations = f18
+		ko.Spec.SourceAccessConfigurations = f24
 	} else {
 		ko.Spec.SourceAccessConfigurations = nil
 	}
-	if resp.StartingPosition != nil {
-		ko.Spec.StartingPosition = resp.StartingPosition
+	if resp.StartingPosition != "" {
+		ko.Spec.StartingPosition = aws.String(string(resp.StartingPosition))
 	} else {
 		ko.Spec.StartingPosition = nil
 	}
@@ -282,18 +284,13 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.StateTransitionReason = nil
 	}
 	if resp.Topics != nil {
-		f23 := []*string{}
-		for _, f23iter := range resp.Topics {
-			var f23elem string
-			f23elem = *f23iter
-			f23 = append(f23, &f23elem)
-		}
-		ko.Spec.Topics = f23
+		ko.Spec.Topics = aws.StringSlice(resp.Topics)
 	} else {
 		ko.Spec.Topics = nil
 	}
 	if resp.TumblingWindowInSeconds != nil {
-		ko.Spec.TumblingWindowInSeconds = resp.TumblingWindowInSeconds
+		tumblingWindowInSecondsCopy := int64(*resp.TumblingWindowInSeconds)
+		ko.Spec.TumblingWindowInSeconds = &tumblingWindowInSecondsCopy
 	} else {
 		ko.Spec.TumblingWindowInSeconds = nil
 	}
@@ -325,7 +322,7 @@ func (rm *resourceManager) newDescribeRequestPayload(
 	res := &svcsdk.GetEventSourceMappingInput{}
 
 	if r.ko.Status.UUID != nil {
-		res.SetUUID(*r.ko.Status.UUID)
+		res.UUID = r.ko.Status.UUID
 	}
 
 	return res, nil
@@ -348,9 +345,9 @@ func (rm *resourceManager) sdkCreate(
 		return nil, err
 	}
 
-	var resp *svcsdk.EventSourceMappingConfiguration
+	var resp *svcsdk.CreateEventSourceMappingOutput
 	_ = resp
-	resp, err = rm.sdkapi.CreateEventSourceMappingWithContext(ctx, input)
+	resp, err = rm.sdkapi.CreateEventSourceMapping(ctx, input)
 	rm.metrics.RecordAPICall("CREATE", "CreateEventSourceMapping", err)
 	if err != nil {
 		return nil, err
@@ -369,7 +366,8 @@ func (rm *resourceManager) sdkCreate(
 		ko.Spec.AmazonManagedKafkaEventSourceConfig = nil
 	}
 	if resp.BatchSize != nil {
-		ko.Spec.BatchSize = resp.BatchSize
+		batchSizeCopy := int64(*resp.BatchSize)
+		ko.Spec.BatchSize = &batchSizeCopy
 	} else {
 		ko.Spec.BatchSize = nil
 	}
@@ -403,20 +401,27 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Spec.EventSourceARN = nil
 	}
+	if ko.Status.ACKResourceMetadata == nil {
+		ko.Status.ACKResourceMetadata = &ackv1alpha1.ResourceMetadata{}
+	}
+	if resp.EventSourceMappingArn != nil {
+		arn := ackv1alpha1.AWSResourceName(*resp.EventSourceMappingArn)
+		ko.Status.ACKResourceMetadata.ARN = &arn
+	}
 	if resp.FilterCriteria != nil {
-		f5 := &svcapitypes.FilterCriteria{}
+		f6 := &svcapitypes.FilterCriteria{}
 		if resp.FilterCriteria.Filters != nil {
-			f5f0 := []*svcapitypes.Filter{}
-			for _, f5f0iter := range resp.FilterCriteria.Filters {
-				f5f0elem := &svcapitypes.Filter{}
-				if f5f0iter.Pattern != nil {
-					f5f0elem.Pattern = f5f0iter.Pattern
+			f6f0 := []*svcapitypes.Filter{}
+			for _, f6f0iter := range resp.FilterCriteria.Filters {
+				f6f0elem := &svcapitypes.Filter{}
+				if f6f0iter.Pattern != nil {
+					f6f0elem.Pattern = f6f0iter.Pattern
 				}
-				f5f0 = append(f5f0, f5f0elem)
+				f6f0 = append(f6f0, f6f0elem)
 			}
-			f5.Filters = f5f0
+			f6.Filters = f6f0
 		}
-		ko.Spec.FilterCriteria = f5
+		ko.Spec.FilterCriteria = f6
 	} else {
 		ko.Spec.FilterCriteria = nil
 	}
@@ -426,13 +431,13 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.FunctionARN = nil
 	}
 	if resp.FunctionResponseTypes != nil {
-		f7 := []*string{}
-		for _, f7iter := range resp.FunctionResponseTypes {
-			var f7elem string
-			f7elem = *f7iter
-			f7 = append(f7, &f7elem)
+		f8 := []*string{}
+		for _, f8iter := range resp.FunctionResponseTypes {
+			var f8elem *string
+			f8elem = aws.String(string(f8iter))
+			f8 = append(f8, f8elem)
 		}
-		ko.Spec.FunctionResponseTypes = f7
+		ko.Spec.FunctionResponseTypes = f8
 	} else {
 		ko.Spec.FunctionResponseTypes = nil
 	}
@@ -447,91 +452,84 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.LastProcessingResult = nil
 	}
 	if resp.MaximumBatchingWindowInSeconds != nil {
-		ko.Spec.MaximumBatchingWindowInSeconds = resp.MaximumBatchingWindowInSeconds
+		maximumBatchingWindowInSecondsCopy := int64(*resp.MaximumBatchingWindowInSeconds)
+		ko.Spec.MaximumBatchingWindowInSeconds = &maximumBatchingWindowInSecondsCopy
 	} else {
 		ko.Spec.MaximumBatchingWindowInSeconds = nil
 	}
 	if resp.MaximumRecordAgeInSeconds != nil {
-		ko.Spec.MaximumRecordAgeInSeconds = resp.MaximumRecordAgeInSeconds
+		maximumRecordAgeInSecondsCopy := int64(*resp.MaximumRecordAgeInSeconds)
+		ko.Spec.MaximumRecordAgeInSeconds = &maximumRecordAgeInSecondsCopy
 	} else {
 		ko.Spec.MaximumRecordAgeInSeconds = nil
 	}
 	if resp.MaximumRetryAttempts != nil {
-		ko.Spec.MaximumRetryAttempts = resp.MaximumRetryAttempts
+		maximumRetryAttemptsCopy := int64(*resp.MaximumRetryAttempts)
+		ko.Spec.MaximumRetryAttempts = &maximumRetryAttemptsCopy
 	} else {
 		ko.Spec.MaximumRetryAttempts = nil
 	}
 	if resp.ParallelizationFactor != nil {
-		ko.Spec.ParallelizationFactor = resp.ParallelizationFactor
+		parallelizationFactorCopy := int64(*resp.ParallelizationFactor)
+		ko.Spec.ParallelizationFactor = &parallelizationFactorCopy
 	} else {
 		ko.Spec.ParallelizationFactor = nil
 	}
 	if resp.Queues != nil {
-		f14 := []*string{}
-		for _, f14iter := range resp.Queues {
-			var f14elem string
-			f14elem = *f14iter
-			f14 = append(f14, &f14elem)
-		}
-		ko.Spec.Queues = f14
+		ko.Spec.Queues = aws.StringSlice(resp.Queues)
 	} else {
 		ko.Spec.Queues = nil
 	}
 	if resp.ScalingConfig != nil {
-		f15 := &svcapitypes.ScalingConfig{}
+		f16 := &svcapitypes.ScalingConfig{}
 		if resp.ScalingConfig.MaximumConcurrency != nil {
-			f15.MaximumConcurrency = resp.ScalingConfig.MaximumConcurrency
+			maximumConcurrencyCopy := int64(*resp.ScalingConfig.MaximumConcurrency)
+			f16.MaximumConcurrency = &maximumConcurrencyCopy
 		}
-		ko.Spec.ScalingConfig = f15
+		ko.Spec.ScalingConfig = f16
 	} else {
 		ko.Spec.ScalingConfig = nil
 	}
 	if resp.SelfManagedEventSource != nil {
-		f16 := &svcapitypes.SelfManagedEventSource{}
+		f17 := &svcapitypes.SelfManagedEventSource{}
 		if resp.SelfManagedEventSource.Endpoints != nil {
-			f16f0 := map[string][]*string{}
-			for f16f0key, f16f0valiter := range resp.SelfManagedEventSource.Endpoints {
-				f16f0val := []*string{}
-				for _, f16f0valiter := range f16f0valiter {
-					var f16f0valelem string
-					f16f0valelem = *f16f0valiter
-					f16f0val = append(f16f0val, &f16f0valelem)
-				}
-				f16f0[f16f0key] = f16f0val
+			f17f0 := map[string][]*string{}
+			for f17f0key, f17f0valiter := range resp.SelfManagedEventSource.Endpoints {
+				f17f0[f17f0key] = aws.StringSlice(f17f0valiter)
 			}
-			f16.Endpoints = f16f0
+			f17.Endpoints = f17f0
 		}
-		ko.Spec.SelfManagedEventSource = f16
+		ko.Spec.SelfManagedEventSource = f17
 	} else {
 		ko.Spec.SelfManagedEventSource = nil
 	}
 	if resp.SelfManagedKafkaEventSourceConfig != nil {
-		f17 := &svcapitypes.SelfManagedKafkaEventSourceConfig{}
+		f18 := &svcapitypes.SelfManagedKafkaEventSourceConfig{}
 		if resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId != nil {
-			f17.ConsumerGroupID = resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId
+			f18.ConsumerGroupID = resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId
 		}
-		ko.Spec.SelfManagedKafkaEventSourceConfig = f17
+		ko.Spec.SelfManagedKafkaEventSourceConfig = f18
 	} else {
 		ko.Spec.SelfManagedKafkaEventSourceConfig = nil
 	}
 	if resp.SourceAccessConfigurations != nil {
-		f18 := []*svcapitypes.SourceAccessConfiguration{}
-		for _, f18iter := range resp.SourceAccessConfigurations {
-			f18elem := &svcapitypes.SourceAccessConfiguration{}
-			if f18iter.Type != nil {
-				f18elem.Type = f18iter.Type
+		f19 := []*svcapitypes.SourceAccessConfiguration{}
+		for _, f19iter := range resp.SourceAccessConfigurations {
+			f19elem := &svcapitypes.SourceAccessConfiguration{}
+			if f19iter.Type != "" {
+				f19elem.Type = aws.String(string(f19iter.Type))
 			}
-			if f18iter.URI != nil {
-				f18elem.URI = f18iter.URI
+			if f19iter.URI != nil {
+				f19elem.URI = f19iter.URI
 			}
-			f18 = append(f18, f18elem)
+			f19 = append(f19, f19elem)
 		}
-		ko.Spec.SourceAccessConfigurations = f18
+		ko.Spec.SourceAccessConfigurations = f19
 	} else {
 		ko.Spec.SourceAccessConfigurations = nil
 	}
-	if resp.StartingPosition != nil {
-		ko.Spec.StartingPosition = resp.StartingPosition
+	if resp.StartingPosition != "" {
+		ko.Spec.StartingPosition = aws.String(string(resp.StartingPosition))
 	} else {
 		ko.Spec.StartingPosition = nil
 	}
@@ -551,18 +549,13 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.StateTransitionReason = nil
 	}
 	if resp.Topics != nil {
-		f23 := []*string{}
-		for _, f23iter := range resp.Topics {
-			var f23elem string
-			f23elem = *f23iter
-			f23 = append(f23, &f23elem)
-		}
-		ko.Spec.Topics = f23
+		ko.Spec.Topics = aws.StringSlice(resp.Topics)
 	} else {
 		ko.Spec.Topics = nil
 	}
 	if resp.TumblingWindowInSeconds != nil {
-		ko.Spec.TumblingWindowInSeconds = resp.TumblingWindowInSeconds
+		tumblingWindowInSecondsCopy := int64(*resp.TumblingWindowInSeconds)
+		ko.Spec.TumblingWindowInSeconds = &tumblingWindowInSecondsCopy
 	} else {
 		ko.Spec.TumblingWindowInSeconds = nil
 	}
@@ -585,152 +578,169 @@ func (rm *resourceManager) newCreateRequestPayload(
 	res := &svcsdk.CreateEventSourceMappingInput{}
 
 	if r.ko.Spec.AmazonManagedKafkaEventSourceConfig != nil {
-		f0 := &svcsdk.AmazonManagedKafkaEventSourceConfig{}
+		f0 := &svcsdktypes.AmazonManagedKafkaEventSourceConfig{}
 		if r.ko.Spec.AmazonManagedKafkaEventSourceConfig.ConsumerGroupID != nil {
-			f0.SetConsumerGroupId(*r.ko.Spec.AmazonManagedKafkaEventSourceConfig.ConsumerGroupID)
+			f0.ConsumerGroupId = r.ko.Spec.AmazonManagedKafkaEventSourceConfig.ConsumerGroupID
 		}
-		res.SetAmazonManagedKafkaEventSourceConfig(f0)
+		res.AmazonManagedKafkaEventSourceConfig = f0
 	}
 	if r.ko.Spec.BatchSize != nil {
-		res.SetBatchSize(*r.ko.Spec.BatchSize)
+		batchSizeCopy0 := *r.ko.Spec.BatchSize
+		if batchSizeCopy0 > math.MaxInt32 || batchSizeCopy0 < math.MinInt32 {
+			return nil, fmt.Errorf("error: field BatchSize is of type int32")
+		}
+		batchSizeCopy := int32(batchSizeCopy0)
+		res.BatchSize = &batchSizeCopy
 	}
 	if r.ko.Spec.BisectBatchOnFunctionError != nil {
-		res.SetBisectBatchOnFunctionError(*r.ko.Spec.BisectBatchOnFunctionError)
+		res.BisectBatchOnFunctionError = r.ko.Spec.BisectBatchOnFunctionError
 	}
 	if r.ko.Spec.DestinationConfig != nil {
-		f3 := &svcsdk.DestinationConfig{}
+		f3 := &svcsdktypes.DestinationConfig{}
 		if r.ko.Spec.DestinationConfig.OnFailure != nil {
-			f3f0 := &svcsdk.OnFailure{}
+			f3f0 := &svcsdktypes.OnFailure{}
 			if r.ko.Spec.DestinationConfig.OnFailure.Destination != nil {
-				f3f0.SetDestination(*r.ko.Spec.DestinationConfig.OnFailure.Destination)
+				f3f0.Destination = r.ko.Spec.DestinationConfig.OnFailure.Destination
 			}
-			f3.SetOnFailure(f3f0)
+			f3.OnFailure = f3f0
 		}
 		if r.ko.Spec.DestinationConfig.OnSuccess != nil {
-			f3f1 := &svcsdk.OnSuccess{}
+			f3f1 := &svcsdktypes.OnSuccess{}
 			if r.ko.Spec.DestinationConfig.OnSuccess.Destination != nil {
-				f3f1.SetDestination(*r.ko.Spec.DestinationConfig.OnSuccess.Destination)
+				f3f1.Destination = r.ko.Spec.DestinationConfig.OnSuccess.Destination
 			}
-			f3.SetOnSuccess(f3f1)
+			f3.OnSuccess = f3f1
 		}
-		res.SetDestinationConfig(f3)
+		res.DestinationConfig = f3
 	}
 	if r.ko.Spec.Enabled != nil {
-		res.SetEnabled(*r.ko.Spec.Enabled)
+		res.Enabled = r.ko.Spec.Enabled
 	}
 	if r.ko.Spec.EventSourceARN != nil {
-		res.SetEventSourceArn(*r.ko.Spec.EventSourceARN)
+		res.EventSourceArn = r.ko.Spec.EventSourceARN
 	}
 	if r.ko.Spec.FilterCriteria != nil {
-		f6 := &svcsdk.FilterCriteria{}
+		f6 := &svcsdktypes.FilterCriteria{}
 		if r.ko.Spec.FilterCriteria.Filters != nil {
-			f6f0 := []*svcsdk.Filter{}
+			f6f0 := []svcsdktypes.Filter{}
 			for _, f6f0iter := range r.ko.Spec.FilterCriteria.Filters {
-				f6f0elem := &svcsdk.Filter{}
+				f6f0elem := &svcsdktypes.Filter{}
 				if f6f0iter.Pattern != nil {
-					f6f0elem.SetPattern(*f6f0iter.Pattern)
+					f6f0elem.Pattern = f6f0iter.Pattern
 				}
-				f6f0 = append(f6f0, f6f0elem)
+				f6f0 = append(f6f0, *f6f0elem)
 			}
-			f6.SetFilters(f6f0)
+			f6.Filters = f6f0
 		}
-		res.SetFilterCriteria(f6)
+		res.FilterCriteria = f6
 	}
 	if r.ko.Spec.FunctionName != nil {
-		res.SetFunctionName(*r.ko.Spec.FunctionName)
+		res.FunctionName = r.ko.Spec.FunctionName
 	}
 	if r.ko.Spec.FunctionResponseTypes != nil {
-		f8 := []*string{}
+		f8 := []svcsdktypes.FunctionResponseType{}
 		for _, f8iter := range r.ko.Spec.FunctionResponseTypes {
 			var f8elem string
-			f8elem = *f8iter
-			f8 = append(f8, &f8elem)
+			f8elem = string(*f8iter)
+			f8 = append(f8, svcsdktypes.FunctionResponseType(f8elem))
 		}
-		res.SetFunctionResponseTypes(f8)
+		res.FunctionResponseTypes = f8
 	}
 	if r.ko.Spec.MaximumBatchingWindowInSeconds != nil {
-		res.SetMaximumBatchingWindowInSeconds(*r.ko.Spec.MaximumBatchingWindowInSeconds)
+		maximumBatchingWindowInSecondsCopy0 := *r.ko.Spec.MaximumBatchingWindowInSeconds
+		if maximumBatchingWindowInSecondsCopy0 > math.MaxInt32 || maximumBatchingWindowInSecondsCopy0 < math.MinInt32 {
+			return nil, fmt.Errorf("error: field MaximumBatchingWindowInSeconds is of type int32")
+		}
+		maximumBatchingWindowInSecondsCopy := int32(maximumBatchingWindowInSecondsCopy0)
+		res.MaximumBatchingWindowInSeconds = &maximumBatchingWindowInSecondsCopy
 	}
 	if r.ko.Spec.MaximumRecordAgeInSeconds != nil {
-		res.SetMaximumRecordAgeInSeconds(*r.ko.Spec.MaximumRecordAgeInSeconds)
+		maximumRecordAgeInSecondsCopy0 := *r.ko.Spec.MaximumRecordAgeInSeconds
+		if maximumRecordAgeInSecondsCopy0 > math.MaxInt32 || maximumRecordAgeInSecondsCopy0 < math.MinInt32 {
+			return nil, fmt.Errorf("error: field MaximumRecordAgeInSeconds is of type int32")
+		}
+		maximumRecordAgeInSecondsCopy := int32(maximumRecordAgeInSecondsCopy0)
+		res.MaximumRecordAgeInSeconds = &maximumRecordAgeInSecondsCopy
 	}
 	if r.ko.Spec.MaximumRetryAttempts != nil {
-		res.SetMaximumRetryAttempts(*r.ko.Spec.MaximumRetryAttempts)
+		maximumRetryAttemptsCopy0 := *r.ko.Spec.MaximumRetryAttempts
+		if maximumRetryAttemptsCopy0 > math.MaxInt32 || maximumRetryAttemptsCopy0 < math.MinInt32 {
+			return nil, fmt.Errorf("error: field MaximumRetryAttempts is of type int32")
+		}
+		maximumRetryAttemptsCopy := int32(maximumRetryAttemptsCopy0)
+		res.MaximumRetryAttempts = &maximumRetryAttemptsCopy
 	}
 	if r.ko.Spec.ParallelizationFactor != nil {
-		res.SetParallelizationFactor(*r.ko.Spec.ParallelizationFactor)
+		parallelizationFactorCopy0 := *r.ko.Spec.ParallelizationFactor
+		if parallelizationFactorCopy0 > math.MaxInt32 || parallelizationFactorCopy0 < math.MinInt32 {
+			return nil, fmt.Errorf("error: field ParallelizationFactor is of type int32")
+		}
+		parallelizationFactorCopy := int32(parallelizationFactorCopy0)
+		res.ParallelizationFactor = &parallelizationFactorCopy
 	}
 	if r.ko.Spec.Queues != nil {
-		f13 := []*string{}
-		for _, f13iter := range r.ko.Spec.Queues {
-			var f13elem string
-			f13elem = *f13iter
-			f13 = append(f13, &f13elem)
-		}
-		res.SetQueues(f13)
+		res.Queues = aws.ToStringSlice(r.ko.Spec.Queues)
 	}
 	if r.ko.Spec.ScalingConfig != nil {
-		f14 := &svcsdk.ScalingConfig{}
+		f14 := &svcsdktypes.ScalingConfig{}
 		if r.ko.Spec.ScalingConfig.MaximumConcurrency != nil {
-			f14.SetMaximumConcurrency(*r.ko.Spec.ScalingConfig.MaximumConcurrency)
+			maximumConcurrencyCopy0 := *r.ko.Spec.ScalingConfig.MaximumConcurrency
+			if maximumConcurrencyCopy0 > math.MaxInt32 || maximumConcurrencyCopy0 < math.MinInt32 {
+				return nil, fmt.Errorf("error: field MaximumConcurrency is of type int32")
+			}
+			maximumConcurrencyCopy := int32(maximumConcurrencyCopy0)
+			f14.MaximumConcurrency = &maximumConcurrencyCopy
 		}
-		res.SetScalingConfig(f14)
+		res.ScalingConfig = f14
 	}
 	if r.ko.Spec.SelfManagedEventSource != nil {
-		f15 := &svcsdk.SelfManagedEventSource{}
+		f15 := &svcsdktypes.SelfManagedEventSource{}
 		if r.ko.Spec.SelfManagedEventSource.Endpoints != nil {
-			f15f0 := map[string][]*string{}
+			f15f0 := map[string][]string{}
 			for f15f0key, f15f0valiter := range r.ko.Spec.SelfManagedEventSource.Endpoints {
-				f15f0val := []*string{}
-				for _, f15f0valiter := range f15f0valiter {
-					var f15f0valelem string
-					f15f0valelem = *f15f0valiter
-					f15f0val = append(f15f0val, &f15f0valelem)
-				}
-				f15f0[f15f0key] = f15f0val
+				f15f0[f15f0key] = aws.ToStringSlice(f15f0valiter)
 			}
-			f15.SetEndpoints(f15f0)
+			f15.Endpoints = f15f0
 		}
-		res.SetSelfManagedEventSource(f15)
+		res.SelfManagedEventSource = f15
 	}
 	if r.ko.Spec.SelfManagedKafkaEventSourceConfig != nil {
-		f16 := &svcsdk.SelfManagedKafkaEventSourceConfig{}
+		f16 := &svcsdktypes.SelfManagedKafkaEventSourceConfig{}
 		if r.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID != nil {
-			f16.SetConsumerGroupId(*r.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID)
+			f16.ConsumerGroupId = r.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID
 		}
-		res.SetSelfManagedKafkaEventSourceConfig(f16)
+		res.SelfManagedKafkaEventSourceConfig = f16
 	}
 	if r.ko.Spec.SourceAccessConfigurations != nil {
-		f17 := []*svcsdk.SourceAccessConfiguration{}
+		f17 := []svcsdktypes.SourceAccessConfiguration{}
 		for _, f17iter := range r.ko.Spec.SourceAccessConfigurations {
-			f17elem := &svcsdk.SourceAccessConfiguration{}
+			f17elem := &svcsdktypes.SourceAccessConfiguration{}
 			if f17iter.Type != nil {
-				f17elem.SetType(*f17iter.Type)
+				f17elem.Type = svcsdktypes.SourceAccessType(*f17iter.Type)
 			}
 			if f17iter.URI != nil {
-				f17elem.SetURI(*f17iter.URI)
+				f17elem.URI = f17iter.URI
 			}
-			f17 = append(f17, f17elem)
+			f17 = append(f17, *f17elem)
 		}
-		res.SetSourceAccessConfigurations(f17)
+		res.SourceAccessConfigurations = f17
 	}
 	if r.ko.Spec.StartingPosition != nil {
-		res.SetStartingPosition(*r.ko.Spec.StartingPosition)
+		res.StartingPosition = svcsdktypes.EventSourcePosition(*r.ko.Spec.StartingPosition)
 	}
 	if r.ko.Spec.StartingPositionTimestamp != nil {
-		res.SetStartingPositionTimestamp(r.ko.Spec.StartingPositionTimestamp.Time)
+		res.StartingPositionTimestamp = &r.ko.Spec.StartingPositionTimestamp.Time
 	}
 	if r.ko.Spec.Topics != nil {
-		f20 := []*string{}
-		for _, f20iter := range r.ko.Spec.Topics {
-			var f20elem string
-			f20elem = *f20iter
-			f20 = append(f20, &f20elem)
-		}
-		res.SetTopics(f20)
+		res.Topics = aws.ToStringSlice(r.ko.Spec.Topics)
 	}
 	if r.ko.Spec.TumblingWindowInSeconds != nil {
-		res.SetTumblingWindowInSeconds(*r.ko.Spec.TumblingWindowInSeconds)
+		tumblingWindowInSecondsCopy0 := *r.ko.Spec.TumblingWindowInSeconds
+		if tumblingWindowInSecondsCopy0 > math.MaxInt32 || tumblingWindowInSecondsCopy0 < math.MinInt32 {
+			return nil, fmt.Errorf("error: field TumblingWindowInSeconds is of type int32")
+		}
+		tumblingWindowInSecondsCopy := int32(tumblingWindowInSecondsCopy0)
+		res.TumblingWindowInSeconds = &tumblingWindowInSecondsCopy
 	}
 
 	return res, nil
@@ -758,14 +768,14 @@ func (rm *resourceManager) sdkUpdate(
 	// wants to delete their filterCriterias. Mainly because the
 	// aws-sdk-go doesn't try to update nil fields.
 	if filterCriteriasDeleted(latest, desired, delta) {
-		input.FilterCriteria = &svcsdk.FilterCriteria{
-			Filters: []*svcsdk.Filter{},
+		input.FilterCriteria = &svcsdktypes.FilterCriteria{
+			Filters: []svcsdktypes.Filter{},
 		}
 	}
 
-	var resp *svcsdk.EventSourceMappingConfiguration
+	var resp *svcsdk.UpdateEventSourceMappingOutput
 	_ = resp
-	resp, err = rm.sdkapi.UpdateEventSourceMappingWithContext(ctx, input)
+	resp, err = rm.sdkapi.UpdateEventSourceMapping(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateEventSourceMapping", err)
 	if err != nil {
 		return nil, err
@@ -784,7 +794,8 @@ func (rm *resourceManager) sdkUpdate(
 		ko.Spec.AmazonManagedKafkaEventSourceConfig = nil
 	}
 	if resp.BatchSize != nil {
-		ko.Spec.BatchSize = resp.BatchSize
+		batchSizeCopy := int64(*resp.BatchSize)
+		ko.Spec.BatchSize = &batchSizeCopy
 	} else {
 		ko.Spec.BatchSize = nil
 	}
@@ -818,20 +829,27 @@ func (rm *resourceManager) sdkUpdate(
 	} else {
 		ko.Spec.EventSourceARN = nil
 	}
+	if ko.Status.ACKResourceMetadata == nil {
+		ko.Status.ACKResourceMetadata = &ackv1alpha1.ResourceMetadata{}
+	}
+	if resp.EventSourceMappingArn != nil {
+		arn := ackv1alpha1.AWSResourceName(*resp.EventSourceMappingArn)
+		ko.Status.ACKResourceMetadata.ARN = &arn
+	}
 	if resp.FilterCriteria != nil {
-		f5 := &svcapitypes.FilterCriteria{}
+		f7 := &svcapitypes.FilterCriteria{}
 		if resp.FilterCriteria.Filters != nil {
-			f5f0 := []*svcapitypes.Filter{}
-			for _, f5f0iter := range resp.FilterCriteria.Filters {
-				f5f0elem := &svcapitypes.Filter{}
-				if f5f0iter.Pattern != nil {
-					f5f0elem.Pattern = f5f0iter.Pattern
+			f7f0 := []*svcapitypes.Filter{}
+			for _, f7f0iter := range resp.FilterCriteria.Filters {
+				f7f0elem := &svcapitypes.Filter{}
+				if f7f0iter.Pattern != nil {
+					f7f0elem.Pattern = f7f0iter.Pattern
 				}
-				f5f0 = append(f5f0, f5f0elem)
+				f7f0 = append(f7f0, f7f0elem)
 			}
-			f5.Filters = f5f0
+			f7.Filters = f7f0
 		}
-		ko.Spec.FilterCriteria = f5
+		ko.Spec.FilterCriteria = f7
 	} else {
 		ko.Spec.FilterCriteria = nil
 	}
@@ -841,13 +859,13 @@ func (rm *resourceManager) sdkUpdate(
 		ko.Status.FunctionARN = nil
 	}
 	if resp.FunctionResponseTypes != nil {
-		f7 := []*string{}
-		for _, f7iter := range resp.FunctionResponseTypes {
-			var f7elem string
-			f7elem = *f7iter
-			f7 = append(f7, &f7elem)
+		f10 := []*string{}
+		for _, f10iter := range resp.FunctionResponseTypes {
+			var f10elem *string
+			f10elem = aws.String(string(f10iter))
+			f10 = append(f10, f10elem)
 		}
-		ko.Spec.FunctionResponseTypes = f7
+		ko.Spec.FunctionResponseTypes = f10
 	} else {
 		ko.Spec.FunctionResponseTypes = nil
 	}
@@ -862,91 +880,84 @@ func (rm *resourceManager) sdkUpdate(
 		ko.Status.LastProcessingResult = nil
 	}
 	if resp.MaximumBatchingWindowInSeconds != nil {
-		ko.Spec.MaximumBatchingWindowInSeconds = resp.MaximumBatchingWindowInSeconds
+		maximumBatchingWindowInSecondsCopy := int64(*resp.MaximumBatchingWindowInSeconds)
+		ko.Spec.MaximumBatchingWindowInSeconds = &maximumBatchingWindowInSecondsCopy
 	} else {
 		ko.Spec.MaximumBatchingWindowInSeconds = nil
 	}
 	if resp.MaximumRecordAgeInSeconds != nil {
-		ko.Spec.MaximumRecordAgeInSeconds = resp.MaximumRecordAgeInSeconds
+		maximumRecordAgeInSecondsCopy := int64(*resp.MaximumRecordAgeInSeconds)
+		ko.Spec.MaximumRecordAgeInSeconds = &maximumRecordAgeInSecondsCopy
 	} else {
 		ko.Spec.MaximumRecordAgeInSeconds = nil
 	}
 	if resp.MaximumRetryAttempts != nil {
-		ko.Spec.MaximumRetryAttempts = resp.MaximumRetryAttempts
+		maximumRetryAttemptsCopy := int64(*resp.MaximumRetryAttempts)
+		ko.Spec.MaximumRetryAttempts = &maximumRetryAttemptsCopy
 	} else {
 		ko.Spec.MaximumRetryAttempts = nil
 	}
 	if resp.ParallelizationFactor != nil {
-		ko.Spec.ParallelizationFactor = resp.ParallelizationFactor
+		parallelizationFactorCopy := int64(*resp.ParallelizationFactor)
+		ko.Spec.ParallelizationFactor = &parallelizationFactorCopy
 	} else {
 		ko.Spec.ParallelizationFactor = nil
 	}
 	if resp.Queues != nil {
-		f14 := []*string{}
-		for _, f14iter := range resp.Queues {
-			var f14elem string
-			f14elem = *f14iter
-			f14 = append(f14, &f14elem)
-		}
-		ko.Spec.Queues = f14
+		ko.Spec.Queues = aws.StringSlice(resp.Queues)
 	} else {
 		ko.Spec.Queues = nil
 	}
 	if resp.ScalingConfig != nil {
-		f15 := &svcapitypes.ScalingConfig{}
+		f21 := &svcapitypes.ScalingConfig{}
 		if resp.ScalingConfig.MaximumConcurrency != nil {
-			f15.MaximumConcurrency = resp.ScalingConfig.MaximumConcurrency
+			maximumConcurrencyCopy := int64(*resp.ScalingConfig.MaximumConcurrency)
+			f21.MaximumConcurrency = &maximumConcurrencyCopy
 		}
-		ko.Spec.ScalingConfig = f15
+		ko.Spec.ScalingConfig = f21
 	} else {
 		ko.Spec.ScalingConfig = nil
 	}
 	if resp.SelfManagedEventSource != nil {
-		f16 := &svcapitypes.SelfManagedEventSource{}
+		f22 := &svcapitypes.SelfManagedEventSource{}
 		if resp.SelfManagedEventSource.Endpoints != nil {
-			f16f0 := map[string][]*string{}
-			for f16f0key, f16f0valiter := range resp.SelfManagedEventSource.Endpoints {
-				f16f0val := []*string{}
-				for _, f16f0valiter := range f16f0valiter {
-					var f16f0valelem string
-					f16f0valelem = *f16f0valiter
-					f16f0val = append(f16f0val, &f16f0valelem)
-				}
-				f16f0[f16f0key] = f16f0val
+			f22f0 := map[string][]*string{}
+			for f22f0key, f22f0valiter := range resp.SelfManagedEventSource.Endpoints {
+				f22f0[f22f0key] = aws.StringSlice(f22f0valiter)
 			}
-			f16.Endpoints = f16f0
+			f22.Endpoints = f22f0
 		}
-		ko.Spec.SelfManagedEventSource = f16
+		ko.Spec.SelfManagedEventSource = f22
 	} else {
 		ko.Spec.SelfManagedEventSource = nil
 	}
 	if resp.SelfManagedKafkaEventSourceConfig != nil {
-		f17 := &svcapitypes.SelfManagedKafkaEventSourceConfig{}
+		f23 := &svcapitypes.SelfManagedKafkaEventSourceConfig{}
 		if resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId != nil {
-			f17.ConsumerGroupID = resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId
+			f23.ConsumerGroupID = resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId
 		}
-		ko.Spec.SelfManagedKafkaEventSourceConfig = f17
+		ko.Spec.SelfManagedKafkaEventSourceConfig = f23
 	} else {
 		ko.Spec.SelfManagedKafkaEventSourceConfig = nil
 	}
 	if resp.SourceAccessConfigurations != nil {
-		f18 := []*svcapitypes.SourceAccessConfiguration{}
-		for _, f18iter := range resp.SourceAccessConfigurations {
-			f18elem := &svcapitypes.SourceAccessConfiguration{}
-			if f18iter.Type != nil {
-				f18elem.Type = f18iter.Type
+		f24 := []*svcapitypes.SourceAccessConfiguration{}
+		for _, f24iter := range resp.SourceAccessConfigurations {
+			f24elem := &svcapitypes.SourceAccessConfiguration{}
+			if f24iter.Type != "" {
+				f24elem.Type = aws.String(string(f24iter.Type))
 			}
-			if f18iter.URI != nil {
-				f18elem.URI = f18iter.URI
+			if f24iter.URI != nil {
+				f24elem.URI = f24iter.URI
 			}
-			f18 = append(f18, f18elem)
+			f24 = append(f24, f24elem)
 		}
-		ko.Spec.SourceAccessConfigurations = f18
+		ko.Spec.SourceAccessConfigurations = f24
 	} else {
 		ko.Spec.SourceAccessConfigurations = nil
 	}
-	if resp.StartingPosition != nil {
-		ko.Spec.StartingPosition = resp.StartingPosition
+	if resp.StartingPosition != "" {
+		ko.Spec.StartingPosition = aws.String(string(resp.StartingPosition))
 	} else {
 		ko.Spec.StartingPosition = nil
 	}
@@ -966,18 +977,13 @@ func (rm *resourceManager) sdkUpdate(
 		ko.Status.StateTransitionReason = nil
 	}
 	if resp.Topics != nil {
-		f23 := []*string{}
-		for _, f23iter := range resp.Topics {
-			var f23elem string
-			f23elem = *f23iter
-			f23 = append(f23, &f23elem)
-		}
-		ko.Spec.Topics = f23
+		ko.Spec.Topics = aws.StringSlice(resp.Topics)
 	} else {
 		ko.Spec.Topics = nil
 	}
 	if resp.TumblingWindowInSeconds != nil {
-		ko.Spec.TumblingWindowInSeconds = resp.TumblingWindowInSeconds
+		tumblingWindowInSecondsCopy := int64(*resp.TumblingWindowInSeconds)
+		ko.Spec.TumblingWindowInSeconds = &tumblingWindowInSecondsCopy
 	} else {
 		ko.Spec.TumblingWindowInSeconds = nil
 	}
@@ -1001,97 +1007,132 @@ func (rm *resourceManager) newUpdateRequestPayload(
 	res := &svcsdk.UpdateEventSourceMappingInput{}
 
 	if r.ko.Spec.BatchSize != nil {
-		res.SetBatchSize(*r.ko.Spec.BatchSize)
+		batchSizeCopy0 := *r.ko.Spec.BatchSize
+		if batchSizeCopy0 > math.MaxInt32 || batchSizeCopy0 < math.MinInt32 {
+			return nil, fmt.Errorf("error: field BatchSize is of type int32")
+		}
+		batchSizeCopy := int32(batchSizeCopy0)
+		res.BatchSize = &batchSizeCopy
 	}
 	if r.ko.Spec.BisectBatchOnFunctionError != nil {
-		res.SetBisectBatchOnFunctionError(*r.ko.Spec.BisectBatchOnFunctionError)
+		res.BisectBatchOnFunctionError = r.ko.Spec.BisectBatchOnFunctionError
 	}
 	if r.ko.Spec.DestinationConfig != nil {
-		f2 := &svcsdk.DestinationConfig{}
+		f2 := &svcsdktypes.DestinationConfig{}
 		if r.ko.Spec.DestinationConfig.OnFailure != nil {
-			f2f0 := &svcsdk.OnFailure{}
+			f2f0 := &svcsdktypes.OnFailure{}
 			if r.ko.Spec.DestinationConfig.OnFailure.Destination != nil {
-				f2f0.SetDestination(*r.ko.Spec.DestinationConfig.OnFailure.Destination)
+				f2f0.Destination = r.ko.Spec.DestinationConfig.OnFailure.Destination
 			}
-			f2.SetOnFailure(f2f0)
+			f2.OnFailure = f2f0
 		}
 		if r.ko.Spec.DestinationConfig.OnSuccess != nil {
-			f2f1 := &svcsdk.OnSuccess{}
+			f2f1 := &svcsdktypes.OnSuccess{}
 			if r.ko.Spec.DestinationConfig.OnSuccess.Destination != nil {
-				f2f1.SetDestination(*r.ko.Spec.DestinationConfig.OnSuccess.Destination)
+				f2f1.Destination = r.ko.Spec.DestinationConfig.OnSuccess.Destination
 			}
-			f2.SetOnSuccess(f2f1)
+			f2.OnSuccess = f2f1
 		}
-		res.SetDestinationConfig(f2)
+		res.DestinationConfig = f2
 	}
 	if r.ko.Spec.Enabled != nil {
-		res.SetEnabled(*r.ko.Spec.Enabled)
+		res.Enabled = r.ko.Spec.Enabled
 	}
 	if r.ko.Spec.FilterCriteria != nil {
-		f4 := &svcsdk.FilterCriteria{}
+		f5 := &svcsdktypes.FilterCriteria{}
 		if r.ko.Spec.FilterCriteria.Filters != nil {
-			f4f0 := []*svcsdk.Filter{}
-			for _, f4f0iter := range r.ko.Spec.FilterCriteria.Filters {
-				f4f0elem := &svcsdk.Filter{}
-				if f4f0iter.Pattern != nil {
-					f4f0elem.SetPattern(*f4f0iter.Pattern)
+			f5f0 := []svcsdktypes.Filter{}
+			for _, f5f0iter := range r.ko.Spec.FilterCriteria.Filters {
+				f5f0elem := &svcsdktypes.Filter{}
+				if f5f0iter.Pattern != nil {
+					f5f0elem.Pattern = f5f0iter.Pattern
 				}
-				f4f0 = append(f4f0, f4f0elem)
+				f5f0 = append(f5f0, *f5f0elem)
 			}
-			f4.SetFilters(f4f0)
+			f5.Filters = f5f0
 		}
-		res.SetFilterCriteria(f4)
+		res.FilterCriteria = f5
 	}
 	if r.ko.Spec.FunctionName != nil {
-		res.SetFunctionName(*r.ko.Spec.FunctionName)
+		res.FunctionName = r.ko.Spec.FunctionName
 	}
 	if r.ko.Spec.FunctionResponseTypes != nil {
-		f6 := []*string{}
-		for _, f6iter := range r.ko.Spec.FunctionResponseTypes {
-			var f6elem string
-			f6elem = *f6iter
-			f6 = append(f6, &f6elem)
+		f7 := []svcsdktypes.FunctionResponseType{}
+		for _, f7iter := range r.ko.Spec.FunctionResponseTypes {
+			var f7elem string
+			f7elem = string(*f7iter)
+			f7 = append(f7, svcsdktypes.FunctionResponseType(f7elem))
 		}
-		res.SetFunctionResponseTypes(f6)
+		res.FunctionResponseTypes = f7
 	}
 	if r.ko.Spec.MaximumBatchingWindowInSeconds != nil {
-		res.SetMaximumBatchingWindowInSeconds(*r.ko.Spec.MaximumBatchingWindowInSeconds)
+		maximumBatchingWindowInSecondsCopy0 := *r.ko.Spec.MaximumBatchingWindowInSeconds
+		if maximumBatchingWindowInSecondsCopy0 > math.MaxInt32 || maximumBatchingWindowInSecondsCopy0 < math.MinInt32 {
+			return nil, fmt.Errorf("error: field MaximumBatchingWindowInSeconds is of type int32")
+		}
+		maximumBatchingWindowInSecondsCopy := int32(maximumBatchingWindowInSecondsCopy0)
+		res.MaximumBatchingWindowInSeconds = &maximumBatchingWindowInSecondsCopy
 	}
 	if r.ko.Spec.MaximumRecordAgeInSeconds != nil {
-		res.SetMaximumRecordAgeInSeconds(*r.ko.Spec.MaximumRecordAgeInSeconds)
+		maximumRecordAgeInSecondsCopy0 := *r.ko.Spec.MaximumRecordAgeInSeconds
+		if maximumRecordAgeInSecondsCopy0 > math.MaxInt32 || maximumRecordAgeInSecondsCopy0 < math.MinInt32 {
+			return nil, fmt.Errorf("error: field MaximumRecordAgeInSeconds is of type int32")
+		}
+		maximumRecordAgeInSecondsCopy := int32(maximumRecordAgeInSecondsCopy0)
+		res.MaximumRecordAgeInSeconds = &maximumRecordAgeInSecondsCopy
 	}
 	if r.ko.Spec.MaximumRetryAttempts != nil {
-		res.SetMaximumRetryAttempts(*r.ko.Spec.MaximumRetryAttempts)
+		maximumRetryAttemptsCopy0 := *r.ko.Spec.MaximumRetryAttempts
+		if maximumRetryAttemptsCopy0 > math.MaxInt32 || maximumRetryAttemptsCopy0 < math.MinInt32 {
+			return nil, fmt.Errorf("error: field MaximumRetryAttempts is of type int32")
+		}
+		maximumRetryAttemptsCopy := int32(maximumRetryAttemptsCopy0)
+		res.MaximumRetryAttempts = &maximumRetryAttemptsCopy
 	}
 	if r.ko.Spec.ParallelizationFactor != nil {
-		res.SetParallelizationFactor(*r.ko.Spec.ParallelizationFactor)
+		parallelizationFactorCopy0 := *r.ko.Spec.ParallelizationFactor
+		if parallelizationFactorCopy0 > math.MaxInt32 || parallelizationFactorCopy0 < math.MinInt32 {
+			return nil, fmt.Errorf("error: field ParallelizationFactor is of type int32")
+		}
+		parallelizationFactorCopy := int32(parallelizationFactorCopy0)
+		res.ParallelizationFactor = &parallelizationFactorCopy
 	}
 	if r.ko.Spec.ScalingConfig != nil {
-		f11 := &svcsdk.ScalingConfig{}
+		f15 := &svcsdktypes.ScalingConfig{}
 		if r.ko.Spec.ScalingConfig.MaximumConcurrency != nil {
-			f11.SetMaximumConcurrency(*r.ko.Spec.ScalingConfig.MaximumConcurrency)
+			maximumConcurrencyCopy0 := *r.ko.Spec.ScalingConfig.MaximumConcurrency
+			if maximumConcurrencyCopy0 > math.MaxInt32 || maximumConcurrencyCopy0 < math.MinInt32 {
+				return nil, fmt.Errorf("error: field MaximumConcurrency is of type int32")
+			}
+			maximumConcurrencyCopy := int32(maximumConcurrencyCopy0)
+			f15.MaximumConcurrency = &maximumConcurrencyCopy
 		}
-		res.SetScalingConfig(f11)
+		res.ScalingConfig = f15
 	}
 	if r.ko.Spec.SourceAccessConfigurations != nil {
-		f12 := []*svcsdk.SourceAccessConfiguration{}
-		for _, f12iter := range r.ko.Spec.SourceAccessConfigurations {
-			f12elem := &svcsdk.SourceAccessConfiguration{}
-			if f12iter.Type != nil {
-				f12elem.SetType(*f12iter.Type)
+		f16 := []svcsdktypes.SourceAccessConfiguration{}
+		for _, f16iter := range r.ko.Spec.SourceAccessConfigurations {
+			f16elem := &svcsdktypes.SourceAccessConfiguration{}
+			if f16iter.Type != nil {
+				f16elem.Type = svcsdktypes.SourceAccessType(*f16iter.Type)
 			}
-			if f12iter.URI != nil {
-				f12elem.SetURI(*f12iter.URI)
+			if f16iter.URI != nil {
+				f16elem.URI = f16iter.URI
 			}
-			f12 = append(f12, f12elem)
+			f16 = append(f16, *f16elem)
 		}
-		res.SetSourceAccessConfigurations(f12)
+		res.SourceAccessConfigurations = f16
 	}
 	if r.ko.Spec.TumblingWindowInSeconds != nil {
-		res.SetTumblingWindowInSeconds(*r.ko.Spec.TumblingWindowInSeconds)
+		tumblingWindowInSecondsCopy0 := *r.ko.Spec.TumblingWindowInSeconds
+		if tumblingWindowInSecondsCopy0 > math.MaxInt32 || tumblingWindowInSecondsCopy0 < math.MinInt32 {
+			return nil, fmt.Errorf("error: field TumblingWindowInSeconds is of type int32")
+		}
+		tumblingWindowInSecondsCopy := int32(tumblingWindowInSecondsCopy0)
+		res.TumblingWindowInSeconds = &tumblingWindowInSecondsCopy
 	}
 	if r.ko.Status.UUID != nil {
-		res.SetUUID(*r.ko.Status.UUID)
+		res.UUID = r.ko.Status.UUID
 	}
 
 	return res, nil
@@ -1111,9 +1152,9 @@ func (rm *resourceManager) sdkDelete(
 	if err != nil {
 		return nil, err
 	}
-	var resp *svcsdk.EventSourceMappingConfiguration
+	var resp *svcsdk.DeleteEventSourceMappingOutput
 	_ = resp
-	resp, err = rm.sdkapi.DeleteEventSourceMappingWithContext(ctx, input)
+	resp, err = rm.sdkapi.DeleteEventSourceMapping(ctx, input)
 	rm.metrics.RecordAPICall("DELETE", "DeleteEventSourceMapping", err)
 	return nil, err
 }
@@ -1126,7 +1167,7 @@ func (rm *resourceManager) newDeleteRequestPayload(
 	res := &svcsdk.DeleteEventSourceMappingInput{}
 
 	if r.ko.Status.UUID != nil {
-		res.SetUUID(*r.ko.Status.UUID)
+		res.UUID = r.ko.Status.UUID
 	}
 
 	return res, nil

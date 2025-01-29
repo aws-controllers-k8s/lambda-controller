@@ -31,7 +31,7 @@ type FunctionSpec struct {
 	// +kubebuilder:validation:Required
 	Code *FunctionCode `json:"code"`
 	// To enable code signing for this function, specify the ARN of a code-signing
-	// configuration. A code-signing configuration includes a set of signing profiles,
+	// configuration. A code-signing configurationincludes a set of signing profiles,
 	// which define the trusted publishers for this function.
 	CodeSigningConfigARN *string `json:"codeSigningConfigARN,omitempty"`
 	// A dead-letter queue configuration that specifies the queue or topic where
@@ -43,7 +43,8 @@ type FunctionSpec struct {
 	// Environment variables that are accessible from function code during execution.
 	Environment *Environment `json:"environment,omitempty"`
 	// The size of the function's /tmp directory in MB. The default value is 512,
-	// but can be any whole number between 512 and 10,240 MB.
+	// but can be any whole number between 512 and 10,240 MB. For more information,
+	// see Configuring ephemeral storage (console) (https://docs.aws.amazon.com/lambda/latest/dg/configuration-function-common.html#configuration-ephemeral-storage).
 	EphemeralStorage *EphemeralStorage `json:"ephemeralStorage,omitempty"`
 	// Connection settings for an Amazon EFS file system.
 	FileSystemConfigs []*FileSystemConfig `json:"fileSystemConfigs,omitempty"`
@@ -70,12 +71,29 @@ type FunctionSpec struct {
 	// depending on the runtime. For more information, see Lambda programming model
 	// (https://docs.aws.amazon.com/lambda/latest/dg/foundation-progmodel.html).
 	Handler *string `json:"handler,omitempty"`
-	// Container image configuration values (https://docs.aws.amazon.com/lambda/latest/dg/configuration-images.html#configuration-images-settings)
+	// Container image configuration values (https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#images-parms)
 	// that override the values in the container image Dockerfile.
 	ImageConfig *ImageConfig `json:"imageConfig,omitempty"`
-	// The ARN of the Key Management Service (KMS) key that's used to encrypt your
-	// function's environment variables. If it's not provided, Lambda uses a default
-	// service key.
+	// The ARN of the Key Management Service (KMS) customer managed key that's used
+	// to encrypt the following resources:
+	//
+	//   - The function's environment variables (https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-encryption).
+	//
+	//   - The function's Lambda SnapStart (https://docs.aws.amazon.com/lambda/latest/dg/snapstart-security.html)
+	//     snapshots.
+	//
+	//   - When used with SourceKMSKeyArn, the unzipped version of the .zip deployment
+	//     package that's used for function invocations. For more information, see
+	//     Specifying a customer managed key for Lambda (https://docs.aws.amazon.com/lambda/latest/dg/encrypt-zip-package.html#enable-zip-custom-encryption).
+	//
+	//   - The optimized version of the container image that's used for function
+	//     invocations. Note that this is not the same key that's used to protect
+	//     your container image in the Amazon Elastic Container Registry (Amazon
+	//     ECR). For more information, see Function lifecycle (https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#images-lifecycle).
+	//
+	// If you don't provide a customer managed key, Lambda uses an Amazon Web Services
+	// owned key (https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-owned-cmk)
+	// or an Amazon Web Services managed key (https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-managed-cmk).
 	KMSKeyARN *string                                  `json:"kmsKeyARN,omitempty"`
 	KMSKeyRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"kmsKeyRef,omitempty"`
 	// A list of function layers (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html)
@@ -86,7 +104,7 @@ type FunctionSpec struct {
 	// at runtime. Increasing the function memory also increases its CPU allocation.
 	// The default value is 128 MB. The value can be any multiple of 1 MB.
 	MemorySize *int64 `json:"memorySize,omitempty"`
-	// The name of the Lambda function.
+	// The name or ARN of the Lambda function.
 	//
 	// Name formats
 	//
@@ -111,7 +129,15 @@ type FunctionSpec struct {
 	Role    *string                                  `json:"role,omitempty"`
 	RoleRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"roleRef,omitempty"`
 	// The identifier of the function's runtime (https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html).
-	// Runtime is required if the deployment package is a .zip file archive.
+	// Runtime is required if the deployment package is a .zip file archive. Specifying
+	// a runtime results in an error if you're deploying a function using a container
+	// image.
+	//
+	// The following list includes deprecated runtimes. Lambda blocks creating new
+	// functions and updating existing functions shortly after each runtime is deprecated.
+	// For more information, see Runtime use after deprecation (https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-deprecation-levels).
+	//
+	// For a list of all currently supported runtimes, see Supported runtimes (https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtimes-supported).
 	Runtime *string `json:"runtime,omitempty"`
 	// The function's SnapStart (https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html)
 	// setting.
@@ -123,8 +149,8 @@ type FunctionSpec struct {
 	// stopping it. The default is 3 seconds. The maximum allowed value is 900 seconds.
 	// For more information, see Lambda execution environment (https://docs.aws.amazon.com/lambda/latest/dg/runtimes-context.html).
 	Timeout *int64 `json:"timeout,omitempty"`
-	// Set Mode to Active to sample and trace a subset of incoming requests with
-	// X-Ray (https://docs.aws.amazon.com/lambda/latest/dg/services-xray.html).
+	// Set Mode to Active to sample and trace a subset of incoming requests withX-Ray
+	// (https://docs.aws.amazon.com/lambda/latest/dg/services-xray.html).
 	TracingConfig *TracingConfig `json:"tracingConfig,omitempty"`
 	// For network connectivity to Amazon Web Services resources in a VPC, specify
 	// a list of security groups and subnets in the VPC. When you connect a function

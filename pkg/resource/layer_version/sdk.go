@@ -28,8 +28,10 @@ import (
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
-	"github.com/aws/aws-sdk-go/aws"
-	svcsdk "github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	svcsdk "github.com/aws/aws-sdk-go-v2/service/lambda"
+	svcsdktypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	smithy "github.com/aws/smithy-go"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -40,8 +42,7 @@ import (
 var (
 	_ = &metav1.Time{}
 	_ = strings.ToLower("")
-	_ = &aws.JSONValue{}
-	_ = &svcsdk.Lambda{}
+	_ = &svcsdk.Client{}
 	_ = &svcapitypes.LayerVersion{}
 	_ = ackv1alpha1.AWSAccountID("")
 	_ = &ackerr.NotFound
@@ -49,6 +50,7 @@ var (
 	_ = &reflect.Value{}
 	_ = fmt.Sprintf("")
 	_ = &ackrequeue.NoRequeue{}
+	_ = &aws.Config{}
 )
 
 // sdkFind returns SDK-specific information about a supplied resource
@@ -74,13 +76,11 @@ func (rm *resourceManager) sdkFind(
 	}
 
 	var resp *svcsdk.GetLayerVersionOutput
-	resp, err = rm.sdkapi.GetLayerVersionWithContext(ctx, input)
+	resp, err = rm.sdkapi.GetLayerVersion(ctx, input)
 	rm.metrics.RecordAPICall("READ_ONE", "GetLayerVersion", err)
 	if err != nil {
-		if reqErr, ok := ackerr.AWSRequestFailure(err); ok && reqErr.StatusCode() == 404 {
-			return nil, ackerr.NotFound
-		}
-		if awsErr, ok := ackerr.AWSError(err); ok && awsErr.Code() == "ResourceNotFoundException" {
+		var awsErr smithy.APIError
+		if errors.As(err, &awsErr) && awsErr.ErrorCode() == "ResourceNotFoundException" {
 			return nil, ackerr.NotFound
 		}
 		return nil, err
@@ -93,9 +93,9 @@ func (rm *resourceManager) sdkFind(
 	if resp.CompatibleArchitectures != nil {
 		f0 := []*string{}
 		for _, f0iter := range resp.CompatibleArchitectures {
-			var f0elem string
-			f0elem = *f0iter
-			f0 = append(f0, &f0elem)
+			var f0elem *string
+			f0elem = aws.String(string(f0iter))
+			f0 = append(f0, f0elem)
 		}
 		ko.Spec.CompatibleArchitectures = f0
 	} else {
@@ -104,9 +104,9 @@ func (rm *resourceManager) sdkFind(
 	if resp.CompatibleRuntimes != nil {
 		f1 := []*string{}
 		for _, f1iter := range resp.CompatibleRuntimes {
-			var f1elem string
-			f1elem = *f1iter
-			f1 = append(f1, &f1elem)
+			var f1elem *string
+			f1elem = aws.String(string(f1iter))
+			f1 = append(f1, f1elem)
 		}
 		ko.Spec.CompatibleRuntimes = f1
 	} else {
@@ -139,11 +139,7 @@ func (rm *resourceManager) sdkFind(
 	} else {
 		ko.Spec.LicenseInfo = nil
 	}
-	if resp.Version != nil {
-		ko.Status.VersionNumber = resp.Version
-	} else {
-		ko.Status.VersionNumber = nil
-	}
+	ko.Status.VersionNumber = &resp.Version
 
 	rm.setStatusDefaults(ko)
 	return &resource{ko}, nil
@@ -167,10 +163,10 @@ func (rm *resourceManager) newDescribeRequestPayload(
 	res := &svcsdk.GetLayerVersionInput{}
 
 	if r.ko.Spec.LayerName != nil {
-		res.SetLayerName(*r.ko.Spec.LayerName)
+		res.LayerName = r.ko.Spec.LayerName
 	}
 	if r.ko.Status.VersionNumber != nil {
-		res.SetVersionNumber(*r.ko.Status.VersionNumber)
+		res.VersionNumber = r.ko.Status.VersionNumber
 	}
 
 	return res, nil
@@ -195,7 +191,7 @@ func (rm *resourceManager) sdkCreate(
 
 	var resp *svcsdk.PublishLayerVersionOutput
 	_ = resp
-	resp, err = rm.sdkapi.PublishLayerVersionWithContext(ctx, input)
+	resp, err = rm.sdkapi.PublishLayerVersion(ctx, input)
 	rm.metrics.RecordAPICall("CREATE", "PublishLayerVersion", err)
 	if err != nil {
 		return nil, err
@@ -207,9 +203,9 @@ func (rm *resourceManager) sdkCreate(
 	if resp.CompatibleArchitectures != nil {
 		f0 := []*string{}
 		for _, f0iter := range resp.CompatibleArchitectures {
-			var f0elem string
-			f0elem = *f0iter
-			f0 = append(f0, &f0elem)
+			var f0elem *string
+			f0elem = aws.String(string(f0iter))
+			f0 = append(f0, f0elem)
 		}
 		ko.Spec.CompatibleArchitectures = f0
 	} else {
@@ -218,9 +214,9 @@ func (rm *resourceManager) sdkCreate(
 	if resp.CompatibleRuntimes != nil {
 		f1 := []*string{}
 		for _, f1iter := range resp.CompatibleRuntimes {
-			var f1elem string
-			f1elem = *f1iter
-			f1 = append(f1, &f1elem)
+			var f1elem *string
+			f1elem = aws.String(string(f1iter))
+			f1 = append(f1, f1elem)
 		}
 		ko.Spec.CompatibleRuntimes = f1
 	} else {
@@ -253,11 +249,7 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Spec.LicenseInfo = nil
 	}
-	if resp.Version != nil {
-		ko.Status.VersionNumber = resp.Version
-	} else {
-		ko.Status.VersionNumber = nil
-	}
+	ko.Status.VersionNumber = &resp.Version
 
 	rm.setStatusDefaults(ko)
 	return &resource{ko}, nil
@@ -272,47 +264,47 @@ func (rm *resourceManager) newCreateRequestPayload(
 	res := &svcsdk.PublishLayerVersionInput{}
 
 	if r.ko.Spec.CompatibleArchitectures != nil {
-		f0 := []*string{}
+		f0 := []svcsdktypes.Architecture{}
 		for _, f0iter := range r.ko.Spec.CompatibleArchitectures {
 			var f0elem string
-			f0elem = *f0iter
-			f0 = append(f0, &f0elem)
+			f0elem = string(*f0iter)
+			f0 = append(f0, svcsdktypes.Architecture(f0elem))
 		}
-		res.SetCompatibleArchitectures(f0)
+		res.CompatibleArchitectures = f0
 	}
 	if r.ko.Spec.CompatibleRuntimes != nil {
-		f1 := []*string{}
+		f1 := []svcsdktypes.Runtime{}
 		for _, f1iter := range r.ko.Spec.CompatibleRuntimes {
 			var f1elem string
-			f1elem = *f1iter
-			f1 = append(f1, &f1elem)
+			f1elem = string(*f1iter)
+			f1 = append(f1, svcsdktypes.Runtime(f1elem))
 		}
-		res.SetCompatibleRuntimes(f1)
+		res.CompatibleRuntimes = f1
 	}
 	if r.ko.Spec.Content != nil {
-		f2 := &svcsdk.LayerVersionContentInput{}
+		f2 := &svcsdktypes.LayerVersionContentInput{}
 		if r.ko.Spec.Content.S3Bucket != nil {
-			f2.SetS3Bucket(*r.ko.Spec.Content.S3Bucket)
+			f2.S3Bucket = r.ko.Spec.Content.S3Bucket
 		}
 		if r.ko.Spec.Content.S3Key != nil {
-			f2.SetS3Key(*r.ko.Spec.Content.S3Key)
+			f2.S3Key = r.ko.Spec.Content.S3Key
 		}
 		if r.ko.Spec.Content.S3ObjectVersion != nil {
-			f2.SetS3ObjectVersion(*r.ko.Spec.Content.S3ObjectVersion)
+			f2.S3ObjectVersion = r.ko.Spec.Content.S3ObjectVersion
 		}
 		if r.ko.Spec.Content.ZipFile != nil {
-			f2.SetZipFile(r.ko.Spec.Content.ZipFile)
+			f2.ZipFile = r.ko.Spec.Content.ZipFile
 		}
-		res.SetContent(f2)
+		res.Content = f2
 	}
 	if r.ko.Spec.Description != nil {
-		res.SetDescription(*r.ko.Spec.Description)
+		res.Description = r.ko.Spec.Description
 	}
 	if r.ko.Spec.LayerName != nil {
-		res.SetLayerName(*r.ko.Spec.LayerName)
+		res.LayerName = r.ko.Spec.LayerName
 	}
 	if r.ko.Spec.LicenseInfo != nil {
-		res.SetLicenseInfo(*r.ko.Spec.LicenseInfo)
+		res.LicenseInfo = r.ko.Spec.LicenseInfo
 	}
 
 	return res, nil
@@ -338,7 +330,7 @@ func (rm *resourceManager) sdkUpdate(
 
 	var resp *svcsdk.PublishLayerVersionOutput
 	_ = resp
-	resp, err = rm.sdkapi.PublishLayerVersionWithContext(ctx, input)
+	resp, err = rm.sdkapi.PublishLayerVersion(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "PublishLayerVersion", err)
 	if err != nil {
 		return nil, err
@@ -350,9 +342,9 @@ func (rm *resourceManager) sdkUpdate(
 	if resp.CompatibleArchitectures != nil {
 		f0 := []*string{}
 		for _, f0iter := range resp.CompatibleArchitectures {
-			var f0elem string
-			f0elem = *f0iter
-			f0 = append(f0, &f0elem)
+			var f0elem *string
+			f0elem = aws.String(string(f0iter))
+			f0 = append(f0, f0elem)
 		}
 		ko.Spec.CompatibleArchitectures = f0
 	} else {
@@ -361,9 +353,9 @@ func (rm *resourceManager) sdkUpdate(
 	if resp.CompatibleRuntimes != nil {
 		f1 := []*string{}
 		for _, f1iter := range resp.CompatibleRuntimes {
-			var f1elem string
-			f1elem = *f1iter
-			f1 = append(f1, &f1elem)
+			var f1elem *string
+			f1elem = aws.String(string(f1iter))
+			f1 = append(f1, f1elem)
 		}
 		ko.Spec.CompatibleRuntimes = f1
 	} else {
@@ -396,11 +388,7 @@ func (rm *resourceManager) sdkUpdate(
 	} else {
 		ko.Spec.LicenseInfo = nil
 	}
-	if resp.Version != nil {
-		ko.Status.VersionNumber = resp.Version
-	} else {
-		ko.Status.VersionNumber = nil
-	}
+	ko.Status.VersionNumber = &resp.Version
 
 	rm.setStatusDefaults(ko)
 	return &resource{ko}, nil
@@ -416,47 +404,47 @@ func (rm *resourceManager) newUpdateRequestPayload(
 	res := &svcsdk.PublishLayerVersionInput{}
 
 	if r.ko.Spec.CompatibleArchitectures != nil {
-		f0 := []*string{}
+		f0 := []svcsdktypes.Architecture{}
 		for _, f0iter := range r.ko.Spec.CompatibleArchitectures {
 			var f0elem string
-			f0elem = *f0iter
-			f0 = append(f0, &f0elem)
+			f0elem = string(*f0iter)
+			f0 = append(f0, svcsdktypes.Architecture(f0elem))
 		}
-		res.SetCompatibleArchitectures(f0)
+		res.CompatibleArchitectures = f0
 	}
 	if r.ko.Spec.CompatibleRuntimes != nil {
-		f1 := []*string{}
+		f1 := []svcsdktypes.Runtime{}
 		for _, f1iter := range r.ko.Spec.CompatibleRuntimes {
 			var f1elem string
-			f1elem = *f1iter
-			f1 = append(f1, &f1elem)
+			f1elem = string(*f1iter)
+			f1 = append(f1, svcsdktypes.Runtime(f1elem))
 		}
-		res.SetCompatibleRuntimes(f1)
+		res.CompatibleRuntimes = f1
 	}
 	if r.ko.Spec.Content != nil {
-		f2 := &svcsdk.LayerVersionContentInput{}
+		f2 := &svcsdktypes.LayerVersionContentInput{}
 		if r.ko.Spec.Content.S3Bucket != nil {
-			f2.SetS3Bucket(*r.ko.Spec.Content.S3Bucket)
+			f2.S3Bucket = r.ko.Spec.Content.S3Bucket
 		}
 		if r.ko.Spec.Content.S3Key != nil {
-			f2.SetS3Key(*r.ko.Spec.Content.S3Key)
+			f2.S3Key = r.ko.Spec.Content.S3Key
 		}
 		if r.ko.Spec.Content.S3ObjectVersion != nil {
-			f2.SetS3ObjectVersion(*r.ko.Spec.Content.S3ObjectVersion)
+			f2.S3ObjectVersion = r.ko.Spec.Content.S3ObjectVersion
 		}
 		if r.ko.Spec.Content.ZipFile != nil {
-			f2.SetZipFile(r.ko.Spec.Content.ZipFile)
+			f2.ZipFile = r.ko.Spec.Content.ZipFile
 		}
-		res.SetContent(f2)
+		res.Content = f2
 	}
 	if r.ko.Spec.Description != nil {
-		res.SetDescription(*r.ko.Spec.Description)
+		res.Description = r.ko.Spec.Description
 	}
 	if r.ko.Spec.LayerName != nil {
-		res.SetLayerName(*r.ko.Spec.LayerName)
+		res.LayerName = r.ko.Spec.LayerName
 	}
 	if r.ko.Spec.LicenseInfo != nil {
-		res.SetLicenseInfo(*r.ko.Spec.LicenseInfo)
+		res.LicenseInfo = r.ko.Spec.LicenseInfo
 	}
 
 	return res, nil
@@ -481,7 +469,7 @@ func (rm *resourceManager) sdkDelete(
 	}
 	var resp *svcsdk.DeleteLayerVersionOutput
 	_ = resp
-	resp, err = rm.sdkapi.DeleteLayerVersionWithContext(ctx, input)
+	resp, err = rm.sdkapi.DeleteLayerVersion(ctx, input)
 	rm.metrics.RecordAPICall("DELETE", "DeleteLayerVersion", err)
 	return nil, err
 }
@@ -494,10 +482,10 @@ func (rm *resourceManager) newDeleteRequestPayload(
 	res := &svcsdk.DeleteLayerVersionInput{}
 
 	if r.ko.Spec.LayerName != nil {
-		res.SetLayerName(*r.ko.Spec.LayerName)
+		res.LayerName = r.ko.Spec.LayerName
 	}
 	if r.ko.Status.VersionNumber != nil {
-		res.SetVersionNumber(*r.ko.Status.VersionNumber)
+		res.VersionNumber = r.ko.Status.VersionNumber
 	}
 
 	return res, nil

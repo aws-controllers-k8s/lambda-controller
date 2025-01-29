@@ -26,15 +26,15 @@ import (
 type FunctionURLConfigSpec struct {
 
 	// The type of authentication that your function URL uses. Set to AWS_IAM if
-	// you want to restrict access to authenticated IAM users only. Set to NONE
-	// if you want to bypass IAM authentication to create a public endpoint. For
-	// more information, see Security and auth model for Lambda function URLs (https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html).
+	// you want to restrict access to authenticated users only. Set to NONE if you
+	// want to bypass IAM authentication to create a public endpoint. For more information,
+	// see Security and auth model for Lambda function URLs (https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html).
 	// +kubebuilder:validation:Required
 	AuthType *string `json:"authType"`
 	// The cross-origin resource sharing (CORS) (https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
 	// settings for your function URL.
 	CORS *CORS `json:"cors,omitempty"`
-	// The name of the Lambda function.
+	// The name or ARN of the Lambda function.
 	//
 	// Name formats
 	//
