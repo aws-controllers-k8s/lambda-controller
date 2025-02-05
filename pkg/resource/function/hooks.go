@@ -19,14 +19,14 @@ import (
 	"strings"
 	"time"
 
+	svcapitypes "github.com/aws-controllers-k8s/lambda-controller/apis/v1alpha1"
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
-	"github.com/aws/aws-sdk-go/aws"
-	svcsdk "github.com/aws/aws-sdk-go/service/lambda"
-
-	svcapitypes "github.com/aws-controllers-k8s/lambda-controller/apis/v1alpha1"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	svcsdk "github.com/aws/aws-sdk-go-v2/service/lambda"
+	svcsdktypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 )
 
 var (
@@ -154,7 +154,7 @@ func (rm *resourceManager) updateFunctionConfiguration(
 	}
 
 	if delta.DifferentAt("Spec.DeadLetterConfig") {
-		deadLetterConfig := &svcsdk.DeadLetterConfig{}
+		deadLetterConfig := &svcsdktypes.DeadLetterConfig{}
 		if dspec.DeadLetterConfig != nil {
 			deadLetterConfigCopy := dspec.DeadLetterConfig.DeepCopy()
 			deadLetterConfig.TargetArn = deadLetterConfigCopy.TargetARN
@@ -171,32 +171,36 @@ func (rm *resourceManager) updateFunctionConfiguration(
 	}
 
 	if delta.DifferentAt("Spec.Environment") {
-		environment := &svcsdk.Environment{}
+		environment := &svcsdktypes.Environment{}
 		if dspec.Environment != nil {
-			environment.Variables = dspec.Environment.DeepCopy().Variables
+			environmentCopy := dspec.Environment.DeepCopy()
+			environment.Variables = make(map[string]string)
+			for k, v := range environmentCopy.Variables {
+				environment.Variables[k] = *v
+			}
 		}
 		input.Environment = environment
 	}
 
 	if delta.DifferentAt("Spec.EphemeralStorage") {
-		ephemeralStorage := &svcsdk.EphemeralStorage{}
+		ephemeralStorage := &svcsdktypes.EphemeralStorage{}
 		if dspec.EphemeralStorage != nil {
 			ephemeralStorageCopy := dspec.EphemeralStorage.DeepCopy()
-			ephemeralStorage.Size = ephemeralStorageCopy.Size
+			ephemeralStorage.Size = aws.Int32(int32(*ephemeralStorageCopy.Size))
 		}
 		input.EphemeralStorage = ephemeralStorage
 	}
 
 	if delta.DifferentAt("Spec.FileSystemConfigs") {
-		fileSystemConfigs := []*svcsdk.FileSystemConfig{}
+		fileSystemConfigs := []svcsdktypes.FileSystemConfig{}
 		if len(dspec.FileSystemConfigs) > 0 {
 			for _, elem := range dspec.FileSystemConfigs {
 				elemCopy := elem.DeepCopy()
-				fscElem := &svcsdk.FileSystemConfig{
+				fscElem := &svcsdktypes.FileSystemConfig{
 					Arn:            elemCopy.ARN,
 					LocalMountPath: elemCopy.LocalMountPath,
 				}
-				fileSystemConfigs = append(fileSystemConfigs, fscElem)
+				fileSystemConfigs = append(fileSystemConfigs, *fscElem)
 			}
 			input.FileSystemConfigs = fileSystemConfigs
 		}
@@ -212,11 +216,17 @@ func (rm *resourceManager) updateFunctionConfiguration(
 
 	if delta.DifferentAt("Spec.ImageConfig") {
 		if dspec.ImageConfig != nil && dspec.Code.ImageURI != nil && *dspec.Code.ImageURI != "" {
-			imageConfig := &svcsdk.ImageConfig{}
+			imageConfig := &svcsdktypes.ImageConfig{}
 			if dspec.ImageConfig != nil {
 				imageConfigCopy := dspec.ImageConfig.DeepCopy()
-				imageConfig.Command = imageConfigCopy.Command
-				imageConfig.EntryPoint = imageConfigCopy.EntryPoint
+				imageConfig.Command = make([]string, len(imageConfigCopy.Command))
+				for i, elem := range imageConfigCopy.Command {
+					imageConfig.Command[i] = *elem
+				}
+				imageConfig.EntryPoint = make([]string, len(imageConfigCopy.EntryPoint))
+				for i, elem := range imageConfigCopy.EntryPoint {
+					imageConfig.EntryPoint[i] = *elem
+				}
 				imageConfig.WorkingDirectory = imageConfigCopy.WorkingDirectory
 			}
 			input.ImageConfig = imageConfig
@@ -232,11 +242,11 @@ func (rm *resourceManager) updateFunctionConfiguration(
 	}
 
 	if delta.DifferentAt("Spec.Layers") {
-		layers := []*string{}
+		layers := []string{}
 		if len(dspec.Layers) > 0 {
 			for _, iter := range dspec.Layers {
 				var elem string = *iter
-				layers = append(layers, &elem)
+				layers = append(layers, elem)
 			}
 			input.Layers = layers
 		}
@@ -244,9 +254,9 @@ func (rm *resourceManager) updateFunctionConfiguration(
 
 	if delta.DifferentAt("Spec.MemorySize") {
 		if dspec.MemorySize != nil {
-			input.MemorySize = aws.Int64(*dspec.MemorySize)
+			input.MemorySize = aws.Int32(int32(*dspec.MemorySize))
 		} else {
-			input.MemorySize = aws.Int64(0)
+			input.MemorySize = aws.Int32(0)
 		}
 	}
 
@@ -260,48 +270,54 @@ func (rm *resourceManager) updateFunctionConfiguration(
 
 	if delta.DifferentAt("Spec.Runtime") {
 		if dspec.Runtime != nil {
-			input.Runtime = aws.String(*dspec.Runtime)
+			input.Runtime = svcsdktypes.Runtime(*dspec.Runtime)
 		} else {
-			input.Runtime = aws.String("")
+			input.Runtime = svcsdktypes.Runtime("")
 		}
 	}
 
 	if delta.DifferentAt(("Spec.SnapStart")) {
-		snapStart := &svcsdk.SnapStart{}
+		snapStart := &svcsdktypes.SnapStart{}
 		if dspec.SnapStart != nil {
 			snapStartCopy := dspec.SnapStart.DeepCopy()
-			snapStart.ApplyOn = snapStartCopy.ApplyOn
+			snapStart.ApplyOn = svcsdktypes.SnapStartApplyOn(*snapStartCopy.ApplyOn)
 		}
 		input.SnapStart = snapStart
 	}
 
 	if delta.DifferentAt("Spec.Timeout") {
 		if dspec.Timeout != nil {
-			input.Timeout = aws.Int64(*dspec.Timeout)
+			input.Timeout = aws.Int32(int32(*dspec.Timeout))
 		} else {
-			input.Timeout = aws.Int64(0)
+			input.Timeout = aws.Int32(0)
 		}
 	}
 
 	if delta.DifferentAt("Spec.TracingConfig") {
-		tracingConfig := &svcsdk.TracingConfig{}
+		tracingConfig := &svcsdktypes.TracingConfig{}
 		if dspec.TracingConfig != nil {
-			tracingConfig.Mode = aws.String(*dspec.TracingConfig.Mode)
+			tracingConfig.Mode = svcsdktypes.TracingMode(*dspec.TracingConfig.Mode)
 		}
 		input.TracingConfig = tracingConfig
 	}
 
 	if delta.DifferentAt("Spec.VPCConfig") {
-		VPCConfig := &svcsdk.VpcConfig{}
+		VPCConfig := &svcsdktypes.VpcConfig{}
 		if dspec.VPCConfig != nil {
 			vpcConfigCopy := dspec.VPCConfig.DeepCopy()
-			VPCConfig.SubnetIds = vpcConfigCopy.SubnetIDs
-			VPCConfig.SecurityGroupIds = vpcConfigCopy.SecurityGroupIDs
+			VPCConfig.SubnetIds = make([]string, len(vpcConfigCopy.SubnetIDs))
+			for i, elem := range vpcConfigCopy.SubnetIDs {
+				VPCConfig.SubnetIds[i] = *elem
+			}
+			VPCConfig.SecurityGroupIds = make([]string, len(vpcConfigCopy.SecurityGroupIDs))
+			for i, elem := range vpcConfigCopy.SecurityGroupIDs {
+				VPCConfig.SecurityGroupIds[i] = *elem
+			}
 		}
 		input.VpcConfig = VPCConfig
 	}
 
-	_, err = rm.sdkapi.UpdateFunctionConfigurationWithContext(ctx, input)
+	_, err = rm.sdkapi.UpdateFunctionConfiguration(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateFunctionConfiguration", err)
 	if err != nil {
 		return err
@@ -327,18 +343,18 @@ func (rm *resourceManager) updateFunctionTags(
 	// There is no api call to update tags, so we need to remove them and add them later
 	// with their new values.
 	if len(removed)+len(updated) > 0 {
-		removeTags := []*string{}
+		removeTags := []string{}
 		for k := range updated {
-			removeTags = append(removeTags, &k)
+			removeTags = append(removeTags, k)
 		}
 		for _, k := range removed {
-			removeTags = append(removeTags, &k)
+			removeTags = append(removeTags, k)
 		}
 		input := &svcsdk.UntagResourceInput{
 			Resource: (*string)(desired.ko.Status.ACKResourceMetadata.ARN),
 			TagKeys:  removeTags,
 		}
-		_, err = rm.sdkapi.UntagResourceWithContext(ctx, input)
+		_, err = rm.sdkapi.UntagResource(ctx, input)
 		rm.metrics.RecordAPICall("UPDATE", "UntagResource", err)
 		if err != nil {
 			return err
@@ -346,19 +362,19 @@ func (rm *resourceManager) updateFunctionTags(
 	}
 
 	if len(updated)+len(added) > 0 {
-		addedTags := map[string]*string{}
+		addedTags := map[string]string{}
 		for k, v := range added {
-			addedTags[k] = v
+			addedTags[k] = *v
 		}
 		for k, v := range updated {
-			addedTags[k] = v
+			addedTags[k] = *v
 		}
 
 		input := &svcsdk.TagResourceInput{
 			Resource: (*string)(desired.ko.Status.ACKResourceMetadata.ARN),
 			Tags:     addedTags,
 		}
-		_, err = rm.sdkapi.TagResourceWithContext(ctx, input)
+		_, err = rm.sdkapi.TagResource(ctx, input)
 		rm.metrics.RecordAPICall("UPDATE", "TagResource", err)
 		if err != nil {
 			return err
@@ -387,7 +403,10 @@ func (rm *resourceManager) updateFunctionCode(
 	}
 
 	if dspec.Architectures != nil {
-		input.Architectures = dspec.Architectures
+		input.Architectures = make([]svcsdktypes.Architecture, len(dspec.Architectures))
+		for i, elem := range dspec.Architectures {
+			input.Architectures[i] = svcsdktypes.Architecture(*elem)
+		}
 	} else {
 		input.Architectures = nil
 	}
@@ -419,7 +438,7 @@ func (rm *resourceManager) updateFunctionCode(
 		}
 	}
 
-	_, err = rm.sdkapi.UpdateFunctionCodeWithContext(ctx, input)
+	_, err = rm.sdkapi.UpdateFunctionCode(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateFunctionCode", err)
 	if err != nil {
 		return err
@@ -489,8 +508,7 @@ func customPreCompare(
 	}
 }
 
-// updateFunctionConcurrency calls UpdateFunctionConcurrency to update a specific
-// lambda function reserved concurrent executions.
+// updateFunctionConcurrency calls `PutFunctionConcurrency` to update the fields
 func (rm *resourceManager) updateFunctionConcurrency(
 	ctx context.Context,
 	desired *resource,
@@ -506,17 +524,19 @@ func (rm *resourceManager) updateFunctionConcurrency(
 	}
 
 	if desired.ko.Spec.ReservedConcurrentExecutions != nil {
-		input.ReservedConcurrentExecutions = aws.Int64(*desired.ko.Spec.ReservedConcurrentExecutions)
+		input.ReservedConcurrentExecutions = aws.Int32(int32(*desired.ko.Spec.ReservedConcurrentExecutions))
 	} else {
-		input.ReservedConcurrentExecutions = aws.Int64(0)
-	}
-
-	_, err = rm.sdkapi.PutFunctionConcurrencyWithContext(ctx, input)
-	rm.metrics.RecordAPICall("UPDATE", "PutFunctionConcurrency", err)
-	if err != nil {
+		// Delete concurrency config if value is nil
+		_, err = rm.sdkapi.DeleteFunctionConcurrency(ctx, &svcsdk.DeleteFunctionConcurrencyInput{
+			FunctionName: aws.String(*dspec.Name),
+		})
+		rm.metrics.RecordAPICall("DELETE", "DeleteFunctionConcurrency", err)
 		return err
 	}
-	return nil
+
+	_, err = rm.sdkapi.PutFunctionConcurrency(ctx, input)
+	rm.metrics.RecordAPICall("UPDATE", "PutFunctionConcurrency", err)
+	return err
 }
 
 // syncFunctionEventInvokeConfig calls `PutFunctionEventInvokeConfig` to update the fields
@@ -536,7 +556,7 @@ func (rm *resourceManager) syncFunctionEventInvokeConfig(
 		input_delete := &svcsdk.DeleteFunctionEventInvokeConfigInput{
 			FunctionName: aws.String(*desired.ko.Spec.Name),
 		}
-		_, err = rm.sdkapi.DeleteFunctionEventInvokeConfigWithContext(ctx, input_delete)
+		_, err = rm.sdkapi.DeleteFunctionEventInvokeConfig(ctx, input_delete)
 		rm.metrics.RecordAPICall("DELETE", "DeleteFunctionEventInvokeConfig", err)
 		if err != nil {
 			return err
@@ -550,15 +570,15 @@ func (rm *resourceManager) syncFunctionEventInvokeConfig(
 	}
 
 	if dspec.FunctionEventInvokeConfig.DestinationConfig != nil {
-		destinations := &svcsdk.DestinationConfig{}
+		destinations := &svcsdktypes.DestinationConfig{}
 		if dspec.FunctionEventInvokeConfig.DestinationConfig.OnFailure != nil {
-			destinations.OnFailure = &svcsdk.OnFailure{}
+			destinations.OnFailure = &svcsdktypes.OnFailure{}
 			if dspec.FunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination != nil {
 				destinations.OnFailure.Destination = aws.String(*dspec.FunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination)
 			}
 		}
 		if dspec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess != nil {
-			destinations.OnSuccess = &svcsdk.OnSuccess{}
+			destinations.OnSuccess = &svcsdktypes.OnSuccess{}
 			if dspec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination != nil {
 				destinations.OnSuccess.Destination = aws.String(*dspec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination)
 			}
@@ -566,13 +586,13 @@ func (rm *resourceManager) syncFunctionEventInvokeConfig(
 		input.DestinationConfig = destinations
 	}
 	if dspec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds != nil {
-		input.MaximumEventAgeInSeconds = aws.Int64(*dspec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds)
+		input.MaximumEventAgeInSeconds = aws.Int32(int32(*dspec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds))
 	}
 	if dspec.FunctionEventInvokeConfig.MaximumRetryAttempts != nil {
-		input.MaximumRetryAttempts = aws.Int64(*dspec.FunctionEventInvokeConfig.MaximumRetryAttempts)
+		input.MaximumRetryAttempts = aws.Int32(int32(*dspec.FunctionEventInvokeConfig.MaximumRetryAttempts))
 	}
 
-	_, err = rm.sdkapi.PutFunctionEventInvokeConfigWithContext(ctx, input)
+	_, err = rm.sdkapi.PutFunctionEventInvokeConfig(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "SyncEventInvokeConfig", err)
 	if err != nil {
 		return err
@@ -601,7 +621,7 @@ func (rm *resourceManager) updateFunctionCodeSigningConfig(
 		CodeSigningConfigArn: aws.String(*dspec.CodeSigningConfigARN),
 	}
 
-	_, err = rm.sdkapi.PutFunctionCodeSigningConfigWithContext(ctx, input)
+	_, err = rm.sdkapi.PutFunctionCodeSigningConfig(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "PutFunctionCodeSigningConfig", err)
 	if err != nil {
 		return err
@@ -625,7 +645,7 @@ func (rm *resourceManager) deleteFunctionCodeSigningConfig(
 		FunctionName: aws.String(*dspec.Name),
 	}
 
-	_, err = rm.sdkapi.DeleteFunctionCodeSigningConfigWithContext(ctx, input)
+	_, err = rm.sdkapi.DeleteFunctionCodeSigningConfig(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "DeleteFunctionCodeSigningConfig", err)
 	if err != nil {
 		return err
@@ -643,8 +663,13 @@ func (rm *resourceManager) setFunctionConcurrency(
 	exit := rlog.Trace("rm.setFunctionConcurrency")
 	defer exit(err)
 
+	// Add nil checks for required fields
+	if ko == nil || ko.Spec.Name == nil {
+		return nil // Skip if required fields are not set
+	}
+
 	var getFunctionConcurrencyOutput *svcsdk.GetFunctionConcurrencyOutput
-	getFunctionConcurrencyOutput, err = rm.sdkapi.GetFunctionConcurrencyWithContext(
+	getFunctionConcurrencyOutput, err = rm.sdkapi.GetFunctionConcurrency(
 		ctx,
 		&svcsdk.GetFunctionConcurrencyInput{
 			FunctionName: ko.Spec.Name,
@@ -652,9 +677,20 @@ func (rm *resourceManager) setFunctionConcurrency(
 	)
 	rm.metrics.RecordAPICall("GET", "GetFunctionConcurrency", err)
 	if err != nil {
+		// If the concurrency config doesn't exist, don't return error
+		var notFound *svcsdktypes.ResourceNotFoundException
+		if errors.As(err, &notFound) {
+			ko.Spec.ReservedConcurrentExecutions = nil
+			return nil
+		}
 		return err
 	}
-	ko.Spec.ReservedConcurrentExecutions = getFunctionConcurrencyOutput.ReservedConcurrentExecutions
+
+	if getFunctionConcurrencyOutput != nil && getFunctionConcurrencyOutput.ReservedConcurrentExecutions != nil {
+		ko.Spec.ReservedConcurrentExecutions = aws.Int64(int64(*getFunctionConcurrencyOutput.ReservedConcurrentExecutions))
+	} else {
+		ko.Spec.ReservedConcurrentExecutions = nil
+	}
 
 	return nil
 }
@@ -669,8 +705,13 @@ func (rm *resourceManager) setFunctionCodeSigningConfig(
 	exit := rlog.Trace("rm.setFunctionCodeSigningConfig")
 	defer exit(err)
 
+	// Add nil checks for required fields
+	if ko == nil || ko.Spec.Name == nil {
+		return nil // Skip if required fields are not set
+	}
+
 	var getFunctionCodeSigningConfigOutput *svcsdk.GetFunctionCodeSigningConfigOutput
-	getFunctionCodeSigningConfigOutput, err = rm.sdkapi.GetFunctionCodeSigningConfigWithContext(
+	getFunctionCodeSigningConfigOutput, err = rm.sdkapi.GetFunctionCodeSigningConfig(
 		ctx,
 		&svcsdk.GetFunctionCodeSigningConfigInput{
 			FunctionName: ko.Spec.Name,
@@ -680,7 +721,10 @@ func (rm *resourceManager) setFunctionCodeSigningConfig(
 	if err != nil {
 		return err
 	}
-	ko.Spec.CodeSigningConfigARN = getFunctionCodeSigningConfigOutput.CodeSigningConfigArn
+
+	if getFunctionCodeSigningConfigOutput != nil && getFunctionCodeSigningConfigOutput.CodeSigningConfigArn != nil {
+		ko.Spec.CodeSigningConfigARN = getFunctionCodeSigningConfigOutput.CodeSigningConfigArn
+	}
 
 	return nil
 }
@@ -696,8 +740,8 @@ func (rm *resourceManager) setFunctionEventInvokeConfigFromResponse(
 	cloudFunctionEventInvokeConfig.DestinationConfig.OnSuccess = &svcapitypes.OnSuccess{}
 	cloudFunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination = getFunctionEventInvokeConfigOutput.DestinationConfig.OnFailure.Destination
 	cloudFunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination = getFunctionEventInvokeConfigOutput.DestinationConfig.OnSuccess.Destination
-	cloudFunctionEventInvokeConfig.MaximumEventAgeInSeconds = getFunctionEventInvokeConfigOutput.MaximumEventAgeInSeconds
-	cloudFunctionEventInvokeConfig.MaximumRetryAttempts = getFunctionEventInvokeConfigOutput.MaximumRetryAttempts
+	cloudFunctionEventInvokeConfig.MaximumEventAgeInSeconds = aws.Int64(int64(*getFunctionEventInvokeConfigOutput.MaximumEventAgeInSeconds))
+	cloudFunctionEventInvokeConfig.MaximumRetryAttempts = aws.Int64(int64(*getFunctionEventInvokeConfigOutput.MaximumRetryAttempts))
 	ko.Spec.FunctionEventInvokeConfig = cloudFunctionEventInvokeConfig
 
 }
@@ -713,7 +757,7 @@ func (rm *resourceManager) setFunctionEventInvokeConfig(
 	defer exit(err)
 
 	var getFunctionEventInvokeConfigOutput *svcsdk.GetFunctionEventInvokeConfigOutput
-	getFunctionEventInvokeConfigOutput, err = rm.sdkapi.GetFunctionEventInvokeConfigWithContext(
+	getFunctionEventInvokeConfigOutput, err = rm.sdkapi.GetFunctionEventInvokeConfig(
 		ctx,
 		&svcsdk.GetFunctionEventInvokeConfigInput{
 			FunctionName: ko.Spec.Name,
@@ -722,7 +766,7 @@ func (rm *resourceManager) setFunctionEventInvokeConfig(
 	rm.metrics.RecordAPICall("GET", "GetFunctionEventInvokeConfig", err)
 
 	if err != nil {
-		if awserr, ok := ackerr.AWSError(err); ok && (awserr.Code() == "EventInvokeConfigNotFoundException" || awserr.Code() == "ResourceNotFoundException") {
+		if awserr, ok := ackerr.AWSError(err); ok && (awserr.ErrorCode() == "EventInvokeConfigNotFoundException" || awserr.ErrorCode() == "ResourceNotFoundException") {
 			ko.Spec.FunctionEventInvokeConfig = nil
 		} else {
 			return err

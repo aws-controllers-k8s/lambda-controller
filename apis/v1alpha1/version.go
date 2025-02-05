@@ -34,7 +34,7 @@ type VersionSpec struct {
 	// configuration.
 	Description               *string                            `json:"description,omitempty"`
 	FunctionEventInvokeConfig *PutFunctionEventInvokeConfigInput `json:"functionEventInvokeConfig,omitempty"`
-	// The name of the Lambda function.
+	// The name or ARN of the Lambda function.
 	//
 	// Name formats
 	//
@@ -83,8 +83,9 @@ type VersionStatus struct {
 	// Omitted from CloudTrail logs.
 	// +kubebuilder:validation:Optional
 	Environment *EnvironmentResponse `json:"environment,omitempty"`
-	// The size of the function’s /tmp directory in MB. The default value is 512,
-	// but it can be any whole number between 512 and 10,240 MB.
+	// The size of the function's /tmp directory in MB. The default value is 512,
+	// but can be any whole number between 512 and 10,240 MB. For more information,
+	// see Configuring ephemeral storage (console) (https://docs.aws.amazon.com/lambda/latest/dg/configuration-function-common.html#configuration-ephemeral-storage).
 	// +kubebuilder:validation:Optional
 	EphemeralStorage *EphemeralStorage `json:"ephemeralStorage,omitempty"`
 	// Connection settings for an Amazon EFS file system (https://docs.aws.amazon.com/lambda/latest/dg/configuration-filesystem.html).
@@ -99,8 +100,26 @@ type VersionStatus struct {
 	// The function's image configuration values.
 	// +kubebuilder:validation:Optional
 	ImageConfigResponse *ImageConfigResponse `json:"imageConfigResponse,omitempty"`
-	// The KMS key that's used to encrypt the function's environment variables.
-	// This key is returned only if you've configured a customer managed key.
+	// The ARN of the Key Management Service (KMS) customer managed key that's used
+	// to encrypt the following resources:
+	//
+	//    * The function's environment variables (https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-encryption).
+	//
+	//    * The function's Lambda SnapStart (https://docs.aws.amazon.com/lambda/latest/dg/snapstart-security.html)
+	//    snapshots.
+	//
+	//    * When used with SourceKMSKeyArn, the unzipped version of the .zip deployment
+	//    package that's used for function invocations. For more information, see
+	//    Specifying a customer managed key for Lambda (https://docs.aws.amazon.com/lambda/latest/dg/encrypt-zip-package.html#enable-zip-custom-encryption).
+	//
+	//    * The optimized version of the container image that's used for function
+	//    invocations. Note that this is not the same key that's used to protect
+	//    your container image in the Amazon Elastic Container Registry (Amazon
+	//    ECR). For more information, see Function lifecycle (https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#images-lifecycle).
+	//
+	// If you don't provide a customer managed key, Lambda uses an Amazon Web Services
+	// owned key (https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-owned-cmk)
+	// or an Amazon Web Services managed key (https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-managed-cmk).
 	// +kubebuilder:validation:Optional
 	KMSKeyARN *string `json:"kmsKeyARN,omitempty"`
 	// The date and time that the function was last updated, in ISO-8601 format
@@ -136,7 +155,16 @@ type VersionStatus struct {
 	// The function's execution role.
 	// +kubebuilder:validation:Optional
 	Role *string `json:"role,omitempty"`
-	// The runtime environment for the Lambda function.
+	// The identifier of the function's runtime (https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html).
+	// Runtime is required if the deployment package is a .zip file archive. Specifying
+	// a runtime results in an error if you're deploying a function using a container
+	// image.
+	//
+	// The following list includes deprecated runtimes. Lambda blocks creating new
+	// functions and updating existing functions shortly after each runtime is deprecated.
+	// For more information, see Runtime use after deprecation (https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-deprecation-levels).
+	//
+	// For a list of all currently supported runtimes, see Supported runtimes (https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtimes-supported).
 	// +kubebuilder:validation:Optional
 	Runtime *string `json:"runtime,omitempty"`
 	// The ARN of the signing job.

@@ -18,14 +18,14 @@ import (
 	"errors"
 	"time"
 
+	svcapitypes "github.com/aws-controllers-k8s/lambda-controller/apis/v1alpha1"
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
+	svcsdk "github.com/aws/aws-sdk-go-v2/service/lambda"
+	svcsdktypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/aws/aws-sdk-go/aws"
-	svcsdk "github.com/aws/aws-sdk-go/service/lambda"
-
-	svcapitypes "github.com/aws-controllers-k8s/lambda-controller/apis/v1alpha1"
 )
 
 var (
@@ -105,7 +105,7 @@ func (rm *resourceManager) syncEventInvokeConfig(
 			FunctionName: aws.String(*r.ko.Spec.FunctionName),
 			Qualifier:    aws.String(*r.ko.Status.Version),
 		}
-		_, err = rm.sdkapi.DeleteFunctionEventInvokeConfigWithContext(ctx, input_delete)
+		_, err = rm.sdkapi.DeleteFunctionEventInvokeConfig(ctx, input_delete)
 		rm.metrics.RecordAPICall("DELETE", "DeleteFunctionEventInvokeConfig", err)
 		if err != nil {
 			return nil
@@ -120,15 +120,15 @@ func (rm *resourceManager) syncEventInvokeConfig(
 	}
 
 	if dspec.FunctionEventInvokeConfig.DestinationConfig != nil {
-		destinations := &svcsdk.DestinationConfig{}
+		destinations := &svcsdktypes.DestinationConfig{}
 		if dspec.FunctionEventInvokeConfig.DestinationConfig.OnFailure != nil {
-			destinations.OnFailure = &svcsdk.OnFailure{}
+			destinations.OnFailure = &svcsdktypes.OnFailure{}
 			if dspec.FunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination != nil {
 				destinations.OnFailure.Destination = aws.String(*dspec.FunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination)
 			}
 		}
 		if dspec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess != nil {
-			destinations.OnSuccess = &svcsdk.OnSuccess{}
+			destinations.OnSuccess = &svcsdktypes.OnSuccess{}
 			if dspec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination != nil {
 				destinations.OnSuccess.Destination = aws.String(*dspec.FunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination)
 			}
@@ -136,13 +136,13 @@ func (rm *resourceManager) syncEventInvokeConfig(
 		input.DestinationConfig = destinations
 	}
 	if dspec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds != nil {
-		input.MaximumEventAgeInSeconds = aws.Int64(*dspec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds)
+		input.MaximumEventAgeInSeconds = aws.Int32(int32(*dspec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds))
 	}
 	if dspec.FunctionEventInvokeConfig.MaximumRetryAttempts != nil {
-		input.MaximumRetryAttempts = aws.Int64(*dspec.FunctionEventInvokeConfig.MaximumRetryAttempts)
+		input.MaximumRetryAttempts = aws.Int32(int32(*dspec.FunctionEventInvokeConfig.MaximumRetryAttempts))
 	}
 
-	_, err = rm.sdkapi.PutFunctionEventInvokeConfigWithContext(ctx, input)
+	_, err = rm.sdkapi.PutFunctionEventInvokeConfig(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "SyncEventInvokeConfig", err)
 	if err != nil {
 		return err
@@ -161,8 +161,8 @@ func (rm *resourceManager) setFunctionEventInvokeConfigFromResponse(
 	cloudFunctionEventInvokeConfig.DestinationConfig.OnSuccess = &svcapitypes.OnSuccess{}
 	cloudFunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination = getFunctionEventInvokeConfigOutput.DestinationConfig.OnFailure.Destination
 	cloudFunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination = getFunctionEventInvokeConfigOutput.DestinationConfig.OnSuccess.Destination
-	cloudFunctionEventInvokeConfig.MaximumEventAgeInSeconds = getFunctionEventInvokeConfigOutput.MaximumEventAgeInSeconds
-	cloudFunctionEventInvokeConfig.MaximumRetryAttempts = getFunctionEventInvokeConfigOutput.MaximumRetryAttempts
+	cloudFunctionEventInvokeConfig.MaximumEventAgeInSeconds = aws.Int64(int64(*getFunctionEventInvokeConfigOutput.MaximumEventAgeInSeconds))
+	cloudFunctionEventInvokeConfig.MaximumRetryAttempts = aws.Int64(int64(*getFunctionEventInvokeConfigOutput.MaximumRetryAttempts))
 	ko.Spec.FunctionEventInvokeConfig = cloudFunctionEventInvokeConfig
 
 }
@@ -178,7 +178,7 @@ func (rm *resourceManager) setFunctionEventInvokeConfig(
 	defer exit(err)
 
 	var getFunctionEventInvokeConfigOutput *svcsdk.GetFunctionEventInvokeConfigOutput
-	getFunctionEventInvokeConfigOutput, err = rm.sdkapi.GetFunctionEventInvokeConfigWithContext(
+	getFunctionEventInvokeConfigOutput, err = rm.sdkapi.GetFunctionEventInvokeConfig(
 		ctx,
 		&svcsdk.GetFunctionEventInvokeConfigInput{
 			FunctionName: ko.Spec.FunctionName,
@@ -188,7 +188,7 @@ func (rm *resourceManager) setFunctionEventInvokeConfig(
 	rm.metrics.RecordAPICall("GET", "GetFunctionEventInvokeConfig", err)
 
 	if err != nil {
-		if awserr, ok := ackerr.AWSError(err); ok && (awserr.Code() == "EventInvokeConfigNotFoundException" || awserr.Code() == "ResourceNotFoundException") {
+		if awserr, ok := ackerr.AWSError(err); ok && (awserr.ErrorCode() == "EventInvokeConfigNotFoundException" || awserr.ErrorCode() == "ResourceNotFoundException") {
 			ko.Spec.FunctionEventInvokeConfig = nil
 		} else {
 			return err
@@ -222,7 +222,7 @@ func (rm *resourceManager) updateProvisionedConcurrency(
 			FunctionName: aws.String(*desired.ko.Spec.FunctionName),
 			Qualifier:    aws.String(*desired.ko.Status.Version),
 		}
-		_, err = rm.sdkapi.DeleteProvisionedConcurrencyConfigWithContext(ctx, input_delete)
+		_, err = rm.sdkapi.DeleteProvisionedConcurrencyConfig(ctx, input_delete)
 		rm.metrics.RecordAPICall("DELETE", "DeleteProvisionedConcurrency", err)
 		if err != nil {
 			return err
@@ -234,10 +234,10 @@ func (rm *resourceManager) updateProvisionedConcurrency(
 	input := &svcsdk.PutProvisionedConcurrencyConfigInput{
 		FunctionName:                    aws.String(*desired.ko.Spec.FunctionName),
 		Qualifier:                       aws.String(*desired.ko.Status.Version),
-		ProvisionedConcurrentExecutions: aws.Int64(*dspec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions),
+		ProvisionedConcurrentExecutions: aws.Int32(int32(*dspec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions)),
 	}
 
-	_, err = rm.sdkapi.PutProvisionedConcurrencyConfigWithContext(ctx, input)
+	_, err = rm.sdkapi.PutProvisionedConcurrencyConfig(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateProvisionedConcurrency", err)
 	if err != nil {
 		return err
@@ -256,7 +256,7 @@ func (rm *resourceManager) setProvisionedConcurrencyConfig(
 	defer exit(err)
 
 	var getProvisionedConcurrencyConfigOutput *svcsdk.GetProvisionedConcurrencyConfigOutput
-	getProvisionedConcurrencyConfigOutput, err = rm.sdkapi.GetProvisionedConcurrencyConfigWithContext(
+	getProvisionedConcurrencyConfigOutput, err = rm.sdkapi.GetProvisionedConcurrencyConfig(
 		ctx,
 		&svcsdk.GetProvisionedConcurrencyConfigInput{
 			FunctionName: ko.Spec.FunctionName,
@@ -266,7 +266,7 @@ func (rm *resourceManager) setProvisionedConcurrencyConfig(
 	rm.metrics.RecordAPICall("GET", "GetProvisionedConcurrencyConfig", err)
 
 	if err != nil {
-		if awserr, ok := ackerr.AWSError(err); ok && (awserr.Code() == "ProvisionedConcurrencyConfigNotFoundException" || awserr.Code() == "ResourceNotFoundException") {
+		if awserr, ok := ackerr.AWSError(err); ok && (awserr.ErrorCode() == "ProvisionedConcurrencyConfigNotFoundException" || awserr.ErrorCode() == "ResourceNotFoundException") {
 			ko.Spec.ProvisionedConcurrencyConfig = nil
 		} else {
 			return err
@@ -274,7 +274,7 @@ func (rm *resourceManager) setProvisionedConcurrencyConfig(
 	} else {
 		// creating ProvisionedConcurrency object to store the values returned from `Get` call
 		cloudProvisionedConcurrency := &svcapitypes.PutProvisionedConcurrencyConfigInput{}
-		cloudProvisionedConcurrency.ProvisionedConcurrentExecutions = getProvisionedConcurrencyConfigOutput.RequestedProvisionedConcurrentExecutions
+		cloudProvisionedConcurrency.ProvisionedConcurrentExecutions = aws.Int64(int64(*getProvisionedConcurrencyConfigOutput.RequestedProvisionedConcurrentExecutions))
 		ko.Spec.ProvisionedConcurrencyConfig = cloudProvisionedConcurrency
 	}
 

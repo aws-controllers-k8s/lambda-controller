@@ -19,7 +19,7 @@ import (
 	"sort"
 
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
-	svcsdk "github.com/aws/aws-sdk-go/service/lambda"
+	svcsdk "github.com/aws/aws-sdk-go-v2/service/lambda"
 )
 
 // customPreDelete deletes all the previous versions of a
@@ -34,7 +34,7 @@ func customPreDelete(
 	input := &svcsdk.ListLayerVersionsInput{
 		LayerName: r.ko.Spec.LayerName,
 	}
-	response, err := rm.sdkapi.ListLayerVersionsWithContext(ctx, input)
+	response, err := rm.sdkapi.ListLayerVersions(ctx, input)
 	if err != nil {
 		return err
 	}
@@ -49,19 +49,19 @@ func customPreDelete(
 
 	// sorting the list in ascending order
 	sort.Slice(versionList, func(i, j int) bool {
-		return *versionList[i].Version < *versionList[j].Version
+		return versionList[i].Version < versionList[j].Version
 	})
 
 	for i := 0; i < len(versionList)-1; i++ {
 		input := &svcsdk.DeleteLayerVersionInput{
 			LayerName:     r.ko.Spec.LayerName,
-			VersionNumber: versionList[i].Version,
+			VersionNumber: &versionList[i].Version,
 		}
 		// Delete API call to delete the versions one by one
 		logMessage := fmt.Sprintf("Deleting version %v of %v", *input.VersionNumber, *input.LayerName)
 		log.Debug(logMessage)
 
-		_, err = rm.sdkapi.DeleteLayerVersionWithContext(ctx, input)
+		_, err = rm.sdkapi.DeleteLayerVersion(ctx, input)
 		rm.metrics.RecordAPICall("DELETE", "DeleteLayerVersion", err)
 		if err != nil {
 			return err

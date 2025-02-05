@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
 	"strings"
 
@@ -28,8 +29,10 @@ import (
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
-	"github.com/aws/aws-sdk-go/aws"
-	svcsdk "github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	svcsdk "github.com/aws/aws-sdk-go-v2/service/lambda"
+	svcsdktypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	smithy "github.com/aws/smithy-go"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -40,8 +43,7 @@ import (
 var (
 	_ = &metav1.Time{}
 	_ = strings.ToLower("")
-	_ = &aws.JSONValue{}
-	_ = &svcsdk.Lambda{}
+	_ = &svcsdk.Client{}
 	_ = &svcapitypes.FunctionURLConfig{}
 	_ = ackv1alpha1.AWSAccountID("")
 	_ = &ackerr.NotFound
@@ -49,6 +51,7 @@ var (
 	_ = &reflect.Value{}
 	_ = fmt.Sprintf("")
 	_ = &ackrequeue.NoRequeue{}
+	_ = &aws.Config{}
 )
 
 // sdkFind returns SDK-specific information about a supplied resource
@@ -74,13 +77,11 @@ func (rm *resourceManager) sdkFind(
 	}
 
 	var resp *svcsdk.GetFunctionUrlConfigOutput
-	resp, err = rm.sdkapi.GetFunctionUrlConfigWithContext(ctx, input)
+	resp, err = rm.sdkapi.GetFunctionUrlConfig(ctx, input)
 	rm.metrics.RecordAPICall("READ_ONE", "GetFunctionUrlConfig", err)
 	if err != nil {
-		if reqErr, ok := ackerr.AWSRequestFailure(err); ok && reqErr.StatusCode() == 404 {
-			return nil, ackerr.NotFound
-		}
-		if awsErr, ok := ackerr.AWSError(err); ok && awsErr.Code() == "ResourceNotFoundException" {
+		var awsErr smithy.APIError
+		if errors.As(err, &awsErr) && awsErr.ErrorCode() == "ResourceNotFoundException" {
 			return nil, ackerr.NotFound
 		}
 		return nil, err
@@ -90,8 +91,8 @@ func (rm *resourceManager) sdkFind(
 	// the original Kubernetes object we passed to the function
 	ko := r.ko.DeepCopy()
 
-	if resp.AuthType != nil {
-		ko.Spec.AuthType = resp.AuthType
+	if resp.AuthType != "" {
+		ko.Spec.AuthType = aws.String(string(resp.AuthType))
 	} else {
 		ko.Spec.AuthType = nil
 	}
@@ -101,43 +102,20 @@ func (rm *resourceManager) sdkFind(
 			f1.AllowCredentials = resp.Cors.AllowCredentials
 		}
 		if resp.Cors.AllowHeaders != nil {
-			f1f1 := []*string{}
-			for _, f1f1iter := range resp.Cors.AllowHeaders {
-				var f1f1elem string
-				f1f1elem = *f1f1iter
-				f1f1 = append(f1f1, &f1f1elem)
-			}
-			f1.AllowHeaders = f1f1
+			f1.AllowHeaders = aws.StringSlice(resp.Cors.AllowHeaders)
 		}
 		if resp.Cors.AllowMethods != nil {
-			f1f2 := []*string{}
-			for _, f1f2iter := range resp.Cors.AllowMethods {
-				var f1f2elem string
-				f1f2elem = *f1f2iter
-				f1f2 = append(f1f2, &f1f2elem)
-			}
-			f1.AllowMethods = f1f2
+			f1.AllowMethods = aws.StringSlice(resp.Cors.AllowMethods)
 		}
 		if resp.Cors.AllowOrigins != nil {
-			f1f3 := []*string{}
-			for _, f1f3iter := range resp.Cors.AllowOrigins {
-				var f1f3elem string
-				f1f3elem = *f1f3iter
-				f1f3 = append(f1f3, &f1f3elem)
-			}
-			f1.AllowOrigins = f1f3
+			f1.AllowOrigins = aws.StringSlice(resp.Cors.AllowOrigins)
 		}
 		if resp.Cors.ExposeHeaders != nil {
-			f1f4 := []*string{}
-			for _, f1f4iter := range resp.Cors.ExposeHeaders {
-				var f1f4elem string
-				f1f4elem = *f1f4iter
-				f1f4 = append(f1f4, &f1f4elem)
-			}
-			f1.ExposeHeaders = f1f4
+			f1.ExposeHeaders = aws.StringSlice(resp.Cors.ExposeHeaders)
 		}
 		if resp.Cors.MaxAge != nil {
-			f1.MaxAge = resp.Cors.MaxAge
+			maxAgeCopy := int64(*resp.Cors.MaxAge)
+			f1.MaxAge = &maxAgeCopy
 		}
 		ko.Spec.CORS = f1
 	} else {
@@ -181,10 +159,10 @@ func (rm *resourceManager) newDescribeRequestPayload(
 	res := &svcsdk.GetFunctionUrlConfigInput{}
 
 	if r.ko.Spec.FunctionName != nil {
-		res.SetFunctionName(*r.ko.Spec.FunctionName)
+		res.FunctionName = r.ko.Spec.FunctionName
 	}
 	if r.ko.Spec.Qualifier != nil {
-		res.SetQualifier(*r.ko.Spec.Qualifier)
+		res.Qualifier = r.ko.Spec.Qualifier
 	}
 
 	return res, nil
@@ -209,7 +187,7 @@ func (rm *resourceManager) sdkCreate(
 
 	var resp *svcsdk.CreateFunctionUrlConfigOutput
 	_ = resp
-	resp, err = rm.sdkapi.CreateFunctionUrlConfigWithContext(ctx, input)
+	resp, err = rm.sdkapi.CreateFunctionUrlConfig(ctx, input)
 	rm.metrics.RecordAPICall("CREATE", "CreateFunctionUrlConfig", err)
 	if err != nil {
 		return nil, err
@@ -218,8 +196,8 @@ func (rm *resourceManager) sdkCreate(
 	// the original Kubernetes object we passed to the function
 	ko := desired.ko.DeepCopy()
 
-	if resp.AuthType != nil {
-		ko.Spec.AuthType = resp.AuthType
+	if resp.AuthType != "" {
+		ko.Spec.AuthType = aws.String(string(resp.AuthType))
 	} else {
 		ko.Spec.AuthType = nil
 	}
@@ -229,43 +207,20 @@ func (rm *resourceManager) sdkCreate(
 			f1.AllowCredentials = resp.Cors.AllowCredentials
 		}
 		if resp.Cors.AllowHeaders != nil {
-			f1f1 := []*string{}
-			for _, f1f1iter := range resp.Cors.AllowHeaders {
-				var f1f1elem string
-				f1f1elem = *f1f1iter
-				f1f1 = append(f1f1, &f1f1elem)
-			}
-			f1.AllowHeaders = f1f1
+			f1.AllowHeaders = aws.StringSlice(resp.Cors.AllowHeaders)
 		}
 		if resp.Cors.AllowMethods != nil {
-			f1f2 := []*string{}
-			for _, f1f2iter := range resp.Cors.AllowMethods {
-				var f1f2elem string
-				f1f2elem = *f1f2iter
-				f1f2 = append(f1f2, &f1f2elem)
-			}
-			f1.AllowMethods = f1f2
+			f1.AllowMethods = aws.StringSlice(resp.Cors.AllowMethods)
 		}
 		if resp.Cors.AllowOrigins != nil {
-			f1f3 := []*string{}
-			for _, f1f3iter := range resp.Cors.AllowOrigins {
-				var f1f3elem string
-				f1f3elem = *f1f3iter
-				f1f3 = append(f1f3, &f1f3elem)
-			}
-			f1.AllowOrigins = f1f3
+			f1.AllowOrigins = aws.StringSlice(resp.Cors.AllowOrigins)
 		}
 		if resp.Cors.ExposeHeaders != nil {
-			f1f4 := []*string{}
-			for _, f1f4iter := range resp.Cors.ExposeHeaders {
-				var f1f4elem string
-				f1f4elem = *f1f4iter
-				f1f4 = append(f1f4, &f1f4elem)
-			}
-			f1.ExposeHeaders = f1f4
+			f1.ExposeHeaders = aws.StringSlice(resp.Cors.ExposeHeaders)
 		}
 		if resp.Cors.MaxAge != nil {
-			f1.MaxAge = resp.Cors.MaxAge
+			maxAgeCopy := int64(*resp.Cors.MaxAge)
+			f1.MaxAge = &maxAgeCopy
 		}
 		ko.Spec.CORS = f1
 	} else {
@@ -300,59 +255,40 @@ func (rm *resourceManager) newCreateRequestPayload(
 	res := &svcsdk.CreateFunctionUrlConfigInput{}
 
 	if r.ko.Spec.AuthType != nil {
-		res.SetAuthType(*r.ko.Spec.AuthType)
+		res.AuthType = svcsdktypes.FunctionUrlAuthType(*r.ko.Spec.AuthType)
 	}
 	if r.ko.Spec.CORS != nil {
-		f1 := &svcsdk.Cors{}
+		f1 := &svcsdktypes.Cors{}
 		if r.ko.Spec.CORS.AllowCredentials != nil {
-			f1.SetAllowCredentials(*r.ko.Spec.CORS.AllowCredentials)
+			f1.AllowCredentials = r.ko.Spec.CORS.AllowCredentials
 		}
 		if r.ko.Spec.CORS.AllowHeaders != nil {
-			f1f1 := []*string{}
-			for _, f1f1iter := range r.ko.Spec.CORS.AllowHeaders {
-				var f1f1elem string
-				f1f1elem = *f1f1iter
-				f1f1 = append(f1f1, &f1f1elem)
-			}
-			f1.SetAllowHeaders(f1f1)
+			f1.AllowHeaders = aws.ToStringSlice(r.ko.Spec.CORS.AllowHeaders)
 		}
 		if r.ko.Spec.CORS.AllowMethods != nil {
-			f1f2 := []*string{}
-			for _, f1f2iter := range r.ko.Spec.CORS.AllowMethods {
-				var f1f2elem string
-				f1f2elem = *f1f2iter
-				f1f2 = append(f1f2, &f1f2elem)
-			}
-			f1.SetAllowMethods(f1f2)
+			f1.AllowMethods = aws.ToStringSlice(r.ko.Spec.CORS.AllowMethods)
 		}
 		if r.ko.Spec.CORS.AllowOrigins != nil {
-			f1f3 := []*string{}
-			for _, f1f3iter := range r.ko.Spec.CORS.AllowOrigins {
-				var f1f3elem string
-				f1f3elem = *f1f3iter
-				f1f3 = append(f1f3, &f1f3elem)
-			}
-			f1.SetAllowOrigins(f1f3)
+			f1.AllowOrigins = aws.ToStringSlice(r.ko.Spec.CORS.AllowOrigins)
 		}
 		if r.ko.Spec.CORS.ExposeHeaders != nil {
-			f1f4 := []*string{}
-			for _, f1f4iter := range r.ko.Spec.CORS.ExposeHeaders {
-				var f1f4elem string
-				f1f4elem = *f1f4iter
-				f1f4 = append(f1f4, &f1f4elem)
-			}
-			f1.SetExposeHeaders(f1f4)
+			f1.ExposeHeaders = aws.ToStringSlice(r.ko.Spec.CORS.ExposeHeaders)
 		}
 		if r.ko.Spec.CORS.MaxAge != nil {
-			f1.SetMaxAge(*r.ko.Spec.CORS.MaxAge)
+			maxAgeCopy0 := *r.ko.Spec.CORS.MaxAge
+			if maxAgeCopy0 > math.MaxInt32 || maxAgeCopy0 < math.MinInt32 {
+				return nil, fmt.Errorf("error: field MaxAge is of type int32")
+			}
+			maxAgeCopy := int32(maxAgeCopy0)
+			f1.MaxAge = &maxAgeCopy
 		}
-		res.SetCors(f1)
+		res.Cors = f1
 	}
 	if r.ko.Spec.FunctionName != nil {
-		res.SetFunctionName(*r.ko.Spec.FunctionName)
+		res.FunctionName = r.ko.Spec.FunctionName
 	}
 	if r.ko.Spec.Qualifier != nil {
-		res.SetQualifier(*r.ko.Spec.Qualifier)
+		res.Qualifier = r.ko.Spec.Qualifier
 	}
 
 	return res, nil
@@ -378,7 +314,7 @@ func (rm *resourceManager) sdkUpdate(
 
 	var resp *svcsdk.UpdateFunctionUrlConfigOutput
 	_ = resp
-	resp, err = rm.sdkapi.UpdateFunctionUrlConfigWithContext(ctx, input)
+	resp, err = rm.sdkapi.UpdateFunctionUrlConfig(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateFunctionUrlConfig", err)
 	if err != nil {
 		return nil, err
@@ -387,8 +323,8 @@ func (rm *resourceManager) sdkUpdate(
 	// the original Kubernetes object we passed to the function
 	ko := desired.ko.DeepCopy()
 
-	if resp.AuthType != nil {
-		ko.Spec.AuthType = resp.AuthType
+	if resp.AuthType != "" {
+		ko.Spec.AuthType = aws.String(string(resp.AuthType))
 	} else {
 		ko.Spec.AuthType = nil
 	}
@@ -398,43 +334,20 @@ func (rm *resourceManager) sdkUpdate(
 			f1.AllowCredentials = resp.Cors.AllowCredentials
 		}
 		if resp.Cors.AllowHeaders != nil {
-			f1f1 := []*string{}
-			for _, f1f1iter := range resp.Cors.AllowHeaders {
-				var f1f1elem string
-				f1f1elem = *f1f1iter
-				f1f1 = append(f1f1, &f1f1elem)
-			}
-			f1.AllowHeaders = f1f1
+			f1.AllowHeaders = aws.StringSlice(resp.Cors.AllowHeaders)
 		}
 		if resp.Cors.AllowMethods != nil {
-			f1f2 := []*string{}
-			for _, f1f2iter := range resp.Cors.AllowMethods {
-				var f1f2elem string
-				f1f2elem = *f1f2iter
-				f1f2 = append(f1f2, &f1f2elem)
-			}
-			f1.AllowMethods = f1f2
+			f1.AllowMethods = aws.StringSlice(resp.Cors.AllowMethods)
 		}
 		if resp.Cors.AllowOrigins != nil {
-			f1f3 := []*string{}
-			for _, f1f3iter := range resp.Cors.AllowOrigins {
-				var f1f3elem string
-				f1f3elem = *f1f3iter
-				f1f3 = append(f1f3, &f1f3elem)
-			}
-			f1.AllowOrigins = f1f3
+			f1.AllowOrigins = aws.StringSlice(resp.Cors.AllowOrigins)
 		}
 		if resp.Cors.ExposeHeaders != nil {
-			f1f4 := []*string{}
-			for _, f1f4iter := range resp.Cors.ExposeHeaders {
-				var f1f4elem string
-				f1f4elem = *f1f4iter
-				f1f4 = append(f1f4, &f1f4elem)
-			}
-			f1.ExposeHeaders = f1f4
+			f1.ExposeHeaders = aws.StringSlice(resp.Cors.ExposeHeaders)
 		}
 		if resp.Cors.MaxAge != nil {
-			f1.MaxAge = resp.Cors.MaxAge
+			maxAgeCopy := int64(*resp.Cors.MaxAge)
+			f1.MaxAge = &maxAgeCopy
 		}
 		ko.Spec.CORS = f1
 	} else {
@@ -470,59 +383,40 @@ func (rm *resourceManager) newUpdateRequestPayload(
 	res := &svcsdk.UpdateFunctionUrlConfigInput{}
 
 	if r.ko.Spec.AuthType != nil {
-		res.SetAuthType(*r.ko.Spec.AuthType)
+		res.AuthType = svcsdktypes.FunctionUrlAuthType(*r.ko.Spec.AuthType)
 	}
 	if r.ko.Spec.CORS != nil {
-		f1 := &svcsdk.Cors{}
+		f1 := &svcsdktypes.Cors{}
 		if r.ko.Spec.CORS.AllowCredentials != nil {
-			f1.SetAllowCredentials(*r.ko.Spec.CORS.AllowCredentials)
+			f1.AllowCredentials = r.ko.Spec.CORS.AllowCredentials
 		}
 		if r.ko.Spec.CORS.AllowHeaders != nil {
-			f1f1 := []*string{}
-			for _, f1f1iter := range r.ko.Spec.CORS.AllowHeaders {
-				var f1f1elem string
-				f1f1elem = *f1f1iter
-				f1f1 = append(f1f1, &f1f1elem)
-			}
-			f1.SetAllowHeaders(f1f1)
+			f1.AllowHeaders = aws.ToStringSlice(r.ko.Spec.CORS.AllowHeaders)
 		}
 		if r.ko.Spec.CORS.AllowMethods != nil {
-			f1f2 := []*string{}
-			for _, f1f2iter := range r.ko.Spec.CORS.AllowMethods {
-				var f1f2elem string
-				f1f2elem = *f1f2iter
-				f1f2 = append(f1f2, &f1f2elem)
-			}
-			f1.SetAllowMethods(f1f2)
+			f1.AllowMethods = aws.ToStringSlice(r.ko.Spec.CORS.AllowMethods)
 		}
 		if r.ko.Spec.CORS.AllowOrigins != nil {
-			f1f3 := []*string{}
-			for _, f1f3iter := range r.ko.Spec.CORS.AllowOrigins {
-				var f1f3elem string
-				f1f3elem = *f1f3iter
-				f1f3 = append(f1f3, &f1f3elem)
-			}
-			f1.SetAllowOrigins(f1f3)
+			f1.AllowOrigins = aws.ToStringSlice(r.ko.Spec.CORS.AllowOrigins)
 		}
 		if r.ko.Spec.CORS.ExposeHeaders != nil {
-			f1f4 := []*string{}
-			for _, f1f4iter := range r.ko.Spec.CORS.ExposeHeaders {
-				var f1f4elem string
-				f1f4elem = *f1f4iter
-				f1f4 = append(f1f4, &f1f4elem)
-			}
-			f1.SetExposeHeaders(f1f4)
+			f1.ExposeHeaders = aws.ToStringSlice(r.ko.Spec.CORS.ExposeHeaders)
 		}
 		if r.ko.Spec.CORS.MaxAge != nil {
-			f1.SetMaxAge(*r.ko.Spec.CORS.MaxAge)
+			maxAgeCopy0 := *r.ko.Spec.CORS.MaxAge
+			if maxAgeCopy0 > math.MaxInt32 || maxAgeCopy0 < math.MinInt32 {
+				return nil, fmt.Errorf("error: field MaxAge is of type int32")
+			}
+			maxAgeCopy := int32(maxAgeCopy0)
+			f1.MaxAge = &maxAgeCopy
 		}
-		res.SetCors(f1)
+		res.Cors = f1
 	}
 	if r.ko.Spec.FunctionName != nil {
-		res.SetFunctionName(*r.ko.Spec.FunctionName)
+		res.FunctionName = r.ko.Spec.FunctionName
 	}
 	if r.ko.Spec.Qualifier != nil {
-		res.SetQualifier(*r.ko.Spec.Qualifier)
+		res.Qualifier = r.ko.Spec.Qualifier
 	}
 
 	return res, nil
@@ -544,7 +438,7 @@ func (rm *resourceManager) sdkDelete(
 	}
 	var resp *svcsdk.DeleteFunctionUrlConfigOutput
 	_ = resp
-	resp, err = rm.sdkapi.DeleteFunctionUrlConfigWithContext(ctx, input)
+	resp, err = rm.sdkapi.DeleteFunctionUrlConfig(ctx, input)
 	rm.metrics.RecordAPICall("DELETE", "DeleteFunctionUrlConfig", err)
 	return nil, err
 }
@@ -557,10 +451,10 @@ func (rm *resourceManager) newDeleteRequestPayload(
 	res := &svcsdk.DeleteFunctionUrlConfigInput{}
 
 	if r.ko.Spec.FunctionName != nil {
-		res.SetFunctionName(*r.ko.Spec.FunctionName)
+		res.FunctionName = r.ko.Spec.FunctionName
 	}
 	if r.ko.Spec.Qualifier != nil {
-		res.SetQualifier(*r.ko.Spec.Qualifier)
+		res.Qualifier = r.ko.Spec.Qualifier
 	}
 
 	return res, nil

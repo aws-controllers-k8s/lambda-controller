@@ -28,8 +28,10 @@ import (
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
-	"github.com/aws/aws-sdk-go/aws"
-	svcsdk "github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	svcsdk "github.com/aws/aws-sdk-go-v2/service/lambda"
+	svcsdktypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	smithy "github.com/aws/smithy-go"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -40,8 +42,7 @@ import (
 var (
 	_ = &metav1.Time{}
 	_ = strings.ToLower("")
-	_ = &aws.JSONValue{}
-	_ = &svcsdk.Lambda{}
+	_ = &svcsdk.Client{}
 	_ = &svcapitypes.Alias{}
 	_ = ackv1alpha1.AWSAccountID("")
 	_ = &ackerr.NotFound
@@ -49,6 +50,7 @@ var (
 	_ = &reflect.Value{}
 	_ = fmt.Sprintf("")
 	_ = &ackrequeue.NoRequeue{}
+	_ = &aws.Config{}
 )
 
 // sdkFind returns SDK-specific information about a supplied resource
@@ -73,14 +75,12 @@ func (rm *resourceManager) sdkFind(
 		return nil, err
 	}
 
-	var resp *svcsdk.AliasConfiguration
-	resp, err = rm.sdkapi.GetAliasWithContext(ctx, input)
+	var resp *svcsdk.GetAliasOutput
+	resp, err = rm.sdkapi.GetAlias(ctx, input)
 	rm.metrics.RecordAPICall("READ_ONE", "GetAlias", err)
 	if err != nil {
-		if reqErr, ok := ackerr.AWSRequestFailure(err); ok && reqErr.StatusCode() == 404 {
-			return nil, ackerr.NotFound
-		}
-		if awsErr, ok := ackerr.AWSError(err); ok && awsErr.Code() == "ResourceNotFoundException" {
+		var awsErr smithy.APIError
+		if errors.As(err, &awsErr) && awsErr.ErrorCode() == "ResourceNotFoundException" {
 			return nil, ackerr.NotFound
 		}
 		return nil, err
@@ -120,13 +120,7 @@ func (rm *resourceManager) sdkFind(
 	if resp.RoutingConfig != nil {
 		f5 := &svcapitypes.AliasRoutingConfiguration{}
 		if resp.RoutingConfig.AdditionalVersionWeights != nil {
-			f5f0 := map[string]*float64{}
-			for f5f0key, f5f0valiter := range resp.RoutingConfig.AdditionalVersionWeights {
-				var f5f0val float64
-				f5f0val = *f5f0valiter
-				f5f0[f5f0key] = &f5f0val
-			}
-			f5.AdditionalVersionWeights = f5f0
+			f5.AdditionalVersionWeights = aws.Float64Map(resp.RoutingConfig.AdditionalVersionWeights)
 		}
 		ko.Spec.RoutingConfig = f5
 	} else {
@@ -158,10 +152,10 @@ func (rm *resourceManager) newDescribeRequestPayload(
 	res := &svcsdk.GetAliasInput{}
 
 	if r.ko.Spec.FunctionName != nil {
-		res.SetFunctionName(*r.ko.Spec.FunctionName)
+		res.FunctionName = r.ko.Spec.FunctionName
 	}
 	if r.ko.Spec.Name != nil {
-		res.SetName(*r.ko.Spec.Name)
+		res.Name = r.ko.Spec.Name
 	}
 
 	return res, nil
@@ -184,9 +178,9 @@ func (rm *resourceManager) sdkCreate(
 		return nil, err
 	}
 
-	var resp *svcsdk.AliasConfiguration
+	var resp *svcsdk.CreateAliasOutput
 	_ = resp
-	resp, err = rm.sdkapi.CreateAliasWithContext(ctx, input)
+	resp, err = rm.sdkapi.CreateAlias(ctx, input)
 	rm.metrics.RecordAPICall("CREATE", "CreateAlias", err)
 	if err != nil {
 		return nil, err
@@ -225,13 +219,7 @@ func (rm *resourceManager) sdkCreate(
 	if resp.RoutingConfig != nil {
 		f5 := &svcapitypes.AliasRoutingConfiguration{}
 		if resp.RoutingConfig.AdditionalVersionWeights != nil {
-			f5f0 := map[string]*float64{}
-			for f5f0key, f5f0valiter := range resp.RoutingConfig.AdditionalVersionWeights {
-				var f5f0val float64
-				f5f0val = *f5f0valiter
-				f5f0[f5f0key] = &f5f0val
-			}
-			f5.AdditionalVersionWeights = f5f0
+			f5.AdditionalVersionWeights = aws.Float64Map(resp.RoutingConfig.AdditionalVersionWeights)
 		}
 		ko.Spec.RoutingConfig = f5
 	} else {
@@ -264,29 +252,29 @@ func (rm *resourceManager) newCreateRequestPayload(
 	res := &svcsdk.CreateAliasInput{}
 
 	if r.ko.Spec.Description != nil {
-		res.SetDescription(*r.ko.Spec.Description)
+		res.Description = r.ko.Spec.Description
 	}
 	if r.ko.Spec.FunctionName != nil {
-		res.SetFunctionName(*r.ko.Spec.FunctionName)
+		res.FunctionName = r.ko.Spec.FunctionName
 	}
 	if r.ko.Spec.FunctionVersion != nil {
-		res.SetFunctionVersion(*r.ko.Spec.FunctionVersion)
+		res.FunctionVersion = r.ko.Spec.FunctionVersion
 	}
 	if r.ko.Spec.Name != nil {
-		res.SetName(*r.ko.Spec.Name)
+		res.Name = r.ko.Spec.Name
 	}
 	if r.ko.Spec.RoutingConfig != nil {
-		f4 := &svcsdk.AliasRoutingConfiguration{}
+		f4 := &svcsdktypes.AliasRoutingConfiguration{}
 		if r.ko.Spec.RoutingConfig.AdditionalVersionWeights != nil {
-			f4f0 := map[string]*float64{}
+			f4f0 := map[string]float64{}
 			for f4f0key, f4f0valiter := range r.ko.Spec.RoutingConfig.AdditionalVersionWeights {
 				var f4f0val float64
 				f4f0val = *f4f0valiter
-				f4f0[f4f0key] = &f4f0val
+				f4f0[f4f0key] = f4f0val
 			}
-			f4.SetAdditionalVersionWeights(f4f0)
+			f4.AdditionalVersionWeights = f4f0
 		}
-		res.SetRoutingConfig(f4)
+		res.RoutingConfig = f4
 	}
 
 	return res, nil
@@ -325,9 +313,9 @@ func (rm *resourceManager) sdkUpdate(
 		return nil, err
 	}
 
-	var resp *svcsdk.AliasConfiguration
+	var resp *svcsdk.UpdateAliasOutput
 	_ = resp
-	resp, err = rm.sdkapi.UpdateAliasWithContext(ctx, input)
+	resp, err = rm.sdkapi.UpdateAlias(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateAlias", err)
 	if err != nil {
 		return nil, err
@@ -366,13 +354,7 @@ func (rm *resourceManager) sdkUpdate(
 	if resp.RoutingConfig != nil {
 		f5 := &svcapitypes.AliasRoutingConfiguration{}
 		if resp.RoutingConfig.AdditionalVersionWeights != nil {
-			f5f0 := map[string]*float64{}
-			for f5f0key, f5f0valiter := range resp.RoutingConfig.AdditionalVersionWeights {
-				var f5f0val float64
-				f5f0val = *f5f0valiter
-				f5f0[f5f0key] = &f5f0val
-			}
-			f5.AdditionalVersionWeights = f5f0
+			f5.AdditionalVersionWeights = aws.Float64Map(resp.RoutingConfig.AdditionalVersionWeights)
 		}
 		ko.Spec.RoutingConfig = f5
 	} else {
@@ -393,32 +375,32 @@ func (rm *resourceManager) newUpdateRequestPayload(
 	res := &svcsdk.UpdateAliasInput{}
 
 	if r.ko.Spec.Description != nil {
-		res.SetDescription(*r.ko.Spec.Description)
+		res.Description = r.ko.Spec.Description
 	}
 	if r.ko.Spec.FunctionName != nil {
-		res.SetFunctionName(*r.ko.Spec.FunctionName)
+		res.FunctionName = r.ko.Spec.FunctionName
 	}
 	if r.ko.Spec.FunctionVersion != nil {
-		res.SetFunctionVersion(*r.ko.Spec.FunctionVersion)
+		res.FunctionVersion = r.ko.Spec.FunctionVersion
 	}
 	if r.ko.Spec.Name != nil {
-		res.SetName(*r.ko.Spec.Name)
+		res.Name = r.ko.Spec.Name
 	}
 	if r.ko.Status.RevisionID != nil {
-		res.SetRevisionId(*r.ko.Status.RevisionID)
+		res.RevisionId = r.ko.Status.RevisionID
 	}
 	if r.ko.Spec.RoutingConfig != nil {
-		f5 := &svcsdk.AliasRoutingConfiguration{}
+		f5 := &svcsdktypes.AliasRoutingConfiguration{}
 		if r.ko.Spec.RoutingConfig.AdditionalVersionWeights != nil {
-			f5f0 := map[string]*float64{}
+			f5f0 := map[string]float64{}
 			for f5f0key, f5f0valiter := range r.ko.Spec.RoutingConfig.AdditionalVersionWeights {
 				var f5f0val float64
 				f5f0val = *f5f0valiter
-				f5f0[f5f0key] = &f5f0val
+				f5f0[f5f0key] = f5f0val
 			}
-			f5.SetAdditionalVersionWeights(f5f0)
+			f5.AdditionalVersionWeights = f5f0
 		}
-		res.SetRoutingConfig(f5)
+		res.RoutingConfig = f5
 	}
 
 	return res, nil
@@ -440,7 +422,7 @@ func (rm *resourceManager) sdkDelete(
 	}
 	var resp *svcsdk.DeleteAliasOutput
 	_ = resp
-	resp, err = rm.sdkapi.DeleteAliasWithContext(ctx, input)
+	resp, err = rm.sdkapi.DeleteAlias(ctx, input)
 	rm.metrics.RecordAPICall("DELETE", "DeleteAlias", err)
 	return nil, err
 }
@@ -453,10 +435,10 @@ func (rm *resourceManager) newDeleteRequestPayload(
 	res := &svcsdk.DeleteAliasInput{}
 
 	if r.ko.Spec.FunctionName != nil {
-		res.SetFunctionName(*r.ko.Spec.FunctionName)
+		res.FunctionName = r.ko.Spec.FunctionName
 	}
 	if r.ko.Spec.Name != nil {
-		res.SetName(*r.ko.Spec.Name)
+		res.Name = r.ko.Spec.Name
 	}
 
 	return res, nil

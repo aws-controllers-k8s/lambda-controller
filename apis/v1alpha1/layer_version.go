@@ -27,6 +27,9 @@ type LayerVersionSpec struct {
 	CompatibleArchitectures []*string `json:"compatibleArchitectures,omitempty"`
 	// A list of compatible function runtimes (https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html).
 	// Used for filtering with ListLayers and ListLayerVersions.
+	//
+	// The following list includes deprecated runtimes. For more information, see
+	// Runtime deprecation policy (https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy).
 	CompatibleRuntimes []*string `json:"compatibleRuntimes,omitempty"`
 	// The function layer archive.
 	// +kubebuilder:validation:Required

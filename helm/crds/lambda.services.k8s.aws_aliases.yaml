@@ -72,8 +72,12 @@ spec:
                             type: string
                         type: object
                       onSuccess:
-                        description: A destination for events that were processed
-                          successfully.
+                        description: |-
+                          A destination for events that were processed successfully.
+
+                          To retain records of successful asynchronous invocations (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#invocation-async-destinations),
+                          you can configure an Amazon SNS topic, Amazon SQS queue, Lambda function,
+                          or Amazon EventBridge event bus as the destination.
                         properties:
                           destination:
                             type: string
@@ -92,7 +96,7 @@ spec:
                 type: object
               functionName:
                 description: |-
-                  The name of the Lambda function.
+                  The name or ARN of the Lambda function.
 
                   Name formats
 

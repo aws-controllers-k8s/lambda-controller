@@ -5,8 +5,8 @@
 			if f16iter.Arn != nil {
 				f16elem.ARN = f16iter.Arn
 			}
-			if f16iter.CodeSize != nil {
-				f16elem.CodeSize = f16iter.CodeSize
+			if f16iter.CodeSize != 0 {
+				f16elem.CodeSize = aws.Int64(f16iter.CodeSize)
 			}
 			if f16iter.SigningJobArn != nil {
 				f16elem.SigningJobARN = f16iter.SigningJobArn
