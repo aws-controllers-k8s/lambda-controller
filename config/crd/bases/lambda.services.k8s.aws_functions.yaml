@@ -361,8 +361,6 @@ spec:
                   For more information, see Configuring a Lambda function to access resources
                   in a VPC (https://docs.aws.amazon.com/lambda/latest/dg/configuration-vpc.html).
                 properties:
-                  ipv6AllowedForDualStack:
-                    type: boolean
                   securityGroupIDs:
                     items:
                       type: string

@@ -334,13 +334,6 @@ func newResourceDelta(
 	if ackcompare.HasNilDifference(a.ko.Spec.VPCConfig, b.ko.Spec.VPCConfig) {
 		delta.Add("Spec.VPCConfig", a.ko.Spec.VPCConfig, b.ko.Spec.VPCConfig)
 	} else if a.ko.Spec.VPCConfig != nil && b.ko.Spec.VPCConfig != nil {
-		if ackcompare.HasNilDifference(a.ko.Spec.VPCConfig.IPv6AllowedForDualStack, b.ko.Spec.VPCConfig.IPv6AllowedForDualStack) {
-			delta.Add("Spec.VPCConfig.IPv6AllowedForDualStack", a.ko.Spec.VPCConfig.IPv6AllowedForDualStack, b.ko.Spec.VPCConfig.IPv6AllowedForDualStack)
-		} else if a.ko.Spec.VPCConfig.IPv6AllowedForDualStack != nil && b.ko.Spec.VPCConfig.IPv6AllowedForDualStack != nil {
-			if *a.ko.Spec.VPCConfig.IPv6AllowedForDualStack != *b.ko.Spec.VPCConfig.IPv6AllowedForDualStack {
-				delta.Add("Spec.VPCConfig.IPv6AllowedForDualStack", a.ko.Spec.VPCConfig.IPv6AllowedForDualStack, b.ko.Spec.VPCConfig.IPv6AllowedForDualStack)
-			}
-		}
 		if len(a.ko.Spec.VPCConfig.SecurityGroupIDs) != len(b.ko.Spec.VPCConfig.SecurityGroupIDs) {
 			delta.Add("Spec.VPCConfig.SecurityGroupIDs", a.ko.Spec.VPCConfig.SecurityGroupIDs, b.ko.Spec.VPCConfig.SecurityGroupIDs)
 		} else if len(a.ko.Spec.VPCConfig.SecurityGroupIDs) > 0 {

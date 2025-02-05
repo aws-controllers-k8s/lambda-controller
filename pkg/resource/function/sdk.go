@@ -845,9 +845,6 @@ func (rm *resourceManager) newCreateRequestPayload(
 	}
 	if r.ko.Spec.VPCConfig != nil {
 		f22 := &svcsdktypes.VpcConfig{}
-		if r.ko.Spec.VPCConfig.IPv6AllowedForDualStack != nil {
-			f22.Ipv6AllowedForDualStack = r.ko.Spec.VPCConfig.IPv6AllowedForDualStack
-		}
 		if r.ko.Spec.VPCConfig.SecurityGroupIDs != nil {
 			f22.SecurityGroupIds = aws.ToStringSlice(r.ko.Spec.VPCConfig.SecurityGroupIDs)
 		}

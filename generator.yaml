@@ -26,7 +26,7 @@ ignore:
   - CreateFunctionUrlConfigOutput.InvokeMode
   - PublishVersionOutput.LoggingConfig
   - PublishVersionOutput.RuntimeVersionConfig
-  - PublishVersionOutput.VpcConfig.Ipv6AllowedForDualStack
+  - VpcConfig.Ipv6AllowedForDualStack
 operations:
   GetFunction:
     output_wrapper_field_path: Configuration

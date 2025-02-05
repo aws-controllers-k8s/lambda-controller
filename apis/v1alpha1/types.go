@@ -562,8 +562,7 @@ type TracingConfigResponse struct {
 // For more information, see Configuring a Lambda function to access resources
 // in a VPC (https://docs.aws.amazon.com/lambda/latest/dg/configuration-vpc.html).
 type VPCConfig struct {
-	IPv6AllowedForDualStack *bool     `json:"ipv6AllowedForDualStack,omitempty"`
-	SecurityGroupIDs        []*string `json:"securityGroupIDs,omitempty"`
+	SecurityGroupIDs []*string `json:"securityGroupIDs,omitempty"`
 	// Reference field for SecurityGroupIDs
 	SecurityGroupRefs []*ackv1alpha1.AWSResourceReferenceWrapper `json:"securityGroupRefs,omitempty"`
 	SubnetIDs         []*string                                  `json:"subnetIDs,omitempty"`
@@ -573,7 +572,8 @@ type VPCConfig struct {
 
 // The VPC security groups and subnets that are attached to a Lambda function.
 type VPCConfigResponse struct {
-	SecurityGroupIDs []*string `json:"securityGroupIDs,omitempty"`
-	SubnetIDs        []*string `json:"subnetIDs,omitempty"`
-	VPCID            *string   `json:"vpcID,omitempty"`
+	IPv6AllowedForDualStack *bool     `json:"ipv6AllowedForDualStack,omitempty"`
+	SecurityGroupIDs        []*string `json:"securityGroupIDs,omitempty"`
+	SubnetIDs               []*string `json:"subnetIDs,omitempty"`
+	VPCID                   *string   `json:"vpcID,omitempty"`
 }

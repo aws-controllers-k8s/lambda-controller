@@ -348,6 +348,9 @@ func (rm *resourceManager) sdkFind(
 	}
 	if resp.VpcConfig != nil {
 		f35 := &svcapitypes.VPCConfigResponse{}
+		if resp.VpcConfig.Ipv6AllowedForDualStack != nil {
+			f35.IPv6AllowedForDualStack = resp.VpcConfig.Ipv6AllowedForDualStack
+		}
 		if resp.VpcConfig.SecurityGroupIds != nil {
 			f35.SecurityGroupIDs = aws.StringSlice(resp.VpcConfig.SecurityGroupIds)
 		}
@@ -703,6 +706,9 @@ func (rm *resourceManager) sdkCreate(
 	}
 	if resp.VpcConfig != nil {
 		f33 := &svcapitypes.VPCConfigResponse{}
+		if resp.VpcConfig.Ipv6AllowedForDualStack != nil {
+			f33.IPv6AllowedForDualStack = resp.VpcConfig.Ipv6AllowedForDualStack
+		}
 		if resp.VpcConfig.SecurityGroupIds != nil {
 			f33.SecurityGroupIDs = aws.StringSlice(resp.VpcConfig.SecurityGroupIds)
 		}

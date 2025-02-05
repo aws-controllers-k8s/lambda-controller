@@ -433,6 +433,8 @@ spec:
               vpcConfig:
                 description: The function's networking configuration.
                 properties:
+                  ipv6AllowedForDualStack:
+                    type: boolean
                   securityGroupIDs:
                     items:
                       type: string
