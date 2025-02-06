@@ -72,10 +72,10 @@ func (rm *resourceManager) syncEventInvokeConfig(
 		input.DestinationConfig = destinations
 	}
 	if dspec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds != nil {
-		input.MaximumEventAgeInSeconds = aws.Int32(int32(*dspec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds))
+		input.MaximumEventAgeInSeconds = int32OrNil(dspec.FunctionEventInvokeConfig.MaximumEventAgeInSeconds)
 	}
 	if dspec.FunctionEventInvokeConfig.MaximumRetryAttempts != nil {
-		input.MaximumRetryAttempts = aws.Int32(int32(*dspec.FunctionEventInvokeConfig.MaximumRetryAttempts))
+		input.MaximumRetryAttempts = int32OrNil(dspec.FunctionEventInvokeConfig.MaximumRetryAttempts)
 	}
 
 	_, err = rm.sdkapi.PutFunctionEventInvokeConfig(ctx, input)
@@ -116,7 +116,7 @@ func (rm *resourceManager) updateProvisionedConcurrency(
 	input := &svcsdk.PutProvisionedConcurrencyConfigInput{
 		FunctionName:                    aws.String(*dspec.FunctionName),
 		Qualifier:                       aws.String(*dspec.Name),
-		ProvisionedConcurrentExecutions: aws.Int32(int32(*dspec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions)),
+		ProvisionedConcurrentExecutions: int32OrNil(dspec.ProvisionedConcurrencyConfig.ProvisionedConcurrentExecutions),
 	}
 
 	_, err = rm.sdkapi.PutProvisionedConcurrencyConfig(ctx, input)
@@ -156,7 +156,7 @@ func (rm *resourceManager) setProvisionedConcurrencyConfig(
 	} else {
 		// creating ProvisionedConcurrency object to store the values returned from `Get` call
 		cloudProvisionedConcurrency := &svcapitypes.PutProvisionedConcurrencyConfigInput{}
-		cloudProvisionedConcurrency.ProvisionedConcurrentExecutions = aws.Int64(int64(*getProvisionedConcurrencyConfigOutput.RequestedProvisionedConcurrentExecutions))
+		cloudProvisionedConcurrency.ProvisionedConcurrentExecutions = int64OrNil(getProvisionedConcurrencyConfigOutput.RequestedProvisionedConcurrentExecutions)
 		ko.Spec.ProvisionedConcurrencyConfig = cloudProvisionedConcurrency
 	}
 
@@ -174,8 +174,8 @@ func (rm *resourceManager) setFunctionEventInvokeConfigFromResponse(
 	cloudFunctionEventInvokeConfig.DestinationConfig.OnSuccess = &svcapitypes.OnSuccess{}
 	cloudFunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination = getFunctionEventInvokeConfigOutput.DestinationConfig.OnFailure.Destination
 	cloudFunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination = getFunctionEventInvokeConfigOutput.DestinationConfig.OnSuccess.Destination
-	cloudFunctionEventInvokeConfig.MaximumEventAgeInSeconds = aws.Int64(int64(*getFunctionEventInvokeConfigOutput.MaximumEventAgeInSeconds))
-	cloudFunctionEventInvokeConfig.MaximumRetryAttempts = aws.Int64(int64(*getFunctionEventInvokeConfigOutput.MaximumRetryAttempts))
+	cloudFunctionEventInvokeConfig.MaximumEventAgeInSeconds = int64OrNil(getFunctionEventInvokeConfigOutput.MaximumEventAgeInSeconds)
+	cloudFunctionEventInvokeConfig.MaximumRetryAttempts = int64OrNil(getFunctionEventInvokeConfigOutput.MaximumRetryAttempts)
 	ko.Spec.FunctionEventInvokeConfig = cloudFunctionEventInvokeConfig
 
 }
@@ -235,5 +235,20 @@ func (rm *resourceManager) setResourceAdditionalFields(
 		return err
 	}
 
+	return nil
+}
+
+
+func int32OrNil(val *int64) *int32 {
+	if val != nil {
+		return aws.Int32(int32(*val))
+	}
+	return nil
+}
+
+func int64OrNil(val *int32) *int64 {
+	if val != nil {
+		return aws.Int64(int64(*val))
+	}
 	return nil
 }
