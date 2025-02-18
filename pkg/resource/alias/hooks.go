@@ -238,7 +238,6 @@ func (rm *resourceManager) setResourceAdditionalFields(
 	return nil
 }
 
-
 func int32OrNil(val *int64) *int32 {
 	if val != nil {
 		return aws.Int32(int32(*val))
