@@ -24,29 +24,37 @@ import (
 type LayerVersionSpec struct {
 
 	// A list of compatible instruction set architectures (https://docs.aws.amazon.com/lambda/latest/dg/foundation-arch.html).
+
 	CompatibleArchitectures []*string `json:"compatibleArchitectures,omitempty"`
 	// A list of compatible function runtimes (https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html).
 	// Used for filtering with ListLayers and ListLayerVersions.
 	//
 	// The following list includes deprecated runtimes. For more information, see
 	// Runtime deprecation policy (https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy).
+
 	CompatibleRuntimes []*string `json:"compatibleRuntimes,omitempty"`
 	// The function layer archive.
+
 	// +kubebuilder:validation:Required
+
 	Content *LayerVersionContentInput `json:"content"`
 	// The description of the version.
+
 	Description *string `json:"description,omitempty"`
 	// The name or Amazon Resource Name (ARN) of the layer.
+
 	// +kubebuilder:validation:Required
+
 	LayerName *string `json:"layerName"`
 	// The layer's software license. It can be any of the following:
 	//
-	//   - An SPDX license identifier (https://spdx.org/licenses/). For example,
-	//     MIT.
+	//    * An SPDX license identifier (https://spdx.org/licenses/). For example,
+	//    MIT.
 	//
-	//   - The URL of a license hosted on the internet. For example, https://opensource.org/licenses/MIT.
+	//    * The URL of a license hosted on the internet. For example, https://opensource.org/licenses/MIT.
 	//
-	//   - The full text of the license.
+	//    * The full text of the license.
+
 	LicenseInfo *string `json:"licenseInfo,omitempty"`
 }
 
@@ -57,7 +65,7 @@ type LayerVersionStatus struct {
 	// constructed ARN for the resource
 	// +kubebuilder:validation:Optional
 	ACKResourceMetadata *ackv1alpha1.ResourceMetadata `json:"ackResourceMetadata"`
-	// All CRS managed by ACK have a common `Status.Conditions` member that
+	// All CRs managed by ACK have a common `Status.Conditions` member that
 	// contains a collection of `ackv1alpha1.Condition` objects that describe
 	// the various terminal states of the CR and its backend AWS service API
 	// resource

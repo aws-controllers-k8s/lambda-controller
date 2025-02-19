@@ -43,16 +43,13 @@ spec:
               Details about a Lambda function URL.
             properties:
               authType:
-                description: |-
-                  The type of authentication that your function URL uses. Set to AWS_IAM if
-                  you want to restrict access to authenticated users only. Set to NONE if you
-                  want to bypass IAM authentication to create a public endpoint. For more information,
-                  see Security and auth model for Lambda function URLs (https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html).
                 type: string
               cors:
                 description: |-
                   The cross-origin resource sharing (CORS) (https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
-                  settings for your function URL.
+                  settings for your Lambda function URL. Use CORS to grant access to your function
+                  URL from any origin. You can also use CORS to control access for specific
+                  HTTP headers and methods in requests to your function URL.
                 properties:
                   allowCredentials:
                     type: boolean
@@ -77,19 +74,6 @@ spec:
                     type: integer
                 type: object
               functionName:
-                description: |-
-                  The name or ARN of the Lambda function.
-
-                  Name formats
-
-                     * Function name – my-function.
-
-                     * Function ARN – arn:aws:lambda:us-west-2:123456789012:function:my-function.
-
-                     * Partial ARN – 123456789012:function:my-function.
-
-                  The length constraint applies only to the full ARN. If you specify only the
-                  function name, it is limited to 64 characters in length.
                 type: string
               functionRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around
@@ -109,7 +93,6 @@ spec:
                     type: object
                 type: object
               qualifier:
-                description: The alias name.
                 type: string
             required:
             - authType
@@ -148,7 +131,7 @@ spec:
                 type: object
               conditions:
                 description: |-
-                  All CRS managed by ACK have a common `Status.Conditions` member that
+                  All CRs managed by ACK have a common `Status.Conditions` member that
                   contains a collection of `ackv1alpha1.Condition` objects that describe
                   the various terminal states of the CR and its backend AWS service API
                   resource
