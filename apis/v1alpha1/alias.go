@@ -26,6 +26,7 @@ import (
 type AliasSpec struct {
 
 	// A description of the alias.
+
 	Description *string `json:"description,omitempty"`
 	// Configures options for asynchronous invocation on an alias.
 	//
@@ -43,35 +44,44 @@ type AliasSpec struct {
 	//
 	// - MaximumRetryAttempts
 	// The maximum number of times to retry when the function returns an error.
+
 	FunctionEventInvokeConfig *PutFunctionEventInvokeConfigInput `json:"functionEventInvokeConfig,omitempty"`
 	// The name or ARN of the Lambda function.
 	//
 	// Name formats
 	//
-	//   - Function name - MyFunction.
+	//    * Function name - MyFunction.
 	//
-	//   - Function ARN - arn:aws:lambda:us-west-2:123456789012:function:MyFunction.
+	//    * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:MyFunction.
 	//
-	//   - Partial ARN - 123456789012:function:MyFunction.
+	//    * Partial ARN - 123456789012:function:MyFunction.
 	//
 	// The length constraint applies only to the full ARN. If you specify only the
 	// function name, it is limited to 64 characters in length.
-	FunctionName *string                                  `json:"functionName,omitempty"`
-	FunctionRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"functionRef,omitempty"`
+
+	FunctionName *string `json:"functionName,omitempty"`
+
+	FunctionRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"functionRef,omitempty"`
 	// The function version that the alias invokes.
+
 	// +kubebuilder:validation:Required
+
 	FunctionVersion *string `json:"functionVersion"`
 	// The name of the alias.
+
 	// +kubebuilder:validation:Required
+
 	Name *string `json:"name"`
 	// Configures provisioned concurrency to a function's alias
 	//
 	// - ProvisionedConcurrentExecutions
 	// The amount of provisioned concurrency to allocate for the version or alias.
 	// Minimum value of 1 is required
+
 	ProvisionedConcurrencyConfig *PutProvisionedConcurrencyConfigInput `json:"provisionedConcurrencyConfig,omitempty"`
 	// The routing configuration (https://docs.aws.amazon.com/lambda/latest/dg/configuration-aliases.html#configuring-alias-routing)
 	// of the alias.
+
 	RoutingConfig *AliasRoutingConfiguration `json:"routingConfig,omitempty"`
 }
 
@@ -82,7 +92,7 @@ type AliasStatus struct {
 	// constructed ARN for the resource
 	// +kubebuilder:validation:Optional
 	ACKResourceMetadata *ackv1alpha1.ResourceMetadata `json:"ackResourceMetadata"`
-	// All CRS managed by ACK have a common `Status.Conditions` member that
+	// All CRs managed by ACK have a common `Status.Conditions` member that
 	// contains a collection of `ackv1alpha1.Condition` objects that describe
 	// the various terminal states of the CR and its backend AWS service API
 	// resource

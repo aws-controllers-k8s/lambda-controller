@@ -4,7 +4,7 @@
 
 image:
   repository: public.ecr.aws/aws-controllers-k8s/lambda-controller
-  tag: 1.5.7
+  tag: 1.5.8
   pullPolicy: IfNotPresent
   pullSecrets: []
 

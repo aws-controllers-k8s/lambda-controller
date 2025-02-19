@@ -40,15 +40,14 @@ spec:
             description: FunctionSpec defines the desired state of Function.
             properties:
               architectures:
-                description: |-
-                  The instruction set architecture that the function supports. Enter a string
-                  array with one of the valid values (arm64 or x86_64). The default value is
-                  x86_64.
                 items:
                   type: string
                 type: array
               code:
-                description: The code for the function.
+                description: |-
+                  The code for the Lambda function. You can either specify an object in Amazon
+                  S3, upload a .zip file archive deployment package directly, or specify the
+                  URI of a container image.
                 properties:
                   imageURI:
                     type: string
@@ -79,26 +78,23 @@ spec:
                     type: string
                 type: object
               codeSigningConfigARN:
-                description: |-
-                  To enable code signing for this function, specify the ARN of a code-signing
-                  configuration. A code-signing configurationincludes a set of signing profiles,
-                  which define the trusted publishers for this function.
                 type: string
               deadLetterConfig:
                 description: |-
-                  A dead-letter queue configuration that specifies the queue or topic where
-                  Lambda sends asynchronous events when they fail processing. For more information,
-                  see Dead-letter queues (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#invocation-dlq).
+                  The dead-letter queue (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#dlq)
+                  for failed asynchronous invocations.
                 properties:
                   targetARN:
                     type: string
                 type: object
               description:
-                description: A description of the function.
                 type: string
               environment:
-                description: Environment variables that are accessible from function
-                  code during execution.
+                description: |-
+                  A function's environment variable settings. You can use environment variables
+                  to adjust your function's behavior without updating code. An environment
+                  variable is a pair of strings that are stored in a function's version-specific
+                  configuration.
                 properties:
                   variables:
                     additionalProperties:
@@ -116,7 +112,6 @@ spec:
                     type: integer
                 type: object
               fileSystemConfigs:
-                description: Connection settings for an Amazon EFS file system.
                 items:
                   description: |-
                     Details about the connection between a Lambda function and an Amazon EFS
@@ -129,23 +124,6 @@ spec:
                   type: object
                 type: array
               functionEventInvokeConfig:
-                description: |-
-                  Configures options for asynchronous invocation on a function.
-
-                  - DestinationConfig
-                  A destination for events after they have been sent to a function for processing.
-
-                  Types of Destinations:
-                  Function - The Amazon Resource Name (ARN) of a Lambda function.
-                  Queue - The ARN of a standard SQS queue.
-                  Topic - The ARN of a standard SNS topic.
-                  Event Bus - The ARN of an Amazon EventBridge event bus.
-
-                  - MaximumEventAgeInSeconds
-                  The maximum age of a request that Lambda sends to a function for processing.
-
-                  - MaximumRetryAttempts
-                  The maximum number of times to retry when the function returns an error.
                 properties:
                   destinationConfig:
                     description: |-
@@ -182,17 +160,11 @@ spec:
                     type: string
                 type: object
               handler:
-                description: |-
-                  The name of the method within your code that Lambda calls to run your function.
-                  Handler is required if the deployment package is a .zip file archive. The
-                  format includes the file name. It can also include namespaces and other qualifiers,
-                  depending on the runtime. For more information, see Lambda programming model
-                  (https://docs.aws.amazon.com/lambda/latest/dg/foundation-progmodel.html).
                 type: string
               imageConfig:
                 description: |-
-                  Container image configuration values (https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#images-parms)
-                  that override the values in the container image Dockerfile.
+                  Configuration values that override the container image Dockerfile settings.
+                  For more information, see Container image settings (https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#images-parms).
                 properties:
                   command:
                     items:
@@ -206,27 +178,6 @@ spec:
                     type: string
                 type: object
               kmsKeyARN:
-                description: |-
-                  The ARN of the Key Management Service (KMS) customer managed key that's used
-                  to encrypt the following resources:
-
-                    - The function's environment variables (https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-encryption).
-
-                    - The function's Lambda SnapStart (https://docs.aws.amazon.com/lambda/latest/dg/snapstart-security.html)
-                      snapshots.
-
-                    - When used with SourceKMSKeyArn, the unzipped version of the .zip deployment
-                      package that's used for function invocations. For more information, see
-                      Specifying a customer managed key for Lambda (https://docs.aws.amazon.com/lambda/latest/dg/encrypt-zip-package.html#enable-zip-custom-encryption).
-
-                    - The optimized version of the container image that's used for function
-                      invocations. Note that this is not the same key that's used to protect
-                      your container image in the Amazon Elastic Container Registry (Amazon
-                      ECR). For more information, see Function lifecycle (https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#images-lifecycle).
-
-                  If you don't provide a customer managed key, Lambda uses an Amazon Web Services
-                  owned key (https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-owned-cmk)
-                  or an Amazon Web Services managed key (https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-managed-cmk).
                 type: string
               kmsKeyRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around
@@ -246,52 +197,22 @@ spec:
                     type: object
                 type: object
               layers:
-                description: |-
-                  A list of function layers (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html)
-                  to add to the function's execution environment. Specify each layer by its
-                  ARN, including the version.
                 items:
                   type: string
                 type: array
               memorySize:
-                description: |-
-                  The amount of memory available to the function (https://docs.aws.amazon.com/lambda/latest/dg/configuration-function-common.html#configuration-memory-console)
-                  at runtime. Increasing the function memory also increases its CPU allocation.
-                  The default value is 128 MB. The value can be any multiple of 1 MB.
                 format: int64
                 type: integer
               name:
-                description: |-
-                  The name or ARN of the Lambda function.
-
-                  Name formats
-
-                    - Function name – my-function.
-
-                    - Function ARN – arn:aws:lambda:us-west-2:123456789012:function:my-function.
-
-                    - Partial ARN – 123456789012:function:my-function.
-
-                  The length constraint applies only to the full ARN. If you specify only the
-                  function name, it is limited to 64 characters in length.
                 type: string
               packageType:
-                description: |-
-                  The type of deployment package. Set to Image for container image and set
-                  to Zip for .zip file archive.
                 type: string
               publish:
-                description: Set to true to publish the first version of the function
-                  during creation.
                 type: boolean
               reservedConcurrentExecutions:
-                description: The number of simultaneous executions to reserve for
-                  the function.
                 format: int64
                 type: integer
               role:
-                description: The Amazon Resource Name (ARN) of the function's execution
-                  role.
                 type: string
               roleRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around
@@ -311,22 +232,12 @@ spec:
                     type: object
                 type: object
               runtime:
-                description: |-
-                  The identifier of the function's runtime (https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html).
-                  Runtime is required if the deployment package is a .zip file archive. Specifying
-                  a runtime results in an error if you're deploying a function using a container
-                  image.
-
-                  The following list includes deprecated runtimes. Lambda blocks creating new
-                  functions and updating existing functions shortly after each runtime is deprecated.
-                  For more information, see Runtime use after deprecation (https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-deprecation-levels).
-
-                  For a list of all currently supported runtimes, see Supported runtimes (https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtimes-supported).
                 type: string
               snapStart:
                 description: |-
-                  The function's SnapStart (https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html)
-                  setting.
+                  The function's Lambda SnapStart (https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html)
+                  setting. Set ApplyOn to PublishedVersions to create a snapshot of the initialized
+                  execution environment when you publish a function version.
                 properties:
                   applyOn:
                     type: string
@@ -334,30 +245,22 @@ spec:
               tags:
                 additionalProperties:
                   type: string
-                description: |-
-                  A list of tags (https://docs.aws.amazon.com/lambda/latest/dg/tagging.html)
-                  to apply to the function.
                 type: object
               timeout:
-                description: |-
-                  The amount of time (in seconds) that Lambda allows a function to run before
-                  stopping it. The default is 3 seconds. The maximum allowed value is 900 seconds.
-                  For more information, see Lambda execution environment (https://docs.aws.amazon.com/lambda/latest/dg/runtimes-context.html).
                 format: int64
                 type: integer
               tracingConfig:
                 description: |-
-                  Set Mode to Active to sample and trace a subset of incoming requests withX-Ray
-                  (https://docs.aws.amazon.com/lambda/latest/dg/services-xray.html).
+                  The function's X-Ray (https://docs.aws.amazon.com/lambda/latest/dg/services-xray.html)
+                  tracing configuration. To sample and record incoming requests, set Mode to
+                  Active.
                 properties:
                   mode:
                     type: string
                 type: object
               vpcConfig:
                 description: |-
-                  For network connectivity to Amazon Web Services resources in a VPC, specify
-                  a list of security groups and subnets in the VPC. When you connect a function
-                  to a VPC, it can access resources and the internet only through that VPC.
+                  The VPC security groups and subnets that are attached to a Lambda function.
                   For more information, see Configuring a Lambda function to access resources
                   in a VPC (https://docs.aws.amazon.com/lambda/latest/dg/configuration-vpc.html).
                 properties:
@@ -455,7 +358,7 @@ spec:
                 type: integer
               conditions:
                 description: |-
-                  All CRS managed by ACK have a common `Status.Conditions` member that
+                  All CRs managed by ACK have a common `Status.Conditions` member that
                   contains a collection of `ackv1alpha1.Condition` objects that describe
                   the various terminal states of the CR and its backend AWS service API
                   resource

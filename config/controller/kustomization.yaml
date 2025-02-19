@@ -6,4 +6,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: public.ecr.aws/aws-controllers-k8s/lambda-controller
-  newTag: 1.5.7
+  newTag: 1.5.8

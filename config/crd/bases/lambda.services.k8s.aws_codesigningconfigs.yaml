@@ -43,7 +43,7 @@ spec:
               Details about a Code signing configuration (https://docs.aws.amazon.com/lambda/latest/dg/configuration-codesigning.html).
             properties:
               allowedPublishers:
-                description: Signing profiles for this code signing configuration.
+                description: List of signing profiles that can sign a code package.
                 properties:
                   signingProfileVersionARNs:
                     items:
@@ -52,14 +52,13 @@ spec:
                 type: object
               codeSigningPolicies:
                 description: |-
-                  The code signing policies define the actions to take if the validation checks
-                  fail.
+                  Code signing configuration policies (https://docs.aws.amazon.com/lambda/latest/dg/configuration-codesigning.html#config-codesigning-policies)
+                  specify the validation failure action for signature mismatch or expiry.
                 properties:
                   untrustedArtifactOnDeployment:
                     type: string
                 type: object
               description:
-                description: Descriptive name for this code signing configuration.
                 type: string
             required:
             - allowedPublishers
@@ -101,7 +100,7 @@ spec:
                 type: string
               conditions:
                 description: |-
-                  All CRS managed by ACK have a common `Status.Conditions` member that
+                  All CRs managed by ACK have a common `Status.Conditions` member that
                   contains a collection of `ackv1alpha1.Condition` objects that describe
                   the various terminal states of the CR and its backend AWS service API
                   resource

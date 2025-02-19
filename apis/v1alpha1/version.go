@@ -29,29 +29,36 @@ type VersionSpec struct {
 	// Use this option to avoid publishing a version if the function code has changed
 	// since you last updated it. You can get the hash for the version that you
 	// uploaded from the output of UpdateFunctionCode.
+
 	CodeSHA256 *string `json:"codeSHA256,omitempty"`
 	// A description for the version to override the description in the function
 	// configuration.
-	Description               *string                            `json:"description,omitempty"`
+
+	Description *string `json:"description,omitempty"`
+
 	FunctionEventInvokeConfig *PutFunctionEventInvokeConfigInput `json:"functionEventInvokeConfig,omitempty"`
 	// The name or ARN of the Lambda function.
 	//
 	// Name formats
 	//
-	//   - Function name - MyFunction.
+	//    * Function name - MyFunction.
 	//
-	//   - Function ARN - arn:aws:lambda:us-west-2:123456789012:function:MyFunction.
+	//    * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:MyFunction.
 	//
-	//   - Partial ARN - 123456789012:function:MyFunction.
+	//    * Partial ARN - 123456789012:function:MyFunction.
 	//
 	// The length constraint applies only to the full ARN. If you specify only the
 	// function name, it is limited to 64 characters in length.
-	FunctionName                 *string                                  `json:"functionName,omitempty"`
-	FunctionRef                  *ackv1alpha1.AWSResourceReferenceWrapper `json:"functionRef,omitempty"`
-	ProvisionedConcurrencyConfig *PutProvisionedConcurrencyConfigInput    `json:"provisionedConcurrencyConfig,omitempty"`
+
+	FunctionName *string `json:"functionName,omitempty"`
+
+	FunctionRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"functionRef,omitempty"`
+
+	ProvisionedConcurrencyConfig *PutProvisionedConcurrencyConfigInput `json:"provisionedConcurrencyConfig,omitempty"`
 	// Only update the function if the revision ID matches the ID that's specified.
 	// Use this option to avoid publishing a version if the function configuration
 	// has changed since you last updated it.
+
 	RevisionID *string `json:"revisionID,omitempty"`
 }
 
@@ -62,7 +69,7 @@ type VersionStatus struct {
 	// constructed ARN for the resource
 	// +kubebuilder:validation:Optional
 	ACKResourceMetadata *ackv1alpha1.ResourceMetadata `json:"ackResourceMetadata"`
-	// All CRS managed by ACK have a common `Status.Conditions` member that
+	// All CRs managed by ACK have a common `Status.Conditions` member that
 	// contains a collection of `ackv1alpha1.Condition` objects that describe
 	// the various terminal states of the CR and its backend AWS service API
 	// resource

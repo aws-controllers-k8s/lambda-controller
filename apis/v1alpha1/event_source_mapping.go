@@ -25,78 +25,89 @@ type EventSourceMappingSpec struct {
 
 	// Specific configuration settings for an Amazon Managed Streaming for Apache
 	// Kafka (Amazon MSK) event source.
+
 	AmazonManagedKafkaEventSourceConfig *AmazonManagedKafkaEventSourceConfig `json:"amazonManagedKafkaEventSourceConfig,omitempty"`
 	// The maximum number of records in each batch that Lambda pulls from your stream
 	// or queue and sends to your function. Lambda passes all of the records in
 	// the batch to the function in a single call, up to the payload limit for synchronous
 	// invocation (6 MB).
 	//
-	//   - Amazon Kinesis – Default 100. Max 10,000.
+	//    * Amazon Kinesis – Default 100. Max 10,000.
 	//
-	//   - Amazon DynamoDB Streams – Default 100. Max 10,000.
+	//    * Amazon DynamoDB Streams – Default 100. Max 10,000.
 	//
-	//   - Amazon Simple Queue Service – Default 10. For standard queues the
-	//     max is 10,000. For FIFO queues the max is 10.
+	//    * Amazon Simple Queue Service – Default 10. For standard queues the
+	//    max is 10,000. For FIFO queues the max is 10.
 	//
-	//   - Amazon Managed Streaming for Apache Kafka – Default 100. Max 10,000.
+	//    * Amazon Managed Streaming for Apache Kafka – Default 100. Max 10,000.
 	//
-	//   - Self-managed Apache Kafka – Default 100. Max 10,000.
+	//    * Self-managed Apache Kafka – Default 100. Max 10,000.
 	//
-	//   - Amazon MQ (ActiveMQ and RabbitMQ) – Default 100. Max 10,000.
+	//    * Amazon MQ (ActiveMQ and RabbitMQ) – Default 100. Max 10,000.
 	//
-	//   - DocumentDB – Default 100. Max 10,000.
+	//    * DocumentDB – Default 100. Max 10,000.
+
 	BatchSize *int64 `json:"batchSize,omitempty"`
 	// (Kinesis and DynamoDB Streams only) If the function returns an error, split
 	// the batch in two and retry.
+
 	BisectBatchOnFunctionError *bool `json:"bisectBatchOnFunctionError,omitempty"`
 	// (Kinesis, DynamoDB Streams, Amazon MSK, and self-managed Kafka only) A configuration
 	// object that specifies the destination of an event after Lambda processes
 	// it.
+
 	DestinationConfig *DestinationConfig `json:"destinationConfig,omitempty"`
 	// When true, the event source mapping is active. When false, Lambda pauses
 	// polling and invocation.
 	//
 	// Default: True
+
 	Enabled *bool `json:"enabled,omitempty"`
 	// The Amazon Resource Name (ARN) of the event source.
 	//
-	//   - Amazon Kinesis – The ARN of the data stream or a stream consumer.
+	//    * Amazon Kinesis – The ARN of the data stream or a stream consumer.
 	//
-	//   - Amazon DynamoDB Streams – The ARN of the stream.
+	//    * Amazon DynamoDB Streams – The ARN of the stream.
 	//
-	//   - Amazon Simple Queue Service – The ARN of the queue.
+	//    * Amazon Simple Queue Service – The ARN of the queue.
 	//
-	//   - Amazon Managed Streaming for Apache Kafka – The ARN of the cluster
-	//     or the ARN of the VPC connection (for cross-account event source mappings
-	//     (https://docs.aws.amazon.com/lambda/latest/dg/with-msk.html#msk-multi-vpc)).
+	//    * Amazon Managed Streaming for Apache Kafka – The ARN of the cluster
+	//    or the ARN of the VPC connection (for cross-account event source mappings
+	//    (https://docs.aws.amazon.com/lambda/latest/dg/with-msk.html#msk-multi-vpc)).
 	//
-	//   - Amazon MQ – The ARN of the broker.
+	//    * Amazon MQ – The ARN of the broker.
 	//
-	//   - Amazon DocumentDB – The ARN of the DocumentDB change stream.
-	EventSourceARN *string                                  `json:"eventSourceARN,omitempty"`
+	//    * Amazon DocumentDB – The ARN of the DocumentDB change stream.
+
+	EventSourceARN *string `json:"eventSourceARN,omitempty"`
+
 	EventSourceRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"eventSourceRef,omitempty"`
 	// An object that defines the filter criteria that determine whether Lambda
 	// should process an event. For more information, see Lambda event filtering
 	// (https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html).
+
 	FilterCriteria *FilterCriteria `json:"filterCriteria,omitempty"`
 	// The name or ARN of the Lambda function.
 	//
 	// Name formats
 	//
-	//   - Function name – MyFunction.
+	//    * Function name – MyFunction.
 	//
-	//   - Function ARN – arn:aws:lambda:us-west-2:123456789012:function:MyFunction.
+	//    * Function ARN – arn:aws:lambda:us-west-2:123456789012:function:MyFunction.
 	//
-	//   - Version or Alias ARN – arn:aws:lambda:us-west-2:123456789012:function:MyFunction:PROD.
+	//    * Version or Alias ARN – arn:aws:lambda:us-west-2:123456789012:function:MyFunction:PROD.
 	//
-	//   - Partial ARN – 123456789012:function:MyFunction.
+	//    * Partial ARN – 123456789012:function:MyFunction.
 	//
 	// The length constraint applies only to the full ARN. If you specify only the
 	// function name, it's limited to 64 characters in length.
-	FunctionName *string                                  `json:"functionName,omitempty"`
-	FunctionRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"functionRef,omitempty"`
+
+	FunctionName *string `json:"functionName,omitempty"`
+
+	FunctionRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"functionRef,omitempty"`
 	// (Kinesis, DynamoDB Streams, and Amazon SQS) A list of current response type
 	// enums applied to the event source mapping.
+
 	FunctionResponseTypes []*string `json:"functionResponseTypes,omitempty"`
 	// The maximum amount of time, in seconds, that Lambda spends gathering records
 	// before invoking the function. You can configure MaximumBatchingWindowInSeconds
@@ -113,44 +124,58 @@ type EventSourceMappingSpec struct {
 	// Related setting: For Kinesis, DynamoDB, and Amazon SQS event sources, when
 	// you set BatchSize to a value greater than 10, you must set MaximumBatchingWindowInSeconds
 	// to at least 1.
+
 	MaximumBatchingWindowInSeconds *int64 `json:"maximumBatchingWindowInSeconds,omitempty"`
 	// (Kinesis and DynamoDB Streams only) Discard records older than the specified
 	// age. The default value is infinite (-1).
+
 	MaximumRecordAgeInSeconds *int64 `json:"maximumRecordAgeInSeconds,omitempty"`
 	// (Kinesis and DynamoDB Streams only) Discard records after the specified number
 	// of retries. The default value is infinite (-1). When set to infinite (-1),
 	// failed records are retried until the record expires.
+
 	MaximumRetryAttempts *int64 `json:"maximumRetryAttempts,omitempty"`
 	// (Kinesis and DynamoDB Streams only) The number of batches to process from
 	// each shard concurrently.
-	ParallelizationFactor *int64                                     `json:"parallelizationFactor,omitempty"`
-	QueueRefs             []*ackv1alpha1.AWSResourceReferenceWrapper `json:"queueRefs,omitempty"`
+
+	ParallelizationFactor *int64 `json:"parallelizationFactor,omitempty"`
+
+	QueueRefs []*ackv1alpha1.AWSResourceReferenceWrapper `json:"queueRefs,omitempty"`
 	// (MQ) The name of the Amazon MQ broker destination queue to consume.
+
 	Queues []*string `json:"queues,omitempty"`
 	// (Amazon SQS only) The scaling configuration for the event source. For more
 	// information, see Configuring maximum concurrency for Amazon SQS event sources
 	// (https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-max-concurrency).
+
 	ScalingConfig *ScalingConfig `json:"scalingConfig,omitempty"`
 	// The self-managed Apache Kafka cluster to receive records from.
+
 	SelfManagedEventSource *SelfManagedEventSource `json:"selfManagedEventSource,omitempty"`
 	// Specific configuration settings for a self-managed Apache Kafka event source.
+
 	SelfManagedKafkaEventSourceConfig *SelfManagedKafkaEventSourceConfig `json:"selfManagedKafkaEventSourceConfig,omitempty"`
 	// An array of authentication protocols or VPC components required to secure
 	// your event source.
+
 	SourceAccessConfigurations []*SourceAccessConfiguration `json:"sourceAccessConfigurations,omitempty"`
 	// The position in a stream from which to start reading. Required for Amazon
 	// Kinesis and Amazon DynamoDB Stream event sources. AT_TIMESTAMP is supported
 	// only for Amazon Kinesis streams, Amazon DocumentDB, Amazon MSK, and self-managed
 	// Apache Kafka.
+
 	StartingPosition *string `json:"startingPosition,omitempty"`
 	// With StartingPosition set to AT_TIMESTAMP, the time from which to start reading.
 	// StartingPositionTimestamp cannot be in the future.
+
 	StartingPositionTimestamp *metav1.Time `json:"startingPositionTimestamp,omitempty"`
 	// The name of the Kafka topic.
+
 	Topics []*string `json:"topics,omitempty"`
 	// (Kinesis and DynamoDB Streams only) The duration in seconds of a processing
 	// window for DynamoDB and Kinesis Streams event sources. A value of 0 seconds
 	// indicates no tumbling window.
+
 	TumblingWindowInSeconds *int64 `json:"tumblingWindowInSeconds,omitempty"`
 }
 
@@ -161,7 +186,7 @@ type EventSourceMappingStatus struct {
 	// constructed ARN for the resource
 	// +kubebuilder:validation:Optional
 	ACKResourceMetadata *ackv1alpha1.ResourceMetadata `json:"ackResourceMetadata"`
-	// All CRS managed by ACK have a common `Status.Conditions` member that
+	// All CRs managed by ACK have a common `Status.Conditions` member that
 	// contains a collection of `ackv1alpha1.Condition` objects that describe
 	// the various terminal states of the CR and its backend AWS service API
 	// resource

@@ -29,26 +29,32 @@ type FunctionURLConfigSpec struct {
 	// you want to restrict access to authenticated users only. Set to NONE if you
 	// want to bypass IAM authentication to create a public endpoint. For more information,
 	// see Security and auth model for Lambda function URLs (https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html).
+
 	// +kubebuilder:validation:Required
+
 	AuthType *string `json:"authType"`
 	// The cross-origin resource sharing (CORS) (https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
 	// settings for your function URL.
+
 	CORS *CORS `json:"cors,omitempty"`
 	// The name or ARN of the Lambda function.
 	//
 	// Name formats
 	//
-	//   - Function name – my-function.
+	//    * Function name – my-function.
 	//
-	//   - Function ARN – arn:aws:lambda:us-west-2:123456789012:function:my-function.
+	//    * Function ARN – arn:aws:lambda:us-west-2:123456789012:function:my-function.
 	//
-	//   - Partial ARN – 123456789012:function:my-function.
+	//    * Partial ARN – 123456789012:function:my-function.
 	//
 	// The length constraint applies only to the full ARN. If you specify only the
 	// function name, it is limited to 64 characters in length.
-	FunctionName *string                                  `json:"functionName,omitempty"`
-	FunctionRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"functionRef,omitempty"`
+
+	FunctionName *string `json:"functionName,omitempty"`
+
+	FunctionRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"functionRef,omitempty"`
 	// The alias name.
+
 	Qualifier *string `json:"qualifier,omitempty"`
 }
 
@@ -59,7 +65,7 @@ type FunctionURLConfigStatus struct {
 	// constructed ARN for the resource
 	// +kubebuilder:validation:Optional
 	ACKResourceMetadata *ackv1alpha1.ResourceMetadata `json:"ackResourceMetadata"`
-	// All CRS managed by ACK have a common `Status.Conditions` member that
+	// All CRs managed by ACK have a common `Status.Conditions` member that
 	// contains a collection of `ackv1alpha1.Condition` objects that describe
 	// the various terminal states of the CR and its backend AWS service API
 	// resource
