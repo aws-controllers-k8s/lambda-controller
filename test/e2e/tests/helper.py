@@ -186,3 +186,44 @@ class LambdaValidator:
     
     def version_exists(self, function_name: str, qualifier: str) -> bool:
         return self.get_function_config(function_name, qualifier) is not None
+    
+    def get_function_policy(self, function_name: str) -> dict:
+        """Get the resource-based policy for a Lambda function or alias.
+        
+        Args:
+            function_name: Lambda function name or alias ARN
+        
+        Returns:
+            Policy document as a dict, or None if not found
+        """
+        try:
+            resp = self.lambda_client.get_policy(
+                FunctionName=function_name
+            )
+            # Response contains policy as a JSON string, parse it
+            import json
+            policy = json.loads(resp['Policy'])
+            return policy
+        except Exception as e:
+            logging.debug(e)
+            return None
+
+    def function_has_permission(self, function_name: str, statement_id: str) -> bool:
+        """Check if a Lambda function has a specific permission by statement ID.
+        
+        Args:
+            function_name: Lambda function name or alias ARN
+            statement_id: The statement ID to look for
+        
+        Returns:
+            True if the permission exists, False otherwise
+        """
+        policy = self.get_function_policy(function_name)
+        if not policy or 'Statement' not in policy:
+            return False
+            
+        for statement in policy['Statement']:
+            if statement.get('Sid') == statement_id:
+                return True
+        
+        return False

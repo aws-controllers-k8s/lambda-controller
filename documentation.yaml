@@ -21,6 +21,8 @@ resources:
               The maximum number of times to retry when the function returns an error.
   Alias:
     fields:
+      Permissions:
+        prepend: Permissions configures a set of Lambda permissions to grant to an alias.
       FunctionEventInvokeConfig:
         prepend: |
           Configures options for asynchronous invocation on an alias.
