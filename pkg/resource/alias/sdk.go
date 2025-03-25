@@ -240,6 +240,15 @@ func (rm *resourceManager) sdkCreate(
 			return nil, err
 		}
 	}
+
+	if len(ko.Spec.Permissions) > 0 {
+		aliasCopy := ko.DeepCopy()
+		aliasCopy.Spec.Permissions = nil
+		err = rm.syncPermissions(ctx, desired, &resource{aliasCopy})
+		if err != nil {
+			return nil, err
+		}
+	}
 	return &resource{ko}, nil
 }
 
@@ -305,7 +314,13 @@ func (rm *resourceManager) sdkUpdate(
 			return nil, err
 		}
 	}
-	if !delta.DifferentExcept("Spec.ProvisionedConcurrencyConfig", "Spec.FunctionEventInvokeConfig") {
+	if delta.DifferentAt("Spec.Permissions") {
+		err = rm.syncPermissions(ctx, desired, latest)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if !delta.DifferentExcept("Spec.ProvisionedConcurrencyConfig", "Spec.FunctionEventInvokeConfig", "Spec.Permissions") {
 		return desired, nil
 	}
 	input, err := rm.newUpdateRequestPayload(ctx, desired, delta)

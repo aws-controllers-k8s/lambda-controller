@@ -27,6 +27,8 @@ ignore:
   - PublishVersionOutput.LoggingConfig
   - PublishVersionOutput.RuntimeVersionConfig
   - VpcConfig.Ipv6AllowedForDualStack
+  - AddPermissionInput.FunctionName # We grab this from the Alias resource
+  - AddPermissionInput.Qualifier # We grab this from the Alias resource   
 operations:
   GetFunction:
     output_wrapper_field_path: Configuration
@@ -161,7 +163,14 @@ resources:
         from:
           operation: PutProvisionedConcurrencyConfig
           path: .
+      Permissions:
+        custom_field:
+          list_of: AddPermissionInput
+        compare:
+          is_ignored: true
     hooks:
+      delta_pre_compare:
+        code: customPreCompare(delta, a, b)
       sdk_update_pre_build_request:
         template_path: hooks/alias/sdk_update_pre_build_request.go.tpl
       sdk_read_one_post_set_output:

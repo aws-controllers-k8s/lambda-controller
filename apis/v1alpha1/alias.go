@@ -64,6 +64,8 @@ type AliasSpec struct {
 	// The name of the alias.
 	// +kubebuilder:validation:Required
 	Name *string `json:"name"`
+	// Permissions configures a set of Lambda permissions to grant to an alias.
+	Permissions []*AddPermissionInput `json:"permissions,omitempty"`
 	// Configures provisioned concurrency to a function's alias
 	//
 	// - ProvisionedConcurrentExecutions

@@ -17,6 +17,7 @@
 import pytest
 import time
 import logging
+import json
 
 from acktest.resources import random_suffix_name
 from acktest.aws.identity import get_region
@@ -74,6 +75,51 @@ def lambda_function():
 
         _, deleted = k8s.delete_custom_resource(function_reference)
         assert deleted
+
+
+@pytest.fixture(scope="module")
+def lambda_alias(lambda_client, lambda_function):
+    (_, function_resource) = lambda_function
+    lambda_function_name = function_resource["spec"]["name"]
+
+    resource_name = random_suffix_name("lambda-alias", 24)
+
+    replacements = REPLACEMENT_VALUES.copy()
+    replacements["AWS_REGION"] = get_region()
+    replacements["ALIAS_NAME"] = resource_name
+    replacements["FUNCTION_NAME"] = lambda_function_name
+    replacements["FUNCTION_VERSION"] = "$LATEST"
+    
+    resource_data = load_lambda_resource(
+        "alias",
+        additional_replacements=replacements,
+    )
+    logging.debug(resource_data)
+
+    ref = k8s.CustomResourceReference(
+        CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+        resource_name, namespace="default",
+    )
+    k8s.create_custom_resource(ref, resource_data)
+    cr = k8s.wait_resource_consumed_by_controller(ref)
+
+    assert cr is not None
+    assert k8s.get_resource_exists(ref)
+
+    time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+    lambda_validator = LambdaValidator(lambda_client)
+    assert lambda_validator.alias_exists(resource_name, lambda_function_name)
+    
+    yield (ref, cr, lambda_function_name, resource_name)
+    
+    _, deleted = k8s.delete_custom_resource(ref)
+    assert deleted
+
+    time.sleep(DELETE_WAIT_AFTER_SECONDS)
+    
+    # Check alias doesn't exist
+    assert not lambda_validator.alias_exists(resource_name, lambda_function_name)
 
 @service_marker
 @pytest.mark.canary
@@ -354,3 +400,77 @@ class TestAlias:
 
         # Check alias doesn't exist
         assert not lambda_validator.alias_exists(resource_name, lambda_function_name)
+
+    def test_alias_permissions(self, lambda_client, lambda_alias):
+        (ref, cr, lambda_function_name, resource_name) = lambda_alias
+        lambda_validator = LambdaValidator(lambda_client)
+        
+        # Add initial permissions
+        initial_permissions = [
+            {
+                "statementID": "permission1",
+                "action": "lambda:InvokeFunction",
+                "principal": "s3.amazonaws.com",
+                "sourceARN": "arn:aws:s3:::mybucket1"
+            },
+            {
+                "statementID": "permission2",
+                "action": "lambda:InvokeFunction",
+                "principal": "events.amazonaws.com",
+                "sourceARN": "arn:aws:events:us-west-2:123456789012:rule/my-rule"
+            }
+        ]
+        
+        cr["spec"]["permissions"] = initial_permissions
+        
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+        
+        # Verify initial permissions were added
+        function_alias = f"{lambda_function_name}:{resource_name}"
+        policy = lambda_validator.get_function_policy(function_alias)
+        assert policy is not None
+        assert len(policy["Statement"]) == 2
+        assert lambda_validator.function_has_permission(function_alias, "permission1")
+        assert lambda_validator.function_has_permission(function_alias, "permission2")
+        
+        # update permissions: remove permission1, update permission2 (new rule arn), add permission3
+        updated_permissions = [
+            {
+                "statementID": "permission2",
+                "action": "lambda:InvokeFunction",
+                "principal": "events.amazonaws.com",
+                "sourceARN": "arn:aws:events:us-west-2:123456789012:rule/updated-rule"
+            },
+            {
+                "statementID": "permission3", # new permission
+                "action": "lambda:InvokeFunction",
+                "principal": "sns.amazonaws.com",
+                "sourceARN": "arn:aws:sns:us-west-2:123456789012:my-topic"
+            }
+        ]
+
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr["spec"]["permissions"] = updated_permissions
+
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        # Verify updated permissions
+        policy = lambda_validator.get_function_policy(function_alias)
+        assert policy is not None
+        assert len(policy["Statement"]) == 2
+        
+        # Verify permission1 was removed
+        assert not lambda_validator.function_has_permission(function_alias, "permission1")
+        
+        # Verify permission3 was added
+        assert lambda_validator.function_has_permission(function_alias, "permission3")
+        
+        # Verify permission2 was updated (need to examine contents)
+        permission2_updated = False
+        for statement in policy["Statement"]:
+            if (statement.get("Sid") == "permission2" and 
+                "updated-rule" in statement.get("Condition", {}).get("ArnLike", {}).get("AWS:SourceArn", "")):
+                permission2_updated = True
+        assert permission2_updated
