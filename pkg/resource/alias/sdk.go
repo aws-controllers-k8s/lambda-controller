@@ -275,13 +275,7 @@ func (rm *resourceManager) newCreateRequestPayload(
 	if r.ko.Spec.RoutingConfig != nil {
 		f4 := &svcsdktypes.AliasRoutingConfiguration{}
 		if r.ko.Spec.RoutingConfig.AdditionalVersionWeights != nil {
-			f4f0 := map[string]float64{}
-			for f4f0key, f4f0valiter := range r.ko.Spec.RoutingConfig.AdditionalVersionWeights {
-				var f4f0val float64
-				f4f0val = *f4f0valiter
-				f4f0[f4f0key] = f4f0val
-			}
-			f4.AdditionalVersionWeights = f4f0
+			f4.AdditionalVersionWeights = aws.ToFloat64Map(r.ko.Spec.RoutingConfig.AdditionalVersionWeights)
 		}
 		res.RoutingConfig = f4
 	}
@@ -407,13 +401,7 @@ func (rm *resourceManager) newUpdateRequestPayload(
 	if r.ko.Spec.RoutingConfig != nil {
 		f5 := &svcsdktypes.AliasRoutingConfiguration{}
 		if r.ko.Spec.RoutingConfig.AdditionalVersionWeights != nil {
-			f5f0 := map[string]float64{}
-			for f5f0key, f5f0valiter := range r.ko.Spec.RoutingConfig.AdditionalVersionWeights {
-				var f5f0val float64
-				f5f0val = *f5f0valiter
-				f5f0[f5f0key] = f5f0val
-			}
-			f5.AdditionalVersionWeights = f5f0
+			f5.AdditionalVersionWeights = aws.ToFloat64Map(r.ko.Spec.RoutingConfig.AdditionalVersionWeights)
 		}
 		res.RoutingConfig = f5
 	}

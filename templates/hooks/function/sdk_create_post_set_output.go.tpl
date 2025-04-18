@@ -1,3 +1,11 @@
+	if desired.ko.Spec.VPCConfig != nil {
+		if ko.Spec.VPCConfig == nil {
+			ko.Spec.VPCConfig = &svcapitypes.VPCConfig{}
+		}
+		ko.Spec.VPCConfig.SecurityGroupRefs = desired.ko.Spec.VPCConfig.SecurityGroupRefs
+		ko.Spec.VPCConfig.SubnetRefs = desired.ko.Spec.VPCConfig.SubnetRefs
+	}
+	
 	if resp.Layers != nil {
 		f16 := []*svcapitypes.Layer{}
 		for _, f16iter := range resp.Layers {
