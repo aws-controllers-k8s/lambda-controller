@@ -1,3 +1,10 @@
+	if r.ko.Spec.VPCConfig != nil {
+		if ko.Spec.VPCConfig == nil {
+			ko.Spec.VPCConfig = &svcapitypes.VPCConfig{}
+		}
+		ko.Spec.VPCConfig.SecurityGroupRefs = r.ko.Spec.VPCConfig.SecurityGroupRefs
+		ko.Spec.VPCConfig.SubnetRefs = r.ko.Spec.VPCConfig.SubnetRefs
+	}
 	if resp.Code != nil {
 		if ko.Spec.Code == nil {
 			ko.Spec.Code = &svcapitypes.FunctionCode{}
@@ -5,6 +12,9 @@
 		if resp.Code.ImageUri != nil {
 			ko.Spec.Code.ImageURI = resp.Code.ImageUri
 		}
+	}
+	if r.ko.Spec.Code != nil && r.ko.Spec.Code.S3BucketRef != nil {
+		ko.Spec.Code.S3BucketRef = r.ko.Spec.Code.S3BucketRef
 	}
 	if resp.Configuration.Layers != nil {
 		f16 := []*svcapitypes.Layer{}
