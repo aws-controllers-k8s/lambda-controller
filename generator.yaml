@@ -59,7 +59,7 @@ resources:
     synced:
       when:
         - path: Status.State
-          in: [ "Active" ]
+          in: [ "Active", "Inactive" ]
     fields:
       Code.SHA256:
         type: string
