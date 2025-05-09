@@ -247,6 +247,38 @@ func newResourceDelta(
 			delta.Add("Spec.Layers", a.ko.Spec.Layers, b.ko.Spec.Layers)
 		}
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.LoggingConfig, b.ko.Spec.LoggingConfig) {
+		delta.Add("Spec.LoggingConfig", a.ko.Spec.LoggingConfig, b.ko.Spec.LoggingConfig)
+	} else if a.ko.Spec.LoggingConfig != nil && b.ko.Spec.LoggingConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.LoggingConfig.ApplicationLogLevel, b.ko.Spec.LoggingConfig.ApplicationLogLevel) {
+			delta.Add("Spec.LoggingConfig.ApplicationLogLevel", a.ko.Spec.LoggingConfig.ApplicationLogLevel, b.ko.Spec.LoggingConfig.ApplicationLogLevel)
+		} else if a.ko.Spec.LoggingConfig.ApplicationLogLevel != nil && b.ko.Spec.LoggingConfig.ApplicationLogLevel != nil {
+			if *a.ko.Spec.LoggingConfig.ApplicationLogLevel != *b.ko.Spec.LoggingConfig.ApplicationLogLevel {
+				delta.Add("Spec.LoggingConfig.ApplicationLogLevel", a.ko.Spec.LoggingConfig.ApplicationLogLevel, b.ko.Spec.LoggingConfig.ApplicationLogLevel)
+			}
+		}
+		if ackcompare.HasNilDifference(a.ko.Spec.LoggingConfig.LogFormat, b.ko.Spec.LoggingConfig.LogFormat) {
+			delta.Add("Spec.LoggingConfig.LogFormat", a.ko.Spec.LoggingConfig.LogFormat, b.ko.Spec.LoggingConfig.LogFormat)
+		} else if a.ko.Spec.LoggingConfig.LogFormat != nil && b.ko.Spec.LoggingConfig.LogFormat != nil {
+			if *a.ko.Spec.LoggingConfig.LogFormat != *b.ko.Spec.LoggingConfig.LogFormat {
+				delta.Add("Spec.LoggingConfig.LogFormat", a.ko.Spec.LoggingConfig.LogFormat, b.ko.Spec.LoggingConfig.LogFormat)
+			}
+		}
+		if ackcompare.HasNilDifference(a.ko.Spec.LoggingConfig.LogGroup, b.ko.Spec.LoggingConfig.LogGroup) {
+			delta.Add("Spec.LoggingConfig.LogGroup", a.ko.Spec.LoggingConfig.LogGroup, b.ko.Spec.LoggingConfig.LogGroup)
+		} else if a.ko.Spec.LoggingConfig.LogGroup != nil && b.ko.Spec.LoggingConfig.LogGroup != nil {
+			if *a.ko.Spec.LoggingConfig.LogGroup != *b.ko.Spec.LoggingConfig.LogGroup {
+				delta.Add("Spec.LoggingConfig.LogGroup", a.ko.Spec.LoggingConfig.LogGroup, b.ko.Spec.LoggingConfig.LogGroup)
+			}
+		}
+		if ackcompare.HasNilDifference(a.ko.Spec.LoggingConfig.SystemLogLevel, b.ko.Spec.LoggingConfig.SystemLogLevel) {
+			delta.Add("Spec.LoggingConfig.SystemLogLevel", a.ko.Spec.LoggingConfig.SystemLogLevel, b.ko.Spec.LoggingConfig.SystemLogLevel)
+		} else if a.ko.Spec.LoggingConfig.SystemLogLevel != nil && b.ko.Spec.LoggingConfig.SystemLogLevel != nil {
+			if *a.ko.Spec.LoggingConfig.SystemLogLevel != *b.ko.Spec.LoggingConfig.SystemLogLevel {
+				delta.Add("Spec.LoggingConfig.SystemLogLevel", a.ko.Spec.LoggingConfig.SystemLogLevel, b.ko.Spec.LoggingConfig.SystemLogLevel)
+			}
+		}
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.MemorySize, b.ko.Spec.MemorySize) {
 		delta.Add("Spec.MemorySize", a.ko.Spec.MemorySize, b.ko.Spec.MemorySize)
 	} else if a.ko.Spec.MemorySize != nil && b.ko.Spec.MemorySize != nil {

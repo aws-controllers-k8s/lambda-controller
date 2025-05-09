@@ -252,6 +252,25 @@ func (rm *resourceManager) updateFunctionConfiguration(
 		}
 	}
 
+	if delta.DifferentAt("Spec.LoggingConfig") {
+		if dspec.LoggingConfig != nil {
+			logConfig := &svcsdktypes.LoggingConfig{}
+			if dspec.LoggingConfig.ApplicationLogLevel != nil {
+				logConfig.ApplicationLogLevel = svcsdktypes.ApplicationLogLevel(*dspec.LoggingConfig.ApplicationLogLevel)
+			}
+			if dspec.LoggingConfig.LogFormat != nil {
+				logConfig.LogFormat = svcsdktypes.LogFormat(*dspec.LoggingConfig.LogFormat)
+			}
+			if dspec.LoggingConfig.LogGroup != nil {
+				logConfig.LogGroup = dspec.LoggingConfig.LogGroup
+			}
+			if dspec.LoggingConfig.SystemLogLevel != nil {
+				logConfig.SystemLogLevel = svcsdktypes.SystemLogLevel(*dspec.LoggingConfig.SystemLogLevel)
+			}
+			input.LoggingConfig = logConfig
+		}
+	}
+
 	if delta.DifferentAt("Spec.MemorySize") {
 		if dspec.MemorySize != nil {
 			input.MemorySize = aws.Int32(int32(*dspec.MemorySize))

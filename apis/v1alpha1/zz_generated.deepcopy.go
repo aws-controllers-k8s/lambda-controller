@@ -1972,6 +1972,11 @@ func (in *FunctionSpec) DeepCopyInto(out *FunctionSpec) {
 			}
 		}
 	}
+	if in.LoggingConfig != nil {
+		in, out := &in.LoggingConfig, &out.LoggingConfig
+		*out = new(LoggingConfig)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.MemorySize != nil {
 		in, out := &in.MemorySize, &out.MemorySize
 		*out = new(int64)

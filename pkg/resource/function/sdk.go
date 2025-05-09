@@ -228,6 +228,24 @@ func (rm *resourceManager) sdkFind(
 	} else {
 		ko.Status.LastUpdateStatusReasonCode = nil
 	}
+	if resp.Configuration.LoggingConfig != nil {
+		f18 := &svcapitypes.LoggingConfig{}
+		if resp.Configuration.LoggingConfig.ApplicationLogLevel != "" {
+			f18.ApplicationLogLevel = aws.String(string(resp.Configuration.LoggingConfig.ApplicationLogLevel))
+		}
+		if resp.Configuration.LoggingConfig.LogFormat != "" {
+			f18.LogFormat = aws.String(string(resp.Configuration.LoggingConfig.LogFormat))
+		}
+		if resp.Configuration.LoggingConfig.LogGroup != nil {
+			f18.LogGroup = resp.Configuration.LoggingConfig.LogGroup
+		}
+		if resp.Configuration.LoggingConfig.SystemLogLevel != "" {
+			f18.SystemLogLevel = aws.String(string(resp.Configuration.LoggingConfig.SystemLogLevel))
+		}
+		ko.Spec.LoggingConfig = f18
+	} else {
+		ko.Spec.LoggingConfig = nil
+	}
 	if resp.Configuration.MasterArn != nil {
 		ko.Status.MasterARN = resp.Configuration.MasterArn
 	} else {
@@ -577,6 +595,24 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Status.LastUpdateStatusReasonCode = nil
 	}
+	if resp.LoggingConfig != nil {
+		f18 := &svcapitypes.LoggingConfig{}
+		if resp.LoggingConfig.ApplicationLogLevel != "" {
+			f18.ApplicationLogLevel = aws.String(string(resp.LoggingConfig.ApplicationLogLevel))
+		}
+		if resp.LoggingConfig.LogFormat != "" {
+			f18.LogFormat = aws.String(string(resp.LoggingConfig.LogFormat))
+		}
+		if resp.LoggingConfig.LogGroup != nil {
+			f18.LogGroup = resp.LoggingConfig.LogGroup
+		}
+		if resp.LoggingConfig.SystemLogLevel != "" {
+			f18.SystemLogLevel = aws.String(string(resp.LoggingConfig.SystemLogLevel))
+		}
+		ko.Spec.LoggingConfig = f18
+	} else {
+		ko.Spec.LoggingConfig = nil
+	}
 	if resp.MasterArn != nil {
 		ko.Status.MasterARN = resp.MasterArn
 	} else {
@@ -619,11 +655,11 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.SigningProfileVersionARN = nil
 	}
 	if resp.SnapStart != nil {
-		f26 := &svcapitypes.SnapStart{}
+		f27 := &svcapitypes.SnapStart{}
 		if resp.SnapStart.ApplyOn != "" {
-			f26.ApplyOn = aws.String(string(resp.SnapStart.ApplyOn))
+			f27.ApplyOn = aws.String(string(resp.SnapStart.ApplyOn))
 		}
-		ko.Spec.SnapStart = f26
+		ko.Spec.SnapStart = f27
 	} else {
 		ko.Spec.SnapStart = nil
 	}
@@ -649,11 +685,11 @@ func (rm *resourceManager) sdkCreate(
 		ko.Spec.Timeout = nil
 	}
 	if resp.TracingConfig != nil {
-		f31 := &svcapitypes.TracingConfig{}
+		f32 := &svcapitypes.TracingConfig{}
 		if resp.TracingConfig.Mode != "" {
-			f31.Mode = aws.String(string(resp.TracingConfig.Mode))
+			f32.Mode = aws.String(string(resp.TracingConfig.Mode))
 		}
-		ko.Spec.TracingConfig = f31
+		ko.Spec.TracingConfig = f32
 	} else {
 		ko.Spec.TracingConfig = nil
 	}
@@ -663,14 +699,14 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.Version = nil
 	}
 	if resp.VpcConfig != nil {
-		f33 := &svcapitypes.VPCConfig{}
+		f34 := &svcapitypes.VPCConfig{}
 		if resp.VpcConfig.SecurityGroupIds != nil {
-			f33.SecurityGroupIDs = aws.StringSlice(resp.VpcConfig.SecurityGroupIds)
+			f34.SecurityGroupIDs = aws.StringSlice(resp.VpcConfig.SecurityGroupIds)
 		}
 		if resp.VpcConfig.SubnetIds != nil {
-			f33.SubnetIDs = aws.StringSlice(resp.VpcConfig.SubnetIds)
+			f34.SubnetIDs = aws.StringSlice(resp.VpcConfig.SubnetIds)
 		}
-		ko.Spec.VPCConfig = f33
+		ko.Spec.VPCConfig = f34
 	} else {
 		ko.Spec.VPCConfig = nil
 	}
@@ -816,6 +852,22 @@ func (rm *resourceManager) newCreateRequestPayload(
 	if r.ko.Spec.Layers != nil {
 		res.Layers = aws.ToStringSlice(r.ko.Spec.Layers)
 	}
+	if r.ko.Spec.LoggingConfig != nil {
+		f13 := &svcsdktypes.LoggingConfig{}
+		if r.ko.Spec.LoggingConfig.ApplicationLogLevel != nil {
+			f13.ApplicationLogLevel = svcsdktypes.ApplicationLogLevel(*r.ko.Spec.LoggingConfig.ApplicationLogLevel)
+		}
+		if r.ko.Spec.LoggingConfig.LogFormat != nil {
+			f13.LogFormat = svcsdktypes.LogFormat(*r.ko.Spec.LoggingConfig.LogFormat)
+		}
+		if r.ko.Spec.LoggingConfig.LogGroup != nil {
+			f13.LogGroup = r.ko.Spec.LoggingConfig.LogGroup
+		}
+		if r.ko.Spec.LoggingConfig.SystemLogLevel != nil {
+			f13.SystemLogLevel = svcsdktypes.SystemLogLevel(*r.ko.Spec.LoggingConfig.SystemLogLevel)
+		}
+		res.LoggingConfig = f13
+	}
 	if r.ko.Spec.MemorySize != nil {
 		memorySizeCopy0 := *r.ko.Spec.MemorySize
 		if memorySizeCopy0 > math.MaxInt32 || memorySizeCopy0 < math.MinInt32 {
@@ -837,11 +889,11 @@ func (rm *resourceManager) newCreateRequestPayload(
 		res.Runtime = svcsdktypes.Runtime(*r.ko.Spec.Runtime)
 	}
 	if r.ko.Spec.SnapStart != nil {
-		f18 := &svcsdktypes.SnapStart{}
+		f19 := &svcsdktypes.SnapStart{}
 		if r.ko.Spec.SnapStart.ApplyOn != nil {
-			f18.ApplyOn = svcsdktypes.SnapStartApplyOn(*r.ko.Spec.SnapStart.ApplyOn)
+			f19.ApplyOn = svcsdktypes.SnapStartApplyOn(*r.ko.Spec.SnapStart.ApplyOn)
 		}
-		res.SnapStart = f18
+		res.SnapStart = f19
 	}
 	if r.ko.Spec.Tags != nil {
 		res.Tags = aws.ToStringMap(r.ko.Spec.Tags)
@@ -855,21 +907,21 @@ func (rm *resourceManager) newCreateRequestPayload(
 		res.Timeout = &timeoutCopy
 	}
 	if r.ko.Spec.TracingConfig != nil {
-		f21 := &svcsdktypes.TracingConfig{}
+		f22 := &svcsdktypes.TracingConfig{}
 		if r.ko.Spec.TracingConfig.Mode != nil {
-			f21.Mode = svcsdktypes.TracingMode(*r.ko.Spec.TracingConfig.Mode)
+			f22.Mode = svcsdktypes.TracingMode(*r.ko.Spec.TracingConfig.Mode)
 		}
-		res.TracingConfig = f21
+		res.TracingConfig = f22
 	}
 	if r.ko.Spec.VPCConfig != nil {
-		f22 := &svcsdktypes.VpcConfig{}
+		f23 := &svcsdktypes.VpcConfig{}
 		if r.ko.Spec.VPCConfig.SecurityGroupIDs != nil {
-			f22.SecurityGroupIds = aws.ToStringSlice(r.ko.Spec.VPCConfig.SecurityGroupIDs)
+			f23.SecurityGroupIds = aws.ToStringSlice(r.ko.Spec.VPCConfig.SecurityGroupIDs)
 		}
 		if r.ko.Spec.VPCConfig.SubnetIDs != nil {
-			f22.SubnetIds = aws.ToStringSlice(r.ko.Spec.VPCConfig.SubnetIDs)
+			f23.SubnetIds = aws.ToStringSlice(r.ko.Spec.VPCConfig.SubnetIDs)
 		}
-		res.VpcConfig = f22
+		res.VpcConfig = f23
 	}
 
 	return res, nil
