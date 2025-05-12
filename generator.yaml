@@ -19,9 +19,9 @@ ignore:
   - CreateEventSourceMappingOutput.MetricsConfig
   - CreateEventSourceMappingOutput.ProvisionedPollerConfig
   - FunctionCode.SourceKMSKeyArn
-  - CreateFunctionInput.LoggingConfig
+  # - CreateFunctionInput.LoggingConfig
   - CreateFunctionOutput.RuntimeVersionConfig
-  - CreateFunctionOutput.LoggingConfig
+  # - CreateFunctionOutput.LoggingConfig
   - CreateFunctionUrlConfigInput.InvokeMode
   - CreateFunctionUrlConfigOutput.InvokeMode
   - PublishVersionOutput.LoggingConfig
