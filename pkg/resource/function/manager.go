@@ -273,7 +273,7 @@ func (rm *resourceManager) IsSynced(ctx context.Context, res acktypes.AWSResourc
 	}
 	stateCandidates := []string{"Active", "Inactive"}
 	if !ackutil.InStrings(*r.ko.Status.State, stateCandidates) {
-		return false, nil
+		return false, ackrequeue.Needed(fmt.Errorf("requeing until resource status is [Active Inactive]"))
 	}
 
 	return true, nil
