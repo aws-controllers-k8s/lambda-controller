@@ -69,36 +69,38 @@ func (rm *resourceManager) customUpdateFunction(
 	exit := rlog.Trace("rm.customUpdateFunction")
 	defer exit(err)
 
-	if isFunctionPending(desired) {
-		return nil, requeueWaitWhilePending
+	updatedStatusResource := rm.concreteResource(desired.DeepCopy())
+	updatedStatusResource.SetStatus(latest)
+	if isFunctionPending(latest) {
+		return updatedStatusResource, requeueWaitWhilePending
 	}
 
 	if delta.DifferentAt("Spec.Tags") {
 		err = rm.updateFunctionTags(ctx, latest, desired)
 		if err != nil {
-			return nil, err
+			return updatedStatusResource, err
 		}
 	}
 	if delta.DifferentAt("Spec.ReservedConcurrentExecutions") {
 		err = rm.updateFunctionConcurrency(ctx, desired)
 		if err != nil {
-			return nil, err
+			return updatedStatusResource, err
 		}
 	}
 	if delta.DifferentAt("Spec.FunctionEventInvokeConfig") {
 		err = rm.syncFunctionEventInvokeConfig(ctx, desired)
 		if err != nil {
-			return nil, err
+			return updatedStatusResource, err
 		}
 	}
 	if delta.DifferentAt("Spec.CodeSigningConfigARN") {
 		if desired.ko.Spec.PackageType != nil && *desired.ko.Spec.PackageType == "Image" &&
 			desired.ko.Spec.CodeSigningConfigARN != nil && *desired.ko.Spec.CodeSigningConfigARN != "" {
-			return nil, ackerr.NewTerminalError(ErrCannotSetFunctionCSC)
+			return updatedStatusResource, ackerr.NewTerminalError(ErrCannotSetFunctionCSC)
 		} else {
 			err = rm.updateFunctionCodeSigningConfig(ctx, desired)
 			if err != nil {
-				return nil, err
+				return updatedStatusResource, err
 			}
 		}
 	}
@@ -112,9 +114,9 @@ func (rm *resourceManager) customUpdateFunction(
 		err = rm.updateFunctionCode(ctx, desired, delta, latest)
 		if err != nil {
 			if strings.Contains(err.Error(), "Provide a valid source image.") {
-				return nil, requeueWaitWhileSourceImageDoesNotExist
+				return updatedStatusResource, requeueWaitWhileSourceImageDoesNotExist
 			} else {
-				return nil, err
+				return updatedStatusResource, err
 			}
 		}
 	case delta.DifferentExcept(
@@ -125,13 +127,13 @@ func (rm *resourceManager) customUpdateFunction(
 		"Spec.CodeSigningConfigARN"):
 		err = rm.updateFunctionConfiguration(ctx, desired, delta)
 		if err != nil {
-			return nil, err
+			return updatedStatusResource, err
 		}
 	}
 
 	readOneLatest, err := rm.ReadOne(ctx, desired)
 	if err != nil {
-		return nil, err
+		return updatedStatusResource, err
 	}
 	return rm.concreteResource(readOneLatest), nil
 }

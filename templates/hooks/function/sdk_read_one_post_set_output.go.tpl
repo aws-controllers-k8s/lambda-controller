@@ -51,5 +51,5 @@
 		ko.Spec.Tags = expectedOutput  
 	}
 	if err := rm.setResourceAdditionalFields(ctx, ko); err != nil {
-		return nil, err
+		return &resource{ko}, err
 	}
