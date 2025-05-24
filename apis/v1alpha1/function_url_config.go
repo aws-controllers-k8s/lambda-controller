@@ -46,9 +46,13 @@ type FunctionURLConfigSpec struct {
 	//
 	// The length constraint applies only to the full ARN. If you specify only the
 	// function name, it is limited to 64 characters in length.
+	//
+	// Regex Pattern: `^(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}(-gov)?-[a-z]+-\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
 	FunctionName *string                                  `json:"functionName,omitempty"`
 	FunctionRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"functionRef,omitempty"`
 	// The alias name.
+	//
+	// Regex Pattern: `^(^\$LATEST$)|((?!^[0-9]+$)([a-zA-Z0-9-_]+))$`
 	Qualifier *string `json:"qualifier,omitempty"`
 }
 
@@ -70,6 +74,8 @@ type FunctionURLConfigStatus struct {
 	// +kubebuilder:validation:Optional
 	CreationTime *string `json:"creationTime,omitempty"`
 	// The Amazon Resource Name (ARN) of your function.
+	//
+	// Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:lambda:[a-z]{2}(-gov)?-[a-z]+-\d{1}:\d{12}:function:[a-zA-Z0-9-_]+(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
 	// +kubebuilder:validation:Optional
 	FunctionARN *string `json:"functionARN,omitempty"`
 	// The HTTP URL endpoint for your function.

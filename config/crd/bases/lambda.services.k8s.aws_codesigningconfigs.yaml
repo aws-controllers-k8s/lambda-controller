@@ -97,7 +97,10 @@ spec:
                 - region
                 type: object
               codeSigningConfigID:
-                description: Unique identifer for the Code signing configuration.
+                description: |-
+                  Unique identifer for the Code signing configuration.
+
+                  Regex Pattern: `^csc-[a-zA-Z0-9-_\.]{17}$`
                 type: string
               conditions:
                 description: |-

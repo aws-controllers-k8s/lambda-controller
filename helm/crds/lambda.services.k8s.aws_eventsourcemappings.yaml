@@ -124,6 +124,8 @@ spec:
                     - Amazon MQ – The ARN of the broker.
 
                     - Amazon DocumentDB – The ARN of the DocumentDB change stream.
+
+                  Regex Pattern: `^arn:(aws[a-zA-Z0-9-]*):([a-zA-Z0-9\-])+:([a-z]{2}(-gov)?-[a-z]+-\d{1})?:(\d{12})?:(.*)$`
                 type: string
               eventSourceRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around
@@ -175,6 +177,8 @@ spec:
 
                   The length constraint applies only to the full ARN. If you specify only the
                   function name, it's limited to 64 characters in length.
+
+                  Regex Pattern: `^(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}(-gov)?-[a-z]+-\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
                 type: string
               functionRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around
@@ -400,7 +404,10 @@ spec:
                   type: object
                 type: array
               functionARN:
-                description: The ARN of the Lambda function.
+                description: |-
+                  The ARN of the Lambda function.
+
+                  Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:lambda:[a-z]{2}(-gov)?-[a-z]+-\d{1}:\d{12}:function:[a-zA-Z0-9-_]+(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
                 type: string
               lastModified:
                 description: |-
