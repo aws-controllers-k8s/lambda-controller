@@ -100,6 +100,8 @@ spec:
 
                   The length constraint applies only to the full ARN. If you specify only the
                   function name, it is limited to 64 characters in length.
+
+                  Regex Pattern: `^(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}(-gov)?-[a-z]+-\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
                 type: string
               functionRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around
@@ -263,11 +265,16 @@ spec:
                   type: object
                 type: array
               functionARN:
-                description: The function's Amazon Resource Name (ARN).
+                description: |-
+                  The function's Amazon Resource Name (ARN).
+
+                  Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:lambda:[a-z]{2}(-gov)?-[a-z]+-\d{1}:\d{12}:function:[a-zA-Z0-9-_\.]+(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
                 type: string
               handler:
-                description: The function that Lambda calls to begin running your
-                  function.
+                description: |-
+                  The function that Lambda calls to begin running your function.
+
+                  Regex Pattern: `^[^\s]+$`
                 type: string
               imageConfigResponse:
                 description: The function's image configuration values.
@@ -319,6 +326,8 @@ spec:
                   If you don't provide a customer managed key, Lambda uses an Amazon Web Services
                   owned key (https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-owned-cmk)
                   or an Amazon Web Services managed key (https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-managed-cmk).
+
+                  Regex Pattern: `^(arn:(aws[a-zA-Z-]*)?:[a-z0-9-.]+:.*)|()$`
                 type: string
               lastModified:
                 description: |-
@@ -355,7 +364,10 @@ spec:
                   type: object
                 type: array
               masterARN:
-                description: For Lambda@Edge functions, the ARN of the main function.
+                description: |-
+                  For Lambda@Edge functions, the ARN of the main function.
+
+                  Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:lambda:[a-z]{2}(-gov)?-[a-z]+-\d{1}:\d{12}:function:[a-zA-Z0-9-_]+(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
                 type: string
               memorySize:
                 description: The amount of memory available to the function at runtime.
@@ -367,10 +379,16 @@ spec:
                   Zip for .zip file archive.
                 type: string
               qualifier:
-                description: The version of the Lambda function.
+                description: |-
+                  The version of the Lambda function.
+
+                  Regex Pattern: `^(\$LATEST|[0-9]+)$`
                 type: string
               role:
-                description: The function's execution role.
+                description: |-
+                  The function's execution role.
+
+                  Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+$`
                 type: string
               runtime:
                 description: |-
@@ -386,10 +404,16 @@ spec:
                   For a list of all currently supported runtimes, see Supported runtimes (https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtimes-supported).
                 type: string
               signingJobARN:
-                description: The ARN of the signing job.
+                description: |-
+                  The ARN of the signing job.
+
+                  Regex Pattern: `^arn:(aws[a-zA-Z0-9-]*):([a-zA-Z0-9\-])+:([a-z]{2}(-gov)?-[a-z]+-\d{1})?:(\d{12})?:(.*)$`
                 type: string
               signingProfileVersionARN:
-                description: The ARN of the signing profile version.
+                description: |-
+                  The ARN of the signing profile version.
+
+                  Regex Pattern: `^arn:(aws[a-zA-Z0-9-]*):([a-zA-Z0-9\-])+:([a-z]{2}(-gov)?-[a-z]+-\d{1})?:(\d{12})?:(.*)$`
                 type: string
               snapStart:
                 description: |-
@@ -428,7 +452,10 @@ spec:
                     type: string
                 type: object
               version:
-                description: The version of the Lambda function.
+                description: |-
+                  The version of the Lambda function.
+
+                  Regex Pattern: `^(\$LATEST|[0-9]+)$`
                 type: string
               vpcConfig:
                 description: The function's networking configuration.

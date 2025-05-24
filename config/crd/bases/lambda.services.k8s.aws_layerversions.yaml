@@ -71,7 +71,10 @@ spec:
                 description: The description of the version.
                 type: string
               layerName:
-                description: The name or Amazon Resource Name (ARN) of the layer.
+                description: |-
+                  The name or Amazon Resource Name (ARN) of the layer.
+
+                  Regex Pattern: `^(arn:[a-zA-Z0-9-]+:lambda:[a-zA-Z0-9-]+:\d{12}:layer:[a-zA-Z0-9-_]+)|[a-zA-Z0-9-_]+$`
                 type: string
               licenseInfo:
                 description: |-
@@ -161,7 +164,10 @@ spec:
                   (YYYY-MM-DDThh:mm:ss.sTZD).
                 type: string
               layerARN:
-                description: The ARN of the layer.
+                description: |-
+                  The ARN of the layer.
+
+                  Regex Pattern: `^arn:[a-zA-Z0-9-]+:lambda:[a-zA-Z0-9-]+:\d{12}:layer:[a-zA-Z0-9-_]+$`
                 type: string
               versionNumber:
                 description: The version number.

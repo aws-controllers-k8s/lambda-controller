@@ -90,6 +90,8 @@ spec:
 
                   The length constraint applies only to the full ARN. If you specify only the
                   function name, it is limited to 64 characters in length.
+
+                  Regex Pattern: `^(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}(-gov)?-[a-z]+-\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
                 type: string
               functionRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around
@@ -109,7 +111,10 @@ spec:
                     type: object
                 type: object
               qualifier:
-                description: The alias name.
+                description: |-
+                  The alias name.
+
+                  Regex Pattern: `^(^\$LATEST$)|((?!^[0-9]+$)([a-zA-Z0-9-_]+))$`
                 type: string
             required:
             - authType
@@ -187,7 +192,10 @@ spec:
                   (YYYY-MM-DDThh:mm:ss.sTZD).
                 type: string
               functionARN:
-                description: The Amazon Resource Name (ARN) of your function.
+                description: |-
+                  The Amazon Resource Name (ARN) of your function.
+
+                  Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:lambda:[a-z]{2}(-gov)?-[a-z]+-\d{1}:\d{12}:function:[a-zA-Z0-9-_]+(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
                 type: string
               functionURL:
                 description: The HTTP URL endpoint for your function.

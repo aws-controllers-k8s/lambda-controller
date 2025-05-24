@@ -73,6 +73,8 @@ type EventSourceMappingSpec struct {
 	//   - Amazon MQ – The ARN of the broker.
 	//
 	//   - Amazon DocumentDB – The ARN of the DocumentDB change stream.
+	//
+	// Regex Pattern: `^arn:(aws[a-zA-Z0-9-]*):([a-zA-Z0-9\-])+:([a-z]{2}(-gov)?-[a-z]+-\d{1})?:(\d{12})?:(.*)$`
 	EventSourceARN *string                                  `json:"eventSourceARN,omitempty"`
 	EventSourceRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"eventSourceRef,omitempty"`
 	// An object that defines the filter criteria that determine whether Lambda
@@ -93,6 +95,8 @@ type EventSourceMappingSpec struct {
 	//
 	// The length constraint applies only to the full ARN. If you specify only the
 	// function name, it's limited to 64 characters in length.
+	//
+	// Regex Pattern: `^(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}(-gov)?-[a-z]+-\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
 	FunctionName *string                                  `json:"functionName,omitempty"`
 	FunctionRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"functionRef,omitempty"`
 	// (Kinesis, DynamoDB Streams, and Amazon SQS) A list of current response type
@@ -168,6 +172,8 @@ type EventSourceMappingStatus struct {
 	// +kubebuilder:validation:Optional
 	Conditions []*ackv1alpha1.Condition `json:"conditions"`
 	// The ARN of the Lambda function.
+	//
+	// Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:lambda:[a-z]{2}(-gov)?-[a-z]+-\d{1}:\d{12}:function:[a-zA-Z0-9-_]+(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
 	// +kubebuilder:validation:Optional
 	FunctionARN *string `json:"functionARN,omitempty"`
 	// The date that the event source mapping was last updated or that its state

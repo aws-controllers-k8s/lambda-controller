@@ -37,6 +37,8 @@ type LayerVersionSpec struct {
 	// The description of the version.
 	Description *string `json:"description,omitempty"`
 	// The name or Amazon Resource Name (ARN) of the layer.
+	//
+	// Regex Pattern: `^(arn:[a-zA-Z0-9-]+:lambda:[a-zA-Z0-9-]+:\d{12}:layer:[a-zA-Z0-9-_]+)|[a-zA-Z0-9-_]+$`
 	// +kubebuilder:validation:Required
 	LayerName *string `json:"layerName"`
 	// The layer's software license. It can be any of the following:
@@ -68,6 +70,8 @@ type LayerVersionStatus struct {
 	// +kubebuilder:validation:Optional
 	CreatedDate *string `json:"createdDate,omitempty"`
 	// The ARN of the layer.
+	//
+	// Regex Pattern: `^arn:[a-zA-Z0-9-]+:lambda:[a-zA-Z0-9-]+:\d{12}:layer:[a-zA-Z0-9-_]+$`
 	// +kubebuilder:validation:Optional
 	LayerARN *string `json:"layerARN,omitempty"`
 	// The version number.

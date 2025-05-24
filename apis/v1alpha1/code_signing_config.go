@@ -49,6 +49,8 @@ type CodeSigningConfigStatus struct {
 	// +kubebuilder:validation:Optional
 	Conditions []*ackv1alpha1.Condition `json:"conditions"`
 	// Unique identifer for the Code signing configuration.
+	//
+	// Regex Pattern: `^csc-[a-zA-Z0-9-_\.]{17}$`
 	// +kubebuilder:validation:Optional
 	CodeSigningConfigID *string `json:"codeSigningConfigID,omitempty"`
 	// The date and time that the Code signing configuration was last modified,
