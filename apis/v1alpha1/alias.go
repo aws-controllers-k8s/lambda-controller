@@ -56,12 +56,18 @@ type AliasSpec struct {
 	//
 	// The length constraint applies only to the full ARN. If you specify only the
 	// function name, it is limited to 64 characters in length.
+	//
+	// Regex Pattern: `^(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}(-gov)?-[a-z]+-\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
 	FunctionName *string                                  `json:"functionName,omitempty"`
 	FunctionRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"functionRef,omitempty"`
 	// The function version that the alias invokes.
+	//
+	// Regex Pattern: `^(\$LATEST|[0-9]+)$`
 	// +kubebuilder:validation:Required
 	FunctionVersion *string `json:"functionVersion"`
 	// The name of the alias.
+	//
+	// Regex Pattern: `^(?!^[0-9]+$)([a-zA-Z0-9-_]+)$`
 	// +kubebuilder:validation:Required
 	Name *string `json:"name"`
 	// Permissions configures a set of Lambda permissions to grant to an alias.

@@ -33,6 +33,8 @@ type FunctionSpec struct {
 	// To enable code signing for this function, specify the ARN of a code-signing
 	// configuration. A code-signing configurationincludes a set of signing profiles,
 	// which define the trusted publishers for this function.
+	//
+	// Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:lambda:[a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1}:\d{12}:code-signing-config:csc-[a-z0-9]{17}$`
 	CodeSigningConfigARN *string `json:"codeSigningConfigARN,omitempty"`
 	// A dead-letter queue configuration that specifies the queue or topic where
 	// Lambda sends asynchronous events when they fail processing. For more information,
@@ -70,6 +72,8 @@ type FunctionSpec struct {
 	// format includes the file name. It can also include namespaces and other qualifiers,
 	// depending on the runtime. For more information, see Lambda programming model
 	// (https://docs.aws.amazon.com/lambda/latest/dg/foundation-progmodel.html).
+	//
+	// Regex Pattern: `^[^\s]+$`
 	Handler *string `json:"handler,omitempty"`
 	// Container image configuration values (https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#images-parms)
 	// that override the values in the container image Dockerfile.
@@ -94,6 +98,8 @@ type FunctionSpec struct {
 	// If you don't provide a customer managed key, Lambda uses an Amazon Web Services
 	// owned key (https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-owned-cmk)
 	// or an Amazon Web Services managed key (https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-managed-cmk).
+	//
+	// Regex Pattern: `^(arn:(aws[a-zA-Z-]*)?:[a-z0-9-.]+:.*)|()$`
 	KMSKeyARN *string                                  `json:"kmsKeyARN,omitempty"`
 	KMSKeyRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"kmsKeyRef,omitempty"`
 	// A list of function layers (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html)
@@ -118,6 +124,8 @@ type FunctionSpec struct {
 	//
 	// The length constraint applies only to the full ARN. If you specify only the
 	// function name, it is limited to 64 characters in length.
+	//
+	// Regex Pattern: `^(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}(-gov)?-[a-z]+-\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
 	// +kubebuilder:validation:Required
 	Name *string `json:"name"`
 	// The type of deployment package. Set to Image for container image and set
@@ -128,6 +136,8 @@ type FunctionSpec struct {
 	// The number of simultaneous executions to reserve for the function.
 	ReservedConcurrentExecutions *int64 `json:"reservedConcurrentExecutions,omitempty"`
 	// The Amazon Resource Name (ARN) of the function's execution role.
+	//
+	// Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+$`
 	Role    *string                                  `json:"role,omitempty"`
 	RoleRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"roleRef,omitempty"`
 	// The identifier of the function's runtime (https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html).
@@ -202,15 +212,21 @@ type FunctionStatus struct {
 	// +kubebuilder:validation:Optional
 	LayerStatuses []*Layer `json:"layerStatuses,omitempty"`
 	// For Lambda@Edge functions, the ARN of the main function.
+	//
+	// Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:lambda:[a-z]{2}(-gov)?-[a-z]+-\d{1}:\d{12}:function:[a-zA-Z0-9-_]+(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
 	// +kubebuilder:validation:Optional
 	MasterARN *string `json:"masterARN,omitempty"`
 	// The latest updated revision of the function or alias.
 	// +kubebuilder:validation:Optional
 	RevisionID *string `json:"revisionID,omitempty"`
 	// The ARN of the signing job.
+	//
+	// Regex Pattern: `^arn:(aws[a-zA-Z0-9-]*):([a-zA-Z0-9\-])+:([a-z]{2}(-gov)?-[a-z]+-\d{1})?:(\d{12})?:(.*)$`
 	// +kubebuilder:validation:Optional
 	SigningJobARN *string `json:"signingJobARN,omitempty"`
 	// The ARN of the signing profile version.
+	//
+	// Regex Pattern: `^arn:(aws[a-zA-Z0-9-]*):([a-zA-Z0-9\-])+:([a-z]{2}(-gov)?-[a-z]+-\d{1})?:(\d{12})?:(.*)$`
 	// +kubebuilder:validation:Optional
 	SigningProfileVersionARN *string `json:"signingProfileVersionARN,omitempty"`
 	// The current state of the function. When the state is Inactive, you can reactivate
@@ -225,6 +241,8 @@ type FunctionStatus struct {
 	// +kubebuilder:validation:Optional
 	StateReasonCode *string `json:"stateReasonCode,omitempty"`
 	// The version of the Lambda function.
+	//
+	// Regex Pattern: `^(\$LATEST|[0-9]+)$`
 	// +kubebuilder:validation:Optional
 	Version *string `json:"version,omitempty"`
 }

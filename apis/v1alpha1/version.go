@@ -46,6 +46,8 @@ type VersionSpec struct {
 	//
 	// The length constraint applies only to the full ARN. If you specify only the
 	// function name, it is limited to 64 characters in length.
+	//
+	// Regex Pattern: `^(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}(-gov)?-[a-z]+-\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
 	FunctionName                 *string                                  `json:"functionName,omitempty"`
 	FunctionRef                  *ackv1alpha1.AWSResourceReferenceWrapper `json:"functionRef,omitempty"`
 	ProvisionedConcurrencyConfig *PutProvisionedConcurrencyConfigInput    `json:"provisionedConcurrencyConfig,omitempty"`
@@ -92,9 +94,13 @@ type VersionStatus struct {
 	// +kubebuilder:validation:Optional
 	FileSystemConfigs []*FileSystemConfig `json:"fileSystemConfigs,omitempty"`
 	// The function's Amazon Resource Name (ARN).
+	//
+	// Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:lambda:[a-z]{2}(-gov)?-[a-z]+-\d{1}:\d{12}:function:[a-zA-Z0-9-_\.]+(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
 	// +kubebuilder:validation:Optional
 	FunctionARN *string `json:"functionARN,omitempty"`
 	// The function that Lambda calls to begin running your function.
+	//
+	// Regex Pattern: `^[^\s]+$`
 	// +kubebuilder:validation:Optional
 	Handler *string `json:"handler,omitempty"`
 	// The function's image configuration values.
@@ -120,6 +126,8 @@ type VersionStatus struct {
 	// If you don't provide a customer managed key, Lambda uses an Amazon Web Services
 	// owned key (https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-owned-cmk)
 	// or an Amazon Web Services managed key (https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-managed-cmk).
+	//
+	// Regex Pattern: `^(arn:(aws[a-zA-Z-]*)?:[a-z0-9-.]+:.*)|()$`
 	// +kubebuilder:validation:Optional
 	KMSKeyARN *string `json:"kmsKeyARN,omitempty"`
 	// The date and time that the function was last updated, in ISO-8601 format
@@ -140,6 +148,8 @@ type VersionStatus struct {
 	// +kubebuilder:validation:Optional
 	Layers []*Layer `json:"layers,omitempty"`
 	// For Lambda@Edge functions, the ARN of the main function.
+	//
+	// Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:lambda:[a-z]{2}(-gov)?-[a-z]+-\d{1}:\d{12}:function:[a-zA-Z0-9-_]+(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
 	// +kubebuilder:validation:Optional
 	MasterARN *string `json:"masterARN,omitempty"`
 	// The amount of memory available to the function at runtime.
@@ -150,9 +160,13 @@ type VersionStatus struct {
 	// +kubebuilder:validation:Optional
 	PackageType *string `json:"packageType,omitempty"`
 	// The version of the Lambda function.
+	//
+	// Regex Pattern: `^(\$LATEST|[0-9]+)$`
 	// +kubebuilder:validation:Optional
 	Qualifier *string `json:"qualifier,omitempty"`
 	// The function's execution role.
+	//
+	// Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+$`
 	// +kubebuilder:validation:Optional
 	Role *string `json:"role,omitempty"`
 	// The identifier of the function's runtime (https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html).
@@ -168,9 +182,13 @@ type VersionStatus struct {
 	// +kubebuilder:validation:Optional
 	Runtime *string `json:"runtime,omitempty"`
 	// The ARN of the signing job.
+	//
+	// Regex Pattern: `^arn:(aws[a-zA-Z0-9-]*):([a-zA-Z0-9\-])+:([a-z]{2}(-gov)?-[a-z]+-\d{1})?:(\d{12})?:(.*)$`
 	// +kubebuilder:validation:Optional
 	SigningJobARN *string `json:"signingJobARN,omitempty"`
 	// The ARN of the signing profile version.
+	//
+	// Regex Pattern: `^arn:(aws[a-zA-Z0-9-]*):([a-zA-Z0-9\-])+:([a-z]{2}(-gov)?-[a-z]+-\d{1})?:(\d{12})?:(.*)$`
 	// +kubebuilder:validation:Optional
 	SigningProfileVersionARN *string `json:"signingProfileVersionARN,omitempty"`
 	// Set ApplyOn to PublishedVersions to create a snapshot of the initialized
@@ -197,6 +215,8 @@ type VersionStatus struct {
 	// +kubebuilder:validation:Optional
 	TracingConfig *TracingConfigResponse `json:"tracingConfig,omitempty"`
 	// The version of the Lambda function.
+	//
+	// Regex Pattern: `^(\$LATEST|[0-9]+)$`
 	// +kubebuilder:validation:Optional
 	Version *string `json:"version,omitempty"`
 	// The function's networking configuration.
