@@ -68,6 +68,7 @@ type AliasSpec struct {
 	// The name of the alias.
 	//
 	// Regex Pattern: `^(?!^[0-9]+$)([a-zA-Z0-9-_]+)$`
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Value is immutable once set"
 	// +kubebuilder:validation:Required
 	Name *string `json:"name"`
 	// Permissions configures a set of Lambda permissions to grant to an alias.
