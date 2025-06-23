@@ -28,6 +28,7 @@ from acktest.k8s import resource as k8s
 from e2e import service_marker, CRD_GROUP, CRD_VERSION, load_lambda_resource
 from e2e.replacement_values import REPLACEMENT_VALUES
 from e2e.bootstrap_resources import get_bootstrap_resources
+from e2e.fixtures import SecretKeyReference, k8s_secret
 from e2e.service_bootstrap import LAMBDA_FUNCTION_FILE_ZIP, LAMBDA_FUNCTION_FILE_PATH_ZIP
 from e2e.service_bootstrap import LAMBDA_FUNCTION_UPDATED_FILE_ZIP, LAMBDA_FUNCTION_UPDATED_FILE_PATH_ZIP
 from e2e.tests.helper import LambdaValidator
@@ -83,6 +84,202 @@ def code_signing_config():
 @service_marker
 @pytest.mark.canary
 class TestFunction:
+
+    def test_environment_variables_no_secrets(self, lambda_client):
+        resource_name = random_suffix_name("lambda-function", 24)
+        envVar1 = "test_value"
+        envVar2 = "test_value_2"
+
+        resources = get_bootstrap_resources()
+        logging.debug(resources)
+
+        replacements = REPLACEMENT_VALUES.copy()
+        replacements["FUNCTION_NAME"] = resource_name
+        replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
+        replacements["LAMBDA_ROLE"] = resources.BasicRole.arn
+        replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
+        replacements["ENV_VAR_1"] = envVar1
+        replacements["ENV_VAR_2"] = envVar2
+        replacements["AWS_REGION"] = get_region()
+        
+        # Load Lambda CR
+        resource_data = load_lambda_resource(
+            "function_environment_variables",
+            additional_replacements=replacements,
+        )
+        logging.debug(resource_data)
+
+        # Create k8s resource
+        ref = k8s.CustomResourceReference(
+            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            resource_name, namespace="default",
+        )
+        k8s.create_custom_resource(ref, resource_data)
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        assert cr is not None
+        assert k8s.get_resource_exists(ref)
+
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        lambda_validator = LambdaValidator(lambda_client)
+
+        # Assert that the original environment variables are in the spec
+        assert cr["spec"]["environment"]["variables"]["Var1"] == envVar1
+        assert cr["spec"]["environment"]["variables"]["Var2"] == envVar2
+
+        # Check Lambda function exists
+        assert lambda_validator.function_exists(resource_name)
+        function = lambda_validator.get_function(resource_name)
+
+        # Assert that environment variables were written to the lambda
+        assert function["Configuration"]["Environment"]["Variables"]["Var1"] == envVar1
+        assert function["Configuration"]["Environment"]["Variables"]["Var2"] == envVar2
+
+        # Update environment variables
+        updatedEnvVars = {
+            "Var2": "updated_value",
+            "Var3": "new_value"
+        }
+        
+        cr["spec"]["environment"]["variables"] = updatedEnvVars
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        # Check function updated fields
+        function = lambda_validator.get_function(resource_name)
+        assert function is not None
+        assert function["Configuration"]["Environment"]["Variables"]["Var1"] == envVar1
+        assert function["Configuration"]["Environment"]["Variables"]["Var2"] == "updated_value"
+        assert function["Configuration"]["Environment"]["Variables"]["Var3"] == "new_value"
+
+        # Delete k8s resource
+        _, deleted = k8s.delete_custom_resource(ref)
+        assert deleted is True
+
+        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+
+        # Check Lambda function doesn't exist
+        assert not lambda_validator.function_exists(resource_name)
+
+
+    def test_environment_variables_with_secrets(self, lambda_client, k8s_secret):
+        resource_name = random_suffix_name("lambda-function", 24)
+        envVar1 = "test_value"
+        envVar2 = "test_value_2"
+        secretVar1 = "Pa$$word"
+        secretVar2 = "secret_value"
+
+        secret1: SecretKeyReference = k8s_secret(
+            "default",
+            "my-k8s-secret",
+            "password",
+            secretVar1
+        )
+
+        secret2: SecretKeyReference = k8s_secret(
+            "default",
+            "my-k8s-secret-2",
+            "extrasecret",
+            secretVar2
+        )
+
+        resources = get_bootstrap_resources()
+        logging.debug(resources)
+
+        replacements = REPLACEMENT_VALUES.copy()
+        replacements["FUNCTION_NAME"] = resource_name
+        replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
+        replacements["LAMBDA_ROLE"] = resources.BasicRole.arn
+        replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
+        replacements["ENV_VAR_1"] = envVar1
+        replacements["ENV_VAR_2"] = envVar2
+        replacements["AWS_REGION"] = get_region()
+        
+        # Load Lambda CR
+        resource_data = load_lambda_resource(
+            "function_environment_secrets",
+            additional_replacements=replacements,
+        )
+        logging.debug(resource_data)
+
+        # Create k8s resource
+        ref = k8s.CustomResourceReference(
+            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            resource_name, namespace="default",
+        )
+        k8s.create_custom_resource(ref, resource_data)
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        assert cr is not None
+        assert k8s.get_resource_exists(ref)
+
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        lambda_validator = LambdaValidator(lambda_client)
+
+        # Assert that the original environment variables are in the spec
+        print(cr["spec"]["environment"])
+        assert cr["spec"]["environment"]["variables"]["Var1"] == envVar1
+        assert cr["spec"]["environment"]["variables"]["Var2"] == envVar2
+        assert "Secret1" not in cr["spec"]["environment"]["variables"]
+        assert "Secret2" not in cr["spec"]["environment"]["variables"]
+
+        assert cr["spec"]["environment"]["variablesFromSecretRefs"]["Secret1"]["namespace"] == secret1.ns
+        assert cr["spec"]["environment"]["variablesFromSecretRefs"]["Secret1"]["name"] == secret1.name
+        assert cr["spec"]["environment"]["variablesFromSecretRefs"]["Secret1"]["key"] == secret1.key
+
+        assert cr["spec"]["environment"]["variablesFromSecretRefs"]["Secret2"]["namespace"] == secret2.ns
+        assert cr["spec"]["environment"]["variablesFromSecretRefs"]["Secret2"]["name"] == secret2.name
+        assert cr["spec"]["environment"]["variablesFromSecretRefs"]["Secret2"]["key"] == secret2.key
+
+        # Check Lambda function exists
+        assert lambda_validator.function_exists(resource_name)
+        function = lambda_validator.get_function(resource_name)
+
+        # Assert that environment variables were written to the lambda
+        assert function["Configuration"]["Environment"]["Variables"]["Var1"] == envVar1
+        assert function["Configuration"]["Environment"]["Variables"]["Var2"] == envVar2
+        assert function["Configuration"]["Environment"]["Variables"]["Secret1"] == secretVar1
+        assert function["Configuration"]["Environment"]["Variables"]["Secret2"] == secretVar2
+
+        # Update environment variables
+        updatedEnvVars = {
+            "Var2": "updated_value",
+            "Var3": "new_value"
+        }
+        
+        cr["spec"]["environment"]["variables"] = updatedEnvVars
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        # Check function updated fields
+        function = lambda_validator.get_function(resource_name)
+        assert function is not None
+        assert function["Configuration"]["Environment"]["Variables"]["Var1"] == envVar1
+        assert function["Configuration"]["Environment"]["Variables"]["Var2"] == "updated_value"
+        assert function["Configuration"]["Environment"]["Variables"]["Var3"] == "new_value"
+        assert "Secret1" not in cr["spec"]["environment"]["variables"]
+        assert "Secret2" not in cr["spec"]["environment"]["variables"]
+
+        # Delete k8s resource
+        _, deleted = k8s.delete_custom_resource(ref)
+        assert deleted is True
+
+        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+
+        # Check Lambda function doesn't exist
+        assert not lambda_validator.function_exists(resource_name)
+
+
 
     def test_smoke(self, lambda_client):
         resource_name = random_suffix_name("lambda-function", 24)

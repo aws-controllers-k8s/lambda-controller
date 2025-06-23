@@ -146,7 +146,8 @@ type DocumentDBEventSourceConfig struct {
 // variable is a pair of strings that are stored in a function's version-specific
 // configuration.
 type Environment struct {
-	Variables map[string]*string `json:"variables,omitempty"`
+	Variables               map[string]*string                         `json:"variables,omitempty"`
+	VariablesFromSecretRefs map[string]*ackv1alpha1.SecretKeyReference `json:"variablesFromSecretRefs,omitempty"`
 }
 
 // Error messages for environment variables that couldn't be applied.

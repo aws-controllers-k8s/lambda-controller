@@ -16,6 +16,7 @@ package function
 import (
 	"context"
 	"errors"
+	"maps"
 	"strings"
 	"time"
 
@@ -175,11 +176,13 @@ func (rm *resourceManager) updateFunctionConfiguration(
 	if delta.DifferentAt("Spec.Environment") {
 		environment := &svcsdktypes.Environment{}
 		if dspec.Environment != nil {
-			environmentCopy := dspec.Environment.DeepCopy()
-			environment.Variables = make(map[string]string)
-			for k, v := range environmentCopy.Variables {
-				environment.Variables[k] = *v
+			combinedEnvVars, err := combineEnvironmentVariableSources(ctx, desired, rm)
+			if err != nil {
+				return err
 			}
+
+			environment.Variables = make(map[string]string)
+			maps.Copy(environment.Variables, combinedEnvVars)
 		}
 		input.Environment = environment
 	}
@@ -527,6 +530,24 @@ func customPreCompare(
 			}
 		}
 	}
+
+	// Need to check for if environment variables have changed. However, the contents of the environment
+	// variables cannot be stored in the delta as they may contain secrets which must not be logged.
+	//
+	// Currently, we're limited to detecting changes in the non-secret environment variables. Detecting
+	// a delta in the secret environment variables would require us to evaluate the secret references. However,
+	// doing so would require a change to runtime to give the delta comparison access to the resource manager.
+	if ackcompare.HasNilDifference(a.ko.Spec.Environment, b.ko.Spec.Environment) {
+		delta.Add("Spec.Environment", nil, nil)
+	} else if a.ko.Spec.Environment != nil && b.ko.Spec.Environment != nil {
+		for k, v := range a.ko.Spec.Environment.Variables {
+			bValue, exists := b.ko.Spec.Environment.Variables[k]
+			if !exists || *bValue != *v {
+				delta.Add("Spec.Environment.Variables", nil, nil)
+				break
+			}
+		}
+	}
 }
 
 // updateFunctionConcurrency calls `PutFunctionConcurrency` to update the fields
@@ -834,4 +855,42 @@ func (rm *resourceManager) setResourceAdditionalFields(
 	}
 
 	return nil
+}
+
+func combineEnvironmentVariableSources(
+	ctx context.Context,
+	r *resource,
+	rm *resourceManager,
+) (map[string]string, error) {
+	combinedEnvVars := map[string]string{}
+	if r.ko.Spec.Environment != nil {
+		if r.ko.Spec.Environment.Variables != nil {
+			plainEnvVars := aws.ToStringMap(r.ko.Spec.Environment.Variables)
+			maps.Copy(combinedEnvVars, plainEnvVars)
+		}
+		if r.ko.Spec.Environment.VariablesFromSecretRefs != nil {
+			secretEnvVars := map[string]string{}
+			for key, secretRef := range r.ko.Spec.Environment.VariablesFromSecretRefs {
+				var secretRefVal string
+				if secretRef != nil {
+					tmpSecret, err := rm.rr.SecretValueFromReference(ctx, secretRef)
+					if err != nil {
+						return nil, ackrequeue.Needed(err)
+					}
+					if tmpSecret != "" {
+						secretRefVal = tmpSecret
+					}
+				}
+				secretEnvVars[key] = secretRefVal
+			}
+			for k, v := range secretEnvVars {
+				_, exists := combinedEnvVars[k]
+				if !exists {
+					combinedEnvVars[k] = v
+				}
+			}
+		}
+	}
+
+	return combinedEnvVars, nil
 }

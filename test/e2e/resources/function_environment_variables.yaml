@@ -1,0 +1,19 @@
+apiVersion: lambda.services.k8s.aws/v1alpha1
+kind: Function
+metadata:
+  name: $FUNCTION_NAME
+  annotations:
+    services.k8s.aws/region: $AWS_REGION
+spec:
+  name: $FUNCTION_NAME
+  code:
+    s3Bucket: $BUCKET_NAME
+    s3Key: $LAMBDA_FILE_NAME
+  role: $LAMBDA_ROLE
+  runtime: python3.9
+  handler: main
+  description: function created by ACK lambda-controller e2e tests
+  environment:
+    variables:
+      Var1: $ENV_VAR_1
+      Var2: $ENV_VAR_2

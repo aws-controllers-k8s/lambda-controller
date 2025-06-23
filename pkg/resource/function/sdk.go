@@ -448,6 +448,17 @@ func (rm *resourceManager) sdkCreate(
 		input.CodeSigningConfigArn = nil
 	}
 
+	if desired.ko.Spec.Environment != nil {
+		envInput := &svcsdktypes.Environment{}
+		combinedVariables, err := combineEnvironmentVariableSources(ctx, desired, rm)
+		if err != nil {
+			return nil, err
+		}
+
+		envInput.Variables = combinedVariables
+		input.Environment = envInput
+	}
+
 	var resp *svcsdk.CreateFunctionOutput
 	_ = resp
 	resp, err = rm.sdkapi.CreateFunction(ctx, input)
@@ -489,15 +500,6 @@ func (rm *resourceManager) sdkCreate(
 		ko.Spec.Description = resp.Description
 	} else {
 		ko.Spec.Description = nil
-	}
-	if resp.Environment != nil {
-		f5 := &svcapitypes.Environment{}
-		if resp.Environment.Variables != nil {
-			f5.Variables = aws.StringMap(resp.Environment.Variables)
-		}
-		ko.Spec.Environment = f5
-	} else {
-		ko.Spec.Environment = nil
 	}
 	if resp.EphemeralStorage != nil {
 		f6 := &svcapitypes.EphemeralStorage{}
@@ -794,13 +796,6 @@ func (rm *resourceManager) newCreateRequestPayload(
 	}
 	if r.ko.Spec.Description != nil {
 		res.Description = r.ko.Spec.Description
-	}
-	if r.ko.Spec.Environment != nil {
-		f5 := &svcsdktypes.Environment{}
-		if r.ko.Spec.Environment.Variables != nil {
-			f5.Variables = aws.ToStringMap(r.ko.Spec.Environment.Variables)
-		}
-		res.Environment = f5
 	}
 	if r.ko.Spec.EphemeralStorage != nil {
 		f6 := &svcsdktypes.EphemeralStorage{}

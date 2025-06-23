@@ -121,6 +121,40 @@ resources:
         from:
           operation: PutFunctionEventInvokeConfig
           path: .
+
+      # We can't allow Spec.Environment to be set based on the response to a create or update operation.
+      # Doing so could result in the value of secret reference from VariablesFromSecretRefs being leaked into 
+      # Variables.
+      Environment:
+        compare:
+          is_ignored: true
+        set:
+          - ignore: all
+            method: Create
+          - ignore: all
+            method: Update
+
+      Environment.Variables:
+        compare:
+           is_ignored: true
+        set:
+          - ignore: all
+            method: Create
+          - ignore: all
+            method: Update
+
+      Environment.VariablesFromSecretRefs:
+        type: map[string]string
+        is_secret: true
+        compare:
+          is_ignored: true
+        set:
+          - ignore: all
+            method: Create
+          - ignore: all
+            method: ReadOne
+          - ignore: all
+            method: Update
     renames:
       operations:
         CreateFunction:

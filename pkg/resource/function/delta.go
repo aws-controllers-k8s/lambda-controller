@@ -111,17 +111,6 @@ func newResourceDelta(
 			delta.Add("Spec.Description", a.ko.Spec.Description, b.ko.Spec.Description)
 		}
 	}
-	if ackcompare.HasNilDifference(a.ko.Spec.Environment, b.ko.Spec.Environment) {
-		delta.Add("Spec.Environment", a.ko.Spec.Environment, b.ko.Spec.Environment)
-	} else if a.ko.Spec.Environment != nil && b.ko.Spec.Environment != nil {
-		if len(a.ko.Spec.Environment.Variables) != len(b.ko.Spec.Environment.Variables) {
-			delta.Add("Spec.Environment.Variables", a.ko.Spec.Environment.Variables, b.ko.Spec.Environment.Variables)
-		} else if len(a.ko.Spec.Environment.Variables) > 0 {
-			if !ackcompare.MapStringStringPEqual(a.ko.Spec.Environment.Variables, b.ko.Spec.Environment.Variables) {
-				delta.Add("Spec.Environment.Variables", a.ko.Spec.Environment.Variables, b.ko.Spec.Environment.Variables)
-			}
-		}
-	}
 	if ackcompare.HasNilDifference(a.ko.Spec.EphemeralStorage, b.ko.Spec.EphemeralStorage) {
 		delta.Add("Spec.EphemeralStorage", a.ko.Spec.EphemeralStorage, b.ko.Spec.EphemeralStorage)
 	} else if a.ko.Spec.EphemeralStorage != nil && b.ko.Spec.EphemeralStorage != nil {

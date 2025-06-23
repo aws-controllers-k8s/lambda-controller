@@ -121,6 +121,37 @@ resources:
         from:
           operation: PutFunctionEventInvokeConfig
           path: .
+
+      Environment:
+        compare:
+          is_ignored: true
+        set:
+          - ignore: all
+            method: Create
+          - ignore: all
+            method: Update
+
+      Environment.Variables:
+        compare:
+           is_ignored: true
+        set:
+          - ignore: all
+            method: Create
+          - ignore: all
+            method: Update
+
+      Environment.VariablesFromSecretRefs:
+        type: map[string]string
+        is_secret: true
+        compare:
+          is_ignored: true
+        set:
+          - ignore: all
+            method: Create
+          - ignore: all
+            method: ReadOne
+          - ignore: all
+            method: Update
     renames:
       operations:
         CreateFunction:
