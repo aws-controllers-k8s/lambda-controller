@@ -443,6 +443,9 @@ func (rm *resourceManager) updateFunctionCode(
 			if dspec.Code.S3ObjectVersion != nil {
 				input.S3ObjectVersion = aws.String(*dspec.Code.S3ObjectVersion)
 			}
+			if dspec.Code.ZipFile != nil {
+				input.ZipFile = dspec.Code.ZipFile
+			}
 		} else if delta.DifferentAt("Spec.Code.ImageURI") && dspec.Code.ImageURI != nil {
 			if dspec.Code.ImageURI != nil {
 				input.ImageUri = aws.String(*dspec.Code.ImageURI)
