@@ -101,6 +101,21 @@ const (
 	InvokeMode_RESPONSE_STREAM InvokeMode = "RESPONSE_STREAM"
 )
 
+type KafkaSchemaRegistryAuthType string
+
+const (
+	KafkaSchemaRegistryAuthType_BASIC_AUTH                  KafkaSchemaRegistryAuthType = "BASIC_AUTH"
+	KafkaSchemaRegistryAuthType_CLIENT_CERTIFICATE_TLS_AUTH KafkaSchemaRegistryAuthType = "CLIENT_CERTIFICATE_TLS_AUTH"
+	KafkaSchemaRegistryAuthType_SERVER_ROOT_CA_CERTIFICATE  KafkaSchemaRegistryAuthType = "SERVER_ROOT_CA_CERTIFICATE"
+)
+
+type KafkaSchemaValidationAttribute string
+
+const (
+	KafkaSchemaValidationAttribute_KEY   KafkaSchemaValidationAttribute = "KEY"
+	KafkaSchemaValidationAttribute_VALUE KafkaSchemaValidationAttribute = "VALUE"
+)
+
 type LastUpdateStatus string
 
 const (
@@ -221,6 +236,14 @@ const (
 	Runtime_ruby2_7         Runtime = "ruby2.7"
 	Runtime_ruby3_2         Runtime = "ruby3.2"
 	Runtime_ruby3_3         Runtime = "ruby3.3"
+	Runtime_ruby3_4         Runtime = "ruby3.4"
+)
+
+type SchemaRegistryEventRecordFormat string
+
+const (
+	SchemaRegistryEventRecordFormat_JSON   SchemaRegistryEventRecordFormat = "JSON"
+	SchemaRegistryEventRecordFormat_SOURCE SchemaRegistryEventRecordFormat = "SOURCE"
 )
 
 type SnapStartApplyOn string

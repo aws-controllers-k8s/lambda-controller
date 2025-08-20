@@ -31,7 +31,7 @@ type FunctionSpec struct {
 	// +kubebuilder:validation:Required
 	Code *FunctionCode `json:"code"`
 	// To enable code signing for this function, specify the ARN of a code-signing
-	// configuration. A code-signing configurationincludes a set of signing profiles,
+	// configuration. A code-signing configuration includes a set of signing profiles,
 	// which define the trusted publishers for this function.
 	//
 	// Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:lambda:[a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1}:\d{12}:code-signing-config:csc-[a-z0-9]{17}$`
@@ -161,8 +161,8 @@ type FunctionSpec struct {
 	// stopping it. The default is 3 seconds. The maximum allowed value is 900 seconds.
 	// For more information, see Lambda execution environment (https://docs.aws.amazon.com/lambda/latest/dg/runtimes-context.html).
 	Timeout *int64 `json:"timeout,omitempty"`
-	// Set Mode to Active to sample and trace a subset of incoming requests withX-Ray
-	// (https://docs.aws.amazon.com/lambda/latest/dg/services-xray.html).
+	// Set Mode to Active to sample and trace a subset of incoming requests with
+	// X-Ray (https://docs.aws.amazon.com/lambda/latest/dg/services-xray.html).
 	TracingConfig *TracingConfig `json:"tracingConfig,omitempty"`
 	// For network connectivity to Amazon Web Services resources in a VPC, specify
 	// a list of security groups and subnets in the VPC. When you connect a function

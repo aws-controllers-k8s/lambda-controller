@@ -47,6 +47,45 @@ spec:
                 properties:
                   consumerGroupID:
                     type: string
+                  schemaRegistryConfig:
+                    description: Specific configuration settings for a Kafka schema
+                      registry.
+                    properties:
+                      accessConfigs:
+                        items:
+                          description: |-
+                            Specific access configuration settings that tell Lambda how to authenticate
+                            with your schema registry.
+
+                            If you're working with an Glue schema registry, don't provide authentication
+                            details in this object. Instead, ensure that your execution role has the
+                            required permissions for Lambda to access your cluster.
+
+                            If you're working with a Confluent schema registry, choose the authentication
+                            method in the Type field, and provide the Secrets Manager secret ARN in the
+                            URI field.
+                          properties:
+                            type_:
+                              type: string
+                            uRI:
+                              type: string
+                          type: object
+                        type: array
+                      eventRecordFormat:
+                        type: string
+                      schemaRegistryURI:
+                        type: string
+                      schemaValidationConfigs:
+                        items:
+                          description: |-
+                            Specific schema validation configuration settings that tell Lambda the message
+                            attributes you want to validate and filter using your schema registry.
+                          properties:
+                            attribute:
+                              type: string
+                          type: object
+                        type: array
+                    type: object
                 type: object
               batchSize:
                 description: |-
@@ -83,7 +122,9 @@ spec:
                   it.
                 properties:
                   onFailure:
-                    description: A destination for events that failed processing.
+                    description: |-
+                      A destination for events that failed processing. For more information, see
+                      Adding a destination (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async-retain-records.html#invocation-async-destinations).
                     properties:
                       destination:
                         type: string
@@ -95,6 +136,9 @@ spec:
                       To retain records of successful asynchronous invocations (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#invocation-async-destinations),
                       you can configure an Amazon SNS topic, Amazon SQS queue, Lambda function,
                       or Amazon EventBridge event bus as the destination.
+
+                      OnSuccess is not supported in CreateEventSourceMapping or UpdateEventSourceMapping
+                      requests.
                     properties:
                       destination:
                         type: string
@@ -294,6 +338,45 @@ spec:
                 properties:
                   consumerGroupID:
                     type: string
+                  schemaRegistryConfig:
+                    description: Specific configuration settings for a Kafka schema
+                      registry.
+                    properties:
+                      accessConfigs:
+                        items:
+                          description: |-
+                            Specific access configuration settings that tell Lambda how to authenticate
+                            with your schema registry.
+
+                            If you're working with an Glue schema registry, don't provide authentication
+                            details in this object. Instead, ensure that your execution role has the
+                            required permissions for Lambda to access your cluster.
+
+                            If you're working with a Confluent schema registry, choose the authentication
+                            method in the Type field, and provide the Secrets Manager secret ARN in the
+                            URI field.
+                          properties:
+                            type_:
+                              type: string
+                            uRI:
+                              type: string
+                          type: object
+                        type: array
+                      eventRecordFormat:
+                        type: string
+                      schemaRegistryURI:
+                        type: string
+                      schemaValidationConfigs:
+                        items:
+                          description: |-
+                            Specific schema validation configuration settings that tell Lambda the message
+                            attributes you want to validate and filter using your schema registry.
+                          properties:
+                            attribute:
+                              type: string
+                          type: object
+                        type: array
+                    type: object
                 type: object
               sourceAccessConfigurations:
                 description: |-
@@ -416,7 +499,8 @@ spec:
                 format: date-time
                 type: string
               lastProcessingResult:
-                description: The result of the last Lambda invocation of your function.
+                description: The result of the event source mapping's last processing
+                  attempt.
                 type: string
               state:
                 description: |-

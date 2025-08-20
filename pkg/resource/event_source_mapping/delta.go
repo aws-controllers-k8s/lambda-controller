@@ -54,6 +54,38 @@ func newResourceDelta(
 				delta.Add("Spec.AmazonManagedKafkaEventSourceConfig.ConsumerGroupID", a.ko.Spec.AmazonManagedKafkaEventSourceConfig.ConsumerGroupID, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.ConsumerGroupID)
 			}
 		}
+		if ackcompare.HasNilDifference(a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig) {
+			delta.Add("Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig", a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig)
+		} else if a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig != nil && b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig != nil {
+			if len(a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs) != len(b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs) {
+				delta.Add("Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs", a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs)
+			} else if len(a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs) > 0 {
+				if !reflect.DeepEqual(a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs) {
+					delta.Add("Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs", a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs)
+				}
+			}
+			if ackcompare.HasNilDifference(a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat) {
+				delta.Add("Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat", a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat)
+			} else if a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat != nil && b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat != nil {
+				if *a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat != *b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat {
+					delta.Add("Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat", a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat)
+				}
+			}
+			if ackcompare.HasNilDifference(a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI) {
+				delta.Add("Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI", a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI)
+			} else if a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI != nil && b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI != nil {
+				if *a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI != *b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI {
+					delta.Add("Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI", a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI)
+				}
+			}
+			if len(a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs) != len(b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs) {
+				delta.Add("Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs", a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs)
+			} else if len(a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs) > 0 {
+				if !reflect.DeepEqual(a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs) {
+					delta.Add("Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs", a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs)
+				}
+			}
+		}
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.BatchSize, b.ko.Spec.BatchSize) {
 		delta.Add("Spec.BatchSize", a.ko.Spec.BatchSize, b.ko.Spec.BatchSize)
@@ -197,6 +229,38 @@ func newResourceDelta(
 		} else if a.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID != nil && b.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID != nil {
 			if *a.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID != *b.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID {
 				delta.Add("Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID", a.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID, b.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID)
+			}
+		}
+		if ackcompare.HasNilDifference(a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig, b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig) {
+			delta.Add("Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig", a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig, b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig)
+		} else if a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig != nil && b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig != nil {
+			if len(a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs) != len(b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs) {
+				delta.Add("Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs", a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs, b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs)
+			} else if len(a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs) > 0 {
+				if !reflect.DeepEqual(a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs, b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs) {
+					delta.Add("Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs", a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs, b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs)
+				}
+			}
+			if ackcompare.HasNilDifference(a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat, b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat) {
+				delta.Add("Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat", a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat, b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat)
+			} else if a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat != nil && b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat != nil {
+				if *a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat != *b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat {
+					delta.Add("Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat", a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat, b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat)
+				}
+			}
+			if ackcompare.HasNilDifference(a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI, b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI) {
+				delta.Add("Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI", a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI, b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI)
+			} else if a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI != nil && b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI != nil {
+				if *a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI != *b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI {
+					delta.Add("Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI", a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI, b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI)
+				}
+			}
+			if len(a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs) != len(b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs) {
+				delta.Add("Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs", a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs, b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs)
+			} else if len(a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs) > 0 {
+				if !reflect.DeepEqual(a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs, b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs) {
+					delta.Add("Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs", a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs, b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs)
+				}
 			}
 		}
 	}
