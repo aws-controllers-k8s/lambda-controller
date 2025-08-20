@@ -69,6 +69,20 @@ spec:
                               type: string
                             uRI:
                               type: string
+                            uRIRef:
+                              description: Reference field for URI
+                              properties:
+                                from:
+                                  description: |-
+                                    AWSResourceReference provides all the values necessary to reference another
+                                    k8s resource for finding the identifier(Id/ARN/Name)
+                                  properties:
+                                    name:
+                                      type: string
+                                    namespace:
+                                      type: string
+                                  type: object
+                              type: object
                           type: object
                         type: array
                       eventRecordFormat:
@@ -360,6 +374,20 @@ spec:
                               type: string
                             uRI:
                               type: string
+                            uRIRef:
+                              description: Reference field for URI
+                              properties:
+                                from:
+                                  description: |-
+                                    AWSResourceReference provides all the values necessary to reference another
+                                    k8s resource for finding the identifier(Id/ARN/Name)
+                                  properties:
+                                    name:
+                                      type: string
+                                    namespace:
+                                      type: string
+                                  type: object
+                              type: object
                           type: object
                         type: array
                       eventRecordFormat:

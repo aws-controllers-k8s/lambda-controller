@@ -8,10 +8,11 @@ require (
 	github.com/aws-controllers-k8s/ec2-controller v0.0.21
 	github.com/aws-controllers-k8s/iam-controller v1.2.3
 	github.com/aws-controllers-k8s/kafka-controller v0.0.0-20230615185632-102279061de1
-	github.com/aws-controllers-k8s/kms-controller v0.1.2
+	github.com/aws-controllers-k8s/kms-controller v1.0.30
 	github.com/aws-controllers-k8s/mq-controller v0.0.22
 	github.com/aws-controllers-k8s/runtime v0.51.0
 	github.com/aws-controllers-k8s/s3-controller v0.1.5
+	github.com/aws-controllers-k8s/secretsmanager-controller v1.1.0
 	github.com/aws/aws-sdk-go v1.49.0
 	github.com/aws/aws-sdk-go-v2 v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.69.8

@@ -207,6 +207,15 @@ resources:
       FilterCriteria:
         compare:
           is_ignored: true
+      
+      AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs.Type:
+        go_tag: json:"type,omitempty"
+
+      AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs.URI:
+        references:
+          resource: Secret
+          service_name: secretsmanager
+          path: Status.ACKResourceMetadata.ARN
     hooks:
       delta_pre_compare:
         code: customPreCompare(delta, a, b)

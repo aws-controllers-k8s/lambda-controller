@@ -414,6 +414,8 @@ type InvokeWithResponseStreamCompleteEvent struct {
 type KafkaSchemaRegistryAccessConfig struct {
 	Type *string `json:"type_,omitempty"`
 	URI  *string `json:"uRI,omitempty"`
+	// Reference field for URI
+	URIRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"uRIRef,omitempty"`
 }
 
 // Specific configuration settings for a Kafka schema registry.
