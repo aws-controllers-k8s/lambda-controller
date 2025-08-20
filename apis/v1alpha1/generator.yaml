@@ -207,6 +207,10 @@ resources:
       FilterCriteria:
         compare:
           is_ignored: true
+      
+      AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs.Type:
+        go_tag: json:"type,omitempty"
+
       AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs.URI:
         references:
           resource: Secret

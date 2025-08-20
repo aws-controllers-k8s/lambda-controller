@@ -65,11 +65,11 @@ spec:
                             method in the Type field, and provide the Secrets Manager secret ARN in the
                             URI field.
                           properties:
-                            type_:
+                            type:
                               type: string
-                            uRI:
+                            uri:
                               type: string
-                            uRIRef:
+                            uriRef:
                               description: Reference field for URI
                               properties:
                                 from:
@@ -370,11 +370,11 @@ spec:
                             method in the Type field, and provide the Secrets Manager secret ARN in the
                             URI field.
                           properties:
-                            type_:
+                            type:
                               type: string
-                            uRI:
+                            uri:
                               type: string
-                            uRIRef:
+                            uriRef:
                               description: Reference field for URI
                               properties:
                                 from:
@@ -417,7 +417,7 @@ spec:
                   properties:
                     type_:
                       type: string
-                    uRI:
+                    uri:
                       type: string
                   type: object
                 type: array

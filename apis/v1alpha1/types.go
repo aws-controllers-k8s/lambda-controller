@@ -412,10 +412,10 @@ type InvokeWithResponseStreamCompleteEvent struct {
 // method in the Type field, and provide the Secrets Manager secret ARN in the
 // URI field.
 type KafkaSchemaRegistryAccessConfig struct {
-	Type *string `json:"type_,omitempty"`
-	URI  *string `json:"uRI,omitempty"`
+	Type *string `json:"type,omitempty"`
+	URI  *string `json:"uri,omitempty"`
 	// Reference field for URI
-	URIRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"uRIRef,omitempty"`
+	URIRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"uriRef,omitempty"`
 }
 
 // Specific configuration settings for a Kafka schema registry.
@@ -592,7 +592,7 @@ type SnapStartResponse struct {
 // protocol, VPC components, or virtual host.
 type SourceAccessConfiguration struct {
 	Type *string `json:"type_,omitempty"`
-	URI  *string `json:"uRI,omitempty"`
+	URI  *string `json:"uri,omitempty"`
 }
 
 // An object that contains details about an error related to retrieving tags.
