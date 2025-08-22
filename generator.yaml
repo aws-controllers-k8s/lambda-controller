@@ -208,6 +208,11 @@ resources:
         compare:
           is_ignored: true
       
+      SourceAccessConfigurations.URI:
+        # Need to force to "uRI" to avoid breaking change following "URI" -> "uri"
+        # bug fix in aws-controller-k8s/pkg
+        go_tag: json:"uRI,omitempty"
+      
       AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs.Type:
         go_tag: json:"type,omitempty"
 

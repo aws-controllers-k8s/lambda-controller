@@ -592,7 +592,7 @@ type SnapStartResponse struct {
 // protocol, VPC components, or virtual host.
 type SourceAccessConfiguration struct {
 	Type *string `json:"type_,omitempty"`
-	URI  *string `json:"uri,omitempty"`
+	URI  *string `json:"uRI,omitempty"`
 }
 
 // An object that contains details about an error related to retrieving tags.

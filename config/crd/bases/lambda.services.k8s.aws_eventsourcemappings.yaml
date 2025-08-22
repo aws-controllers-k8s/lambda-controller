@@ -417,7 +417,7 @@ spec:
                   properties:
                     type_:
                       type: string
-                    uri:
+                    uRI:
                       type: string
                   type: object
                 type: array
