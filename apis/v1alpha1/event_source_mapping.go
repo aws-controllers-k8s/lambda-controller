@@ -180,7 +180,7 @@ type EventSourceMappingStatus struct {
 	// changed.
 	// +kubebuilder:validation:Optional
 	LastModified *metav1.Time `json:"lastModified,omitempty"`
-	// The result of the last Lambda invocation of your function.
+	// The result of the event source mapping's last processing attempt.
 	// +kubebuilder:validation:Optional
 	LastProcessingResult *string `json:"lastProcessingResult,omitempty"`
 	// The state of the event source mapping. It can be one of the following: Creating,

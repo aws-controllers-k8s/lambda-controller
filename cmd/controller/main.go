@@ -31,6 +31,7 @@ import (
 	ackrtutil "github.com/aws-controllers-k8s/runtime/pkg/util"
 	ackrtwebhook "github.com/aws-controllers-k8s/runtime/pkg/webhook"
 	s3apitypes "github.com/aws-controllers-k8s/s3-controller/apis/v1alpha1"
+	secretsmanagerapitypes "github.com/aws-controllers-k8s/secretsmanager-controller/apis/v1alpha1"
 	flag "github.com/spf13/pflag"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -74,6 +75,7 @@ func init() {
 	_ = kmsapitypes.AddToScheme(scheme)
 	_ = mqapitypes.AddToScheme(scheme)
 	_ = s3apitypes.AddToScheme(scheme)
+	_ = secretsmanagerapitypes.AddToScheme(scheme)
 }
 
 func main() {

@@ -81,6 +81,8 @@ type AllowedPublishers struct {
 // Kafka (Amazon MSK) event source.
 type AmazonManagedKafkaEventSourceConfig struct {
 	ConsumerGroupID *string `json:"consumerGroupID,omitempty"`
+	// Specific configuration settings for a Kafka schema registry.
+	SchemaRegistryConfig *KafkaSchemaRegistryConfig `json:"schemaRegistryConfig,omitempty"`
 }
 
 // The cross-origin resource sharing (CORS) (https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
@@ -115,22 +117,26 @@ type CodeSigningPolicies struct {
 	UntrustedArtifactOnDeployment *string `json:"untrustedArtifactOnDeployment,omitempty"`
 }
 
-// The dead-letter queue (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#dlq)
+// The dead-letter queue (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async-retain-records.html#invocation-dlq)
 // for failed asynchronous invocations.
 type DeadLetterConfig struct {
 	TargetARN *string `json:"targetARN,omitempty"`
 }
 
 // A configuration object that specifies the destination of an event after Lambda
-// processes it.
+// processes it. For more information, see Adding a destination (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async-retain-records.html#invocation-async-destinations).
 type DestinationConfig struct {
-	// A destination for events that failed processing.
+	// A destination for events that failed processing. For more information, see
+	// Adding a destination (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async-retain-records.html#invocation-async-destinations).
 	OnFailure *OnFailure `json:"onFailure,omitempty"`
 	// A destination for events that were processed successfully.
 	//
 	// To retain records of successful asynchronous invocations (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#invocation-async-destinations),
 	// you can configure an Amazon SNS topic, Amazon SQS queue, Lambda function,
 	// or Amazon EventBridge event bus as the destination.
+	//
+	// OnSuccess is not supported in CreateEventSourceMapping or UpdateEventSourceMapping
+	// requests.
 	OnSuccess *OnSuccess `json:"onSuccess,omitempty"`
 }
 
@@ -180,7 +186,7 @@ type EventSourceMappingConfiguration struct {
 	BatchSize                           *int64                               `json:"batchSize,omitempty"`
 	BisectBatchOnFunctionError          *bool                                `json:"bisectBatchOnFunctionError,omitempty"`
 	// A configuration object that specifies the destination of an event after Lambda
-	// processes it.
+	// processes it. For more information, see Adding a destination (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async-retain-records.html#invocation-async-destinations).
 	DestinationConfig *DestinationConfig `json:"destinationConfig,omitempty"`
 	// Specific configuration settings for a DocumentDB event source.
 	DocumentDBEventSourceConfig *DocumentDBEventSourceConfig `json:"documentDBEventSourceConfig,omitempty"`
@@ -203,7 +209,7 @@ type EventSourceMappingConfiguration struct {
 	// to define which metrics you want your event source mapping to produce.
 	MetricsConfig         *EventSourceMappingMetricsConfig `json:"metricsConfig,omitempty"`
 	ParallelizationFactor *int64                           `json:"parallelizationFactor,omitempty"`
-	// The Provisioned Mode (https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventsourcemapping.html#invocation-eventsourcemapping-provisioned-mode)
+	// The provisioned mode (https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventsourcemapping.html#invocation-eventsourcemapping-provisioned-mode)
 	// configuration for the event source. Use Provisioned Mode to customize the
 	// minimum and maximum number of event pollers for your event source. An event
 	// poller is a compute unit that provides approximately 5 MBps of throughput.
@@ -285,7 +291,7 @@ type FunctionConfiguration struct {
 	Architectures []*string `json:"architectures,omitempty"`
 	CodeSHA256    *string   `json:"codeSHA256,omitempty"`
 	CodeSize      *int64    `json:"codeSize,omitempty"`
-	// The dead-letter queue (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#dlq)
+	// The dead-letter queue (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async-retain-records.html#invocation-dlq)
 	// for failed asynchronous invocations.
 	DeadLetterConfig *DeadLetterConfig `json:"deadLetterConfig,omitempty"`
 	Description      *string           `json:"description,omitempty"`
@@ -337,7 +343,7 @@ type FunctionConfiguration struct {
 
 type FunctionEventInvokeConfig struct {
 	// A configuration object that specifies the destination of an event after Lambda
-	// processes it.
+	// processes it. For more information, see Adding a destination (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async-retain-records.html#invocation-async-destinations).
 	DestinationConfig        *DestinationConfig `json:"destinationConfig,omitempty"`
 	FunctionARN              *string            `json:"functionARN,omitempty"`
 	LastModified             *metav1.Time       `json:"lastModified,omitempty"`
@@ -395,6 +401,37 @@ type InvokeWithResponseStreamCompleteEvent struct {
 	LogResult    *string `json:"logResult,omitempty"`
 }
 
+// Specific access configuration settings that tell Lambda how to authenticate
+// with your schema registry.
+//
+// If you're working with an Glue schema registry, don't provide authentication
+// details in this object. Instead, ensure that your execution role has the
+// required permissions for Lambda to access your cluster.
+//
+// If you're working with a Confluent schema registry, choose the authentication
+// method in the Type field, and provide the Secrets Manager secret ARN in the
+// URI field.
+type KafkaSchemaRegistryAccessConfig struct {
+	Type *string `json:"type,omitempty"`
+	URI  *string `json:"uri,omitempty"`
+	// Reference field for URI
+	URIRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"uriRef,omitempty"`
+}
+
+// Specific configuration settings for a Kafka schema registry.
+type KafkaSchemaRegistryConfig struct {
+	AccessConfigs           []*KafkaSchemaRegistryAccessConfig `json:"accessConfigs,omitempty"`
+	EventRecordFormat       *string                            `json:"eventRecordFormat,omitempty"`
+	SchemaRegistryURI       *string                            `json:"schemaRegistryURI,omitempty"`
+	SchemaValidationConfigs []*KafkaSchemaValidationConfig     `json:"schemaValidationConfigs,omitempty"`
+}
+
+// Specific schema validation configuration settings that tell Lambda the message
+// attributes you want to validate and filter using your schema registry.
+type KafkaSchemaValidationConfig struct {
+	Attribute *string `json:"attribute,omitempty"`
+}
+
 // An Lambda layer (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html).
 type Layer struct {
 	ARN                      *string `json:"arn,omitempty"`
@@ -448,7 +485,8 @@ type LoggingConfig struct {
 	SystemLogLevel      *string `json:"systemLogLevel,omitempty"`
 }
 
-// A destination for events that failed processing.
+// A destination for events that failed processing. For more information, see
+// Adding a destination (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async-retain-records.html#invocation-async-destinations).
 type OnFailure struct {
 	Destination *string `json:"destination,omitempty"`
 }
@@ -458,6 +496,9 @@ type OnFailure struct {
 // To retain records of successful asynchronous invocations (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#invocation-async-destinations),
 // you can configure an Amazon SNS topic, Amazon SQS queue, Lambda function,
 // or Amazon EventBridge event bus as the destination.
+//
+// OnSuccess is not supported in CreateEventSourceMapping or UpdateEventSourceMapping
+// requests.
 type OnSuccess struct {
 	Destination *string `json:"destination,omitempty"`
 }
@@ -471,7 +512,7 @@ type ProvisionedConcurrencyConfigListItem struct {
 	StatusReason                             *string `json:"statusReason,omitempty"`
 }
 
-// The Provisioned Mode (https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventsourcemapping.html#invocation-eventsourcemapping-provisioned-mode)
+// The provisioned mode (https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventsourcemapping.html#invocation-eventsourcemapping-provisioned-mode)
 // configuration for the event source. Use Provisioned Mode to customize the
 // minimum and maximum number of event pollers for your event source. An event
 // poller is a compute unit that provides approximately 5 MBps of throughput.
@@ -486,7 +527,7 @@ type PutFunctionConcurrencyOutput struct {
 
 type PutFunctionEventInvokeConfigInput struct {
 	// A configuration object that specifies the destination of an event after Lambda
-	// processes it.
+	// processes it. For more information, see Adding a destination (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async-retain-records.html#invocation-async-destinations).
 	DestinationConfig        *DestinationConfig `json:"destinationConfig,omitempty"`
 	FunctionName             *string            `json:"functionName,omitempty"`
 	MaximumEventAgeInSeconds *int64             `json:"maximumEventAgeInSeconds,omitempty"`
@@ -529,6 +570,8 @@ type SelfManagedEventSource struct {
 // Specific configuration settings for a self-managed Apache Kafka event source.
 type SelfManagedKafkaEventSourceConfig struct {
 	ConsumerGroupID *string `json:"consumerGroupID,omitempty"`
+	// Specific configuration settings for a Kafka schema registry.
+	SchemaRegistryConfig *KafkaSchemaRegistryConfig `json:"schemaRegistryConfig,omitempty"`
 }
 
 // The function's Lambda SnapStart (https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html)

@@ -28,9 +28,13 @@ import (
 	ackv1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	acktypes "github.com/aws-controllers-k8s/runtime/pkg/types"
+	secretsmanagerapitypes "github.com/aws-controllers-k8s/secretsmanager-controller/apis/v1alpha1"
 
 	svcapitypes "github.com/aws-controllers-k8s/lambda-controller/apis/v1alpha1"
 )
+
+// +kubebuilder:rbac:groups=secretsmanager.services.k8s.aws,resources=secrets,verbs=get;list
+// +kubebuilder:rbac:groups=secretsmanager.services.k8s.aws,resources=secrets/status,verbs=get;list
 
 // +kubebuilder:rbac:groups=kafka.services.k8s.aws,resources=clusters,verbs=get;list
 // +kubebuilder:rbac:groups=kafka.services.k8s.aws,resources=clusters/status,verbs=get;list
@@ -44,6 +48,16 @@ import (
 // values.
 func (rm *resourceManager) ClearResolvedReferences(res acktypes.AWSResource) acktypes.AWSResource {
 	ko := rm.concreteResource(res).ko.DeepCopy()
+
+	if ko.Spec.AmazonManagedKafkaEventSourceConfig != nil {
+		if ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig != nil {
+			for f0idx, f0iter := range ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs {
+				if f0iter.URIRef != nil {
+					ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs[f0idx].URI = nil
+				}
+			}
+		}
+	}
 
 	if ko.Spec.EventSourceRef != nil {
 		ko.Spec.EventSourceARN = nil
@@ -76,6 +90,12 @@ func (rm *resourceManager) ResolveReferences(
 
 	resourceHasReferences := false
 	err := validateReferenceFields(ko)
+	if fieldHasReferences, err := rm.resolveReferenceForAmazonManagedKafkaEventSourceConfig_SchemaRegistryConfig_AccessConfigs_URI(ctx, apiReader, ko); err != nil {
+		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
+	} else {
+		resourceHasReferences = resourceHasReferences || fieldHasReferences
+	}
+
 	if fieldHasReferences, err := rm.resolveReferenceForEventSourceARN(ctx, apiReader, ko); err != nil {
 		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
 	} else {
@@ -101,6 +121,16 @@ func (rm *resourceManager) ResolveReferences(
 // identifier field.
 func validateReferenceFields(ko *svcapitypes.EventSourceMapping) error {
 
+	if ko.Spec.AmazonManagedKafkaEventSourceConfig != nil {
+		if ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig != nil {
+			for _, f0iter := range ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs {
+				if f0iter.URIRef != nil && f0iter.URI != nil {
+					return ackerr.ResourceReferenceAndIDNotSupportedFor("AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs.URI", "AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs.URIRef")
+				}
+			}
+		}
+	}
+
 	if ko.Spec.EventSourceRef != nil && ko.Spec.EventSourceARN != nil {
 		return ackerr.ResourceReferenceAndIDNotSupportedFor("EventSourceARN", "EventSourceRef")
 	}
@@ -114,6 +144,95 @@ func validateReferenceFields(ko *svcapitypes.EventSourceMapping) error {
 
 	if len(ko.Spec.QueueRefs) > 0 && len(ko.Spec.Queues) > 0 {
 		return ackerr.ResourceReferenceAndIDNotSupportedFor("Queues", "QueueRefs")
+	}
+	return nil
+}
+
+// resolveReferenceForAmazonManagedKafkaEventSourceConfig_SchemaRegistryConfig_AccessConfigs_URI reads the resource referenced
+// from AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs.URIRef field and sets the AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs.URI
+// from referenced resource. Returns a boolean indicating whether a reference
+// contains references, or an error
+func (rm *resourceManager) resolveReferenceForAmazonManagedKafkaEventSourceConfig_SchemaRegistryConfig_AccessConfigs_URI(
+	ctx context.Context,
+	apiReader client.Reader,
+	ko *svcapitypes.EventSourceMapping,
+) (hasReferences bool, err error) {
+	if ko.Spec.AmazonManagedKafkaEventSourceConfig != nil {
+		if ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig != nil {
+			for f0idx, f0iter := range ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs {
+				if f0iter.URIRef != nil && f0iter.URIRef.From != nil {
+					hasReferences = true
+					arr := f0iter.URIRef.From
+					if arr.Name == nil || *arr.Name == "" {
+						return hasReferences, fmt.Errorf("provided resource reference is nil or empty: AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs.URIRef")
+					}
+					namespace := ko.ObjectMeta.GetNamespace()
+					if arr.Namespace != nil && *arr.Namespace != "" {
+						namespace = *arr.Namespace
+					}
+					obj := &secretsmanagerapitypes.Secret{}
+					if err := getReferencedResourceState_Secret(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
+						return hasReferences, err
+					}
+					ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs[f0idx].URI = (*string)(obj.Status.ACKResourceMetadata.ARN)
+				}
+			}
+		}
+	}
+
+	return hasReferences, nil
+}
+
+// getReferencedResourceState_Secret looks up whether a referenced resource
+// exists and is in a ACK.ResourceSynced=True state. If the referenced resource does exist and is
+// in a Synced state, returns nil, otherwise returns `ackerr.ResourceReferenceTerminalFor` or
+// `ResourceReferenceNotSyncedFor` depending on if the resource is in a Terminal state.
+func getReferencedResourceState_Secret(
+	ctx context.Context,
+	apiReader client.Reader,
+	obj *secretsmanagerapitypes.Secret,
+	name string, // the Kubernetes name of the referenced resource
+	namespace string, // the Kubernetes namespace of the referenced resource
+) error {
+	namespacedName := types.NamespacedName{
+		Namespace: namespace,
+		Name:      name,
+	}
+	err := apiReader.Get(ctx, namespacedName, obj)
+	if err != nil {
+		return err
+	}
+	var refResourceTerminal bool
+	for _, cond := range obj.Status.Conditions {
+		if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
+			cond.Status == corev1.ConditionTrue {
+			return ackerr.ResourceReferenceTerminalFor(
+				"Secret",
+				namespace, name)
+		}
+	}
+	if refResourceTerminal {
+		return ackerr.ResourceReferenceTerminalFor(
+			"Secret",
+			namespace, name)
+	}
+	var refResourceSynced bool
+	for _, cond := range obj.Status.Conditions {
+		if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+			cond.Status == corev1.ConditionTrue {
+			refResourceSynced = true
+		}
+	}
+	if !refResourceSynced {
+		return ackerr.ResourceReferenceNotSyncedFor(
+			"Secret",
+			namespace, name)
+	}
+	if obj.Status.ACKResourceMetadata == nil || obj.Status.ACKResourceMetadata.ARN == nil {
+		return ackerr.ResourceReferenceMissingTargetFieldFor(
+			"Secret",
+			namespace, name,
+			"Status.ACKResourceMetadata.ARN")
 	}
 	return nil
 }

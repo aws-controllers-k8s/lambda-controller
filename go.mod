@@ -8,14 +8,15 @@ require (
 	github.com/aws-controllers-k8s/ec2-controller v0.0.21
 	github.com/aws-controllers-k8s/iam-controller v1.2.3
 	github.com/aws-controllers-k8s/kafka-controller v0.0.0-20230615185632-102279061de1
-	github.com/aws-controllers-k8s/kms-controller v0.1.2
+	github.com/aws-controllers-k8s/kms-controller v1.0.30
 	github.com/aws-controllers-k8s/mq-controller v0.0.22
 	github.com/aws-controllers-k8s/runtime v0.51.0
 	github.com/aws-controllers-k8s/s3-controller v0.1.5
+	github.com/aws-controllers-k8s/secretsmanager-controller v1.1.0
 	github.com/aws/aws-sdk-go v1.49.0
-	github.com/aws/aws-sdk-go-v2 v1.34.0
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.69.8
-	github.com/aws/smithy-go v1.22.2
+	github.com/aws/aws-sdk-go-v2 v1.38.0
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.75.0
+	github.com/aws/smithy-go v1.22.5
 	github.com/go-logr/logr v1.4.2
 	github.com/micahhausler/aws-iam-policy v0.4.2
 	github.com/spf13/pflag v1.0.5
@@ -26,12 +27,12 @@ require (
 )
 
 require (
-	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.8 // indirect
+	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.0 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.28.6 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.47 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.21 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.29 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.29 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.2 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.2 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.6 // indirect
@@ -60,7 +61,6 @@ require (
 	github.com/itchyny/gojq v0.12.6 // indirect
 	github.com/itchyny/timefmt-go v0.1.3 // indirect
 	github.com/jaypipes/envutil v1.0.0 // indirect
-	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
