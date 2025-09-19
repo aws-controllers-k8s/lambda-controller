@@ -103,16 +103,16 @@ func (r *resource) SetIdentifiers(identifier *ackv1alpha1.AWSIdentifiers) error 
 
 // PopulateResourceFromAnnotation populates the fields passed from adoption annotation
 func (r *resource) PopulateResourceFromAnnotation(fields map[string]string) error {
-	tmp, ok := fields["name"]
+	primaryKey, ok := fields["name"]
 	if !ok {
 		return ackerrors.NewTerminalError(fmt.Errorf("required field missing: name"))
 	}
-	r.ko.Spec.Name = &tmp
-
-	f0, f0ok := fields["functionName"]
-	if f0ok {
-		r.ko.Spec.FunctionName = aws.String(f0)
+	r.ko.Spec.Name = &primaryKey
+	f0, ok := fields["functionName"]
+	if !ok {
+		return ackerrors.NewTerminalError(fmt.Errorf("required field missing: functionName"))
 	}
+	r.ko.Spec.FunctionName = &f0
 
 	return nil
 }

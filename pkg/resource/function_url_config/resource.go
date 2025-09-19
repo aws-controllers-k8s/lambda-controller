@@ -103,11 +103,11 @@ func (r *resource) SetIdentifiers(identifier *ackv1alpha1.AWSIdentifiers) error 
 
 // PopulateResourceFromAnnotation populates the fields passed from adoption annotation
 func (r *resource) PopulateResourceFromAnnotation(fields map[string]string) error {
-	tmp, ok := fields["functionName"]
+	primaryKey, ok := fields["functionName"]
 	if !ok {
 		return ackerrors.NewTerminalError(fmt.Errorf("required field missing: functionName"))
 	}
-	r.ko.Spec.FunctionName = &tmp
+	r.ko.Spec.FunctionName = &primaryKey
 
 	f1, f1ok := fields["qualifier"]
 	if f1ok {
