@@ -26,6 +26,7 @@ import (
 	kafkaapitypes "github.com/aws-controllers-k8s/kafka-controller/apis/v1alpha1"
 	mqapitypes "github.com/aws-controllers-k8s/mq-controller/apis/v1alpha1"
 	ackv1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
+	ackcondition "github.com/aws-controllers-k8s/runtime/pkg/condition"
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	acktypes "github.com/aws-controllers-k8s/runtime/pkg/types"
 	secretsmanagerapitypes "github.com/aws-controllers-k8s/secretsmanager-controller/apis/v1alpha1"
@@ -204,8 +205,9 @@ func getReferencedResourceState_Secret(
 	}
 	var refResourceTerminal bool
 	for _, cond := range obj.Status.Conditions {
-		if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
-			cond.Status == corev1.ConditionTrue {
+		if cond.Type == ackv1alpha1.ConditionTypeReady &&
+			cond.Status == corev1.ConditionFalse &&
+			*cond.Reason == ackcondition.TerminalReason {
 			return ackerr.ResourceReferenceTerminalFor(
 				"Secret",
 				namespace, name)
@@ -216,14 +218,14 @@ func getReferencedResourceState_Secret(
 			"Secret",
 			namespace, name)
 	}
-	var refResourceSynced bool
+	var refResourceReady bool
 	for _, cond := range obj.Status.Conditions {
-		if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+		if cond.Type == ackv1alpha1.ConditionTypeReady &&
 			cond.Status == corev1.ConditionTrue {
-			refResourceSynced = true
+			refResourceReady = true
 		}
 	}
-	if !refResourceSynced {
+	if !refResourceReady {
 		return ackerr.ResourceReferenceNotSyncedFor(
 			"Secret",
 			namespace, name)
@@ -287,8 +289,9 @@ func getReferencedResourceState_Cluster(
 	}
 	var refResourceTerminal bool
 	for _, cond := range obj.Status.Conditions {
-		if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
-			cond.Status == corev1.ConditionTrue {
+		if cond.Type == ackv1alpha1.ConditionTypeReady &&
+			cond.Status == corev1.ConditionFalse &&
+			*cond.Reason == ackcondition.TerminalReason {
 			return ackerr.ResourceReferenceTerminalFor(
 				"Cluster",
 				namespace, name)
@@ -299,14 +302,14 @@ func getReferencedResourceState_Cluster(
 			"Cluster",
 			namespace, name)
 	}
-	var refResourceSynced bool
+	var refResourceReady bool
 	for _, cond := range obj.Status.Conditions {
-		if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+		if cond.Type == ackv1alpha1.ConditionTypeReady &&
 			cond.Status == corev1.ConditionTrue {
-			refResourceSynced = true
+			refResourceReady = true
 		}
 	}
-	if !refResourceSynced {
+	if !refResourceReady {
 		return ackerr.ResourceReferenceNotSyncedFor(
 			"Cluster",
 			namespace, name)
@@ -370,8 +373,9 @@ func getReferencedResourceState_Function(
 	}
 	var refResourceTerminal bool
 	for _, cond := range obj.Status.Conditions {
-		if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
-			cond.Status == corev1.ConditionTrue {
+		if cond.Type == ackv1alpha1.ConditionTypeReady &&
+			cond.Status == corev1.ConditionFalse &&
+			*cond.Reason == ackcondition.TerminalReason {
 			return ackerr.ResourceReferenceTerminalFor(
 				"Function",
 				namespace, name)
@@ -382,14 +386,14 @@ func getReferencedResourceState_Function(
 			"Function",
 			namespace, name)
 	}
-	var refResourceSynced bool
+	var refResourceReady bool
 	for _, cond := range obj.Status.Conditions {
-		if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+		if cond.Type == ackv1alpha1.ConditionTypeReady &&
 			cond.Status == corev1.ConditionTrue {
-			refResourceSynced = true
+			refResourceReady = true
 		}
 	}
-	if !refResourceSynced {
+	if !refResourceReady {
 		return ackerr.ResourceReferenceNotSyncedFor(
 			"Function",
 			namespace, name)
@@ -458,8 +462,9 @@ func getReferencedResourceState_Broker(
 	}
 	var refResourceTerminal bool
 	for _, cond := range obj.Status.Conditions {
-		if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
-			cond.Status == corev1.ConditionTrue {
+		if cond.Type == ackv1alpha1.ConditionTypeReady &&
+			cond.Status == corev1.ConditionFalse &&
+			*cond.Reason == ackcondition.TerminalReason {
 			return ackerr.ResourceReferenceTerminalFor(
 				"Broker",
 				namespace, name)
@@ -470,14 +475,14 @@ func getReferencedResourceState_Broker(
 			"Broker",
 			namespace, name)
 	}
-	var refResourceSynced bool
+	var refResourceReady bool
 	for _, cond := range obj.Status.Conditions {
-		if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+		if cond.Type == ackv1alpha1.ConditionTypeReady &&
 			cond.Status == corev1.ConditionTrue {
-			refResourceSynced = true
+			refResourceReady = true
 		}
 	}
-	if !refResourceSynced {
+	if !refResourceReady {
 		return ackerr.ResourceReferenceNotSyncedFor(
 			"Broker",
 			namespace, name)
