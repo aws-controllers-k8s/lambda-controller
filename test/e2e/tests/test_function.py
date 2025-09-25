@@ -23,7 +23,7 @@ import base64
 from acktest import tags
 from acktest.resources import random_suffix_name
 from acktest.aws.identity import get_region, get_account_id
-from acktest.k8s import resource as k8s
+from acktest.k8s import resource as k8s, condition
 
 from e2e import service_marker, CRD_GROUP, CRD_VERSION, load_lambda_resource
 from e2e.replacement_values import REPLACEMENT_VALUES
@@ -400,12 +400,7 @@ class TestFunction:
 
         cr = k8s.wait_resource_consumed_by_controller(ref)
         # assert condition
-        assert k8s.assert_condition_state_message(
-            ref,
-            "ACK.Terminal",
-            "True",
-            "cannot set function code signing config when package type is Image",
-        )
+        condition.assert_terminal(ref, "cannot set function code signing config when package type is Image")
 
         cr = k8s.wait_resource_consumed_by_controller(ref)
 
