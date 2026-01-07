@@ -17,16 +17,15 @@ package event_source_mapping
 
 import (
 	"bytes"
-	"reflect"
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
 	acktags "github.com/aws-controllers-k8s/runtime/pkg/tags"
+	"k8s.io/apimachinery/pkg/api/equality"
 )
 
 // Hack to avoid import errors during build...
 var (
 	_ = &bytes.Buffer{}
-	_ = &reflect.Method{}
 	_ = &acktags.Tags{}
 )
 
@@ -60,7 +59,7 @@ func newResourceDelta(
 			if len(a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs) != len(b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs) {
 				delta.Add("Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs", a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs)
 			} else if len(a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs) > 0 {
-				if !reflect.DeepEqual(a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs) {
+				if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs) {
 					delta.Add("Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs", a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs)
 				}
 			}
@@ -81,7 +80,7 @@ func newResourceDelta(
 			if len(a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs) != len(b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs) {
 				delta.Add("Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs", a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs)
 			} else if len(a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs) > 0 {
-				if !reflect.DeepEqual(a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs) {
+				if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs) {
 					delta.Add("Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs", a.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs, b.ko.Spec.AmazonManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs)
 				}
 			}
@@ -141,7 +140,7 @@ func newResourceDelta(
 			delta.Add("Spec.EventSourceARN", a.ko.Spec.EventSourceARN, b.ko.Spec.EventSourceARN)
 		}
 	}
-	if !reflect.DeepEqual(a.ko.Spec.EventSourceRef, b.ko.Spec.EventSourceRef) {
+	if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.EventSourceRef, b.ko.Spec.EventSourceRef) {
 		delta.Add("Spec.EventSourceRef", a.ko.Spec.EventSourceRef, b.ko.Spec.EventSourceRef)
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.FunctionName, b.ko.Spec.FunctionName) {
@@ -151,7 +150,7 @@ func newResourceDelta(
 			delta.Add("Spec.FunctionName", a.ko.Spec.FunctionName, b.ko.Spec.FunctionName)
 		}
 	}
-	if !reflect.DeepEqual(a.ko.Spec.FunctionRef, b.ko.Spec.FunctionRef) {
+	if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.FunctionRef, b.ko.Spec.FunctionRef) {
 		delta.Add("Spec.FunctionRef", a.ko.Spec.FunctionRef, b.ko.Spec.FunctionRef)
 	}
 	if len(a.ko.Spec.FunctionResponseTypes) != len(b.ko.Spec.FunctionResponseTypes) {
@@ -189,7 +188,7 @@ func newResourceDelta(
 			delta.Add("Spec.ParallelizationFactor", a.ko.Spec.ParallelizationFactor, b.ko.Spec.ParallelizationFactor)
 		}
 	}
-	if !reflect.DeepEqual(a.ko.Spec.QueueRefs, b.ko.Spec.QueueRefs) {
+	if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.QueueRefs, b.ko.Spec.QueueRefs) {
 		delta.Add("Spec.QueueRefs", a.ko.Spec.QueueRefs, b.ko.Spec.QueueRefs)
 	}
 	if len(a.ko.Spec.Queues) != len(b.ko.Spec.Queues) {
@@ -216,7 +215,7 @@ func newResourceDelta(
 		if len(a.ko.Spec.SelfManagedEventSource.Endpoints) != len(b.ko.Spec.SelfManagedEventSource.Endpoints) {
 			delta.Add("Spec.SelfManagedEventSource.Endpoints", a.ko.Spec.SelfManagedEventSource.Endpoints, b.ko.Spec.SelfManagedEventSource.Endpoints)
 		} else if len(a.ko.Spec.SelfManagedEventSource.Endpoints) > 0 {
-			if !reflect.DeepEqual(a.ko.Spec.SelfManagedEventSource.Endpoints, b.ko.Spec.SelfManagedEventSource.Endpoints) {
+			if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.SelfManagedEventSource.Endpoints, b.ko.Spec.SelfManagedEventSource.Endpoints) {
 				delta.Add("Spec.SelfManagedEventSource.Endpoints", a.ko.Spec.SelfManagedEventSource.Endpoints, b.ko.Spec.SelfManagedEventSource.Endpoints)
 			}
 		}
@@ -237,7 +236,7 @@ func newResourceDelta(
 			if len(a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs) != len(b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs) {
 				delta.Add("Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs", a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs, b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs)
 			} else if len(a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs) > 0 {
-				if !reflect.DeepEqual(a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs, b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs) {
+				if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs, b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs) {
 					delta.Add("Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs", a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs, b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs)
 				}
 			}
@@ -258,7 +257,7 @@ func newResourceDelta(
 			if len(a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs) != len(b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs) {
 				delta.Add("Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs", a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs, b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs)
 			} else if len(a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs) > 0 {
-				if !reflect.DeepEqual(a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs, b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs) {
+				if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs, b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs) {
 					delta.Add("Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs", a.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs, b.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs)
 				}
 			}
@@ -267,7 +266,7 @@ func newResourceDelta(
 	if len(a.ko.Spec.SourceAccessConfigurations) != len(b.ko.Spec.SourceAccessConfigurations) {
 		delta.Add("Spec.SourceAccessConfigurations", a.ko.Spec.SourceAccessConfigurations, b.ko.Spec.SourceAccessConfigurations)
 	} else if len(a.ko.Spec.SourceAccessConfigurations) > 0 {
-		if !reflect.DeepEqual(a.ko.Spec.SourceAccessConfigurations, b.ko.Spec.SourceAccessConfigurations) {
+		if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.SourceAccessConfigurations, b.ko.Spec.SourceAccessConfigurations) {
 			delta.Add("Spec.SourceAccessConfigurations", a.ko.Spec.SourceAccessConfigurations, b.ko.Spec.SourceAccessConfigurations)
 		}
 	}
