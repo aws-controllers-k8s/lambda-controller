@@ -17,16 +17,15 @@ package alias
 
 import (
 	"bytes"
-	"reflect"
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
 	acktags "github.com/aws-controllers-k8s/runtime/pkg/tags"
+	"k8s.io/apimachinery/pkg/api/equality"
 )
 
 // Hack to avoid import errors during build...
 var (
 	_ = &bytes.Buffer{}
-	_ = &reflect.Method{}
 	_ = &acktags.Tags{}
 )
 
@@ -116,7 +115,7 @@ func newResourceDelta(
 			delta.Add("Spec.FunctionName", a.ko.Spec.FunctionName, b.ko.Spec.FunctionName)
 		}
 	}
-	if !reflect.DeepEqual(a.ko.Spec.FunctionRef, b.ko.Spec.FunctionRef) {
+	if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.FunctionRef, b.ko.Spec.FunctionRef) {
 		delta.Add("Spec.FunctionRef", a.ko.Spec.FunctionRef, b.ko.Spec.FunctionRef)
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.FunctionVersion, b.ko.Spec.FunctionVersion) {
@@ -164,7 +163,7 @@ func newResourceDelta(
 		if len(a.ko.Spec.RoutingConfig.AdditionalVersionWeights) != len(b.ko.Spec.RoutingConfig.AdditionalVersionWeights) {
 			delta.Add("Spec.RoutingConfig.AdditionalVersionWeights", a.ko.Spec.RoutingConfig.AdditionalVersionWeights, b.ko.Spec.RoutingConfig.AdditionalVersionWeights)
 		} else if len(a.ko.Spec.RoutingConfig.AdditionalVersionWeights) > 0 {
-			if !reflect.DeepEqual(a.ko.Spec.RoutingConfig.AdditionalVersionWeights, b.ko.Spec.RoutingConfig.AdditionalVersionWeights) {
+			if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.RoutingConfig.AdditionalVersionWeights, b.ko.Spec.RoutingConfig.AdditionalVersionWeights) {
 				delta.Add("Spec.RoutingConfig.AdditionalVersionWeights", a.ko.Spec.RoutingConfig.AdditionalVersionWeights, b.ko.Spec.RoutingConfig.AdditionalVersionWeights)
 			}
 		}
