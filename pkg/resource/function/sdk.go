@@ -317,12 +317,21 @@ func (rm *resourceManager) sdkFind(
 	} else {
 		ko.Spec.Timeout = nil
 	}
-	if resp.Configuration.TracingConfig != nil {
-		f33 := &svcapitypes.TracingConfig{}
-		if resp.Configuration.TracingConfig.Mode != "" {
-			f33.Mode = aws.String(string(resp.Configuration.TracingConfig.Mode))
+	if resp.Configuration.TenancyConfig != nil {
+		f33 := &svcapitypes.TenancyConfig{}
+		if resp.Configuration.TenancyConfig.TenantIsolationMode != "" {
+			f33.TenantIsolationMode = aws.String(string(resp.Configuration.TenancyConfig.TenantIsolationMode))
 		}
-		ko.Spec.TracingConfig = f33
+		ko.Spec.TenancyConfig = f33
+	} else {
+		ko.Spec.TenancyConfig = nil
+	}
+	if resp.Configuration.TracingConfig != nil {
+		f34 := &svcapitypes.TracingConfig{}
+		if resp.Configuration.TracingConfig.Mode != "" {
+			f34.Mode = aws.String(string(resp.Configuration.TracingConfig.Mode))
+		}
+		ko.Spec.TracingConfig = f34
 	} else {
 		ko.Spec.TracingConfig = nil
 	}
@@ -685,12 +694,21 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Spec.Timeout = nil
 	}
-	if resp.TracingConfig != nil {
-		f32 := &svcapitypes.TracingConfig{}
-		if resp.TracingConfig.Mode != "" {
-			f32.Mode = aws.String(string(resp.TracingConfig.Mode))
+	if resp.TenancyConfig != nil {
+		f32 := &svcapitypes.TenancyConfig{}
+		if resp.TenancyConfig.TenantIsolationMode != "" {
+			f32.TenantIsolationMode = aws.String(string(resp.TenancyConfig.TenantIsolationMode))
 		}
-		ko.Spec.TracingConfig = f32
+		ko.Spec.TenancyConfig = f32
+	} else {
+		ko.Spec.TenancyConfig = nil
+	}
+	if resp.TracingConfig != nil {
+		f33 := &svcapitypes.TracingConfig{}
+		if resp.TracingConfig.Mode != "" {
+			f33.Mode = aws.String(string(resp.TracingConfig.Mode))
+		}
+		ko.Spec.TracingConfig = f33
 	} else {
 		ko.Spec.TracingConfig = nil
 	}
@@ -898,6 +916,13 @@ func (rm *resourceManager) newCreateRequestPayload(
 	}
 	if r.ko.Spec.Tags != nil {
 		res.Tags = aws.ToStringMap(r.ko.Spec.Tags)
+	}
+	if r.ko.Spec.TenancyConfig != nil {
+		f20 := &svcsdktypes.TenancyConfig{}
+		if r.ko.Spec.TenancyConfig.TenantIsolationMode != nil {
+			f20.TenantIsolationMode = svcsdktypes.TenantIsolationMode(*r.ko.Spec.TenancyConfig.TenantIsolationMode)
+		}
+		res.TenancyConfig = f20
 	}
 	if r.ko.Spec.Timeout != nil {
 		timeoutCopy0 := *r.ko.Spec.Timeout
