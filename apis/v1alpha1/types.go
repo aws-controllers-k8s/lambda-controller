@@ -613,6 +613,13 @@ type TracingConfigResponse struct {
 	Mode *string `json:"mode,omitempty"`
 }
 
+// The function's tenant isolation configuration. Specifies whether
+// the Lambda function runs on a shared or dedicated infrastructure per unique
+// tenant.
+type TenancyConfig struct {
+	TenantIsolationMode *string `json:"tenantIsolationMode,omitempty"`
+}
+
 // The VPC security groups and subnets that are attached to a Lambda function.
 // For more information, see Configuring a Lambda function to access resources
 // in a VPC (https://docs.aws.amazon.com/lambda/latest/dg/configuration-vpc.html).

@@ -157,6 +157,8 @@ type FunctionSpec struct {
 	// A list of tags (https://docs.aws.amazon.com/lambda/latest/dg/tagging.html)
 	// to apply to the function.
 	Tags map[string]*string `json:"tags,omitempty"`
+	// The function's tenant isolation configuration.
+	TenancyConfig *TenancyConfig `json:"tenancyConfig,omitempty"`
 	// The amount of time (in seconds) that Lambda allows a function to run before
 	// stopping it. The default is 3 seconds. The maximum allowed value is 900 seconds.
 	// For more information, see Lambda execution environment (https://docs.aws.amazon.com/lambda/latest/dg/runtimes-context.html).
