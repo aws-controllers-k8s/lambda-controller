@@ -105,7 +105,7 @@ resources:
           is_ignored: false
         set:
           - ignore: true
-            operation: ReadOne
+            method: ReadOne
       Layers:
         set:
           - method: Create
@@ -248,7 +248,7 @@ resources:
           is_ignored: true
         set:
           - ignore: true
-            operation: ReadOne
+            method: ReadOne
     tags:
       ignore: true
     hooks:
