@@ -346,6 +346,17 @@ func newResourceDelta(
 	if !ackcompare.MapStringStringEqual(desiredACKTags, latestACKTags) {
 		delta.Add("Spec.Tags", a.ko.Spec.Tags, b.ko.Spec.Tags)
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.TenancyConfig, b.ko.Spec.TenancyConfig) {
+		delta.Add("Spec.TenancyConfig", a.ko.Spec.TenancyConfig, b.ko.Spec.TenancyConfig)
+	} else if a.ko.Spec.TenancyConfig != nil && b.ko.Spec.TenancyConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.TenancyConfig.TenantIsolationMode, b.ko.Spec.TenancyConfig.TenantIsolationMode) {
+			delta.Add("Spec.TenancyConfig.TenantIsolationMode", a.ko.Spec.TenancyConfig.TenantIsolationMode, b.ko.Spec.TenancyConfig.TenantIsolationMode)
+		} else if a.ko.Spec.TenancyConfig.TenantIsolationMode != nil && b.ko.Spec.TenancyConfig.TenantIsolationMode != nil {
+			if *a.ko.Spec.TenancyConfig.TenantIsolationMode != *b.ko.Spec.TenancyConfig.TenantIsolationMode {
+				delta.Add("Spec.TenancyConfig.TenantIsolationMode", a.ko.Spec.TenancyConfig.TenantIsolationMode, b.ko.Spec.TenancyConfig.TenantIsolationMode)
+			}
+		}
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.Timeout, b.ko.Spec.Timeout) {
 		delta.Add("Spec.Timeout", a.ko.Spec.Timeout, b.ko.Spec.Timeout)
 	} else if a.ko.Spec.Timeout != nil && b.ko.Spec.Timeout != nil {

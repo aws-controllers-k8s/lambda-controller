@@ -31,9 +31,10 @@ var (
 // Limits that are related to concurrency and storage. All file and storage
 // sizes are in bytes.
 type AccountLimit struct {
-	CodeSizeUnzipped *int64 `json:"codeSizeUnzipped,omitempty"`
-	CodeSizeZipped   *int64 `json:"codeSizeZipped,omitempty"`
-	TotalCodeSize    *int64 `json:"totalCodeSize,omitempty"`
+	CodeSizeUnzipped     *int64 `json:"codeSizeUnzipped,omitempty"`
+	CodeSizeZipped       *int64 `json:"codeSizeZipped,omitempty"`
+	ConcurrentExecutions *int64 `json:"concurrentExecutions,omitempty"`
+	TotalCodeSize        *int64 `json:"totalCodeSize,omitempty"`
 }
 
 // The number of functions and amount of storage in use.
@@ -98,6 +99,45 @@ type CORS struct {
 	MaxAge           *int64    `json:"maxAge,omitempty"`
 }
 
+// A capacity provider manages compute resources for Lambda functions.
+type CapacityProvider struct {
+	CapacityProviderARN *string `json:"capacityProviderARN,omitempty"`
+	KMSKeyARN           *string `json:"kmsKeyARN,omitempty"`
+	LastModified        *string `json:"lastModified,omitempty"`
+}
+
+// Configuration for the capacity provider that manages compute resources for
+// Lambda functions.
+type CapacityProviderConfig struct {
+	// Configuration for Lambda-managed instances used by the capacity provider.
+	LambdaManagedInstancesCapacityProviderConfig *LambdaManagedInstancesCapacityProviderConfig `json:"lambdaManagedInstancesCapacityProviderConfig,omitempty"`
+}
+
+// Configuration that specifies the permissions required for the capacity provider
+// to manage compute resources.
+type CapacityProviderPermissionsConfig struct {
+	CapacityProviderOperatorRoleARN *string `json:"capacityProviderOperatorRoleARN,omitempty"`
+}
+
+// Configuration options for chained function invocations in durable executions,
+// including retry settings and timeout configuration.
+type ChainedInvokeOptions struct {
+	FunctionName *string `json:"functionName,omitempty"`
+}
+
+// Contains details about a chained function invocation that has started execution,
+// including start time and execution context.
+type ChainedInvokeStartedDetails struct {
+	ExecutedVersion *string `json:"executedVersion,omitempty"`
+	FunctionName    *string `json:"functionName,omitempty"`
+}
+
+// Contains operations that have been updated since the last checkpoint, such
+// as completed asynchronous work like timers or callbacks.
+type CheckpointUpdatedExecutionState struct {
+	NextMarker *string `json:"nextMarker,omitempty"`
+}
+
 // Details about a Code signing configuration (https://docs.aws.amazon.com/lambda/latest/dg/configuration-codesigning.html).
 type CodeSigningConfig_SDK struct {
 	// List of signing profiles that can sign a code package.
@@ -145,6 +185,13 @@ type DocumentDBEventSourceConfig struct {
 	CollectionName *string `json:"collectionName,omitempty"`
 	DatabaseName   *string `json:"databaseName,omitempty"`
 	FullDocument   *string `json:"fullDocument,omitempty"`
+}
+
+// Configuration settings for durable functions (https://docs.aws.amazon.com/lambda/latest/dg/durable-functions.html),
+// including execution timeout and retention period for execution history.
+type DurableConfig struct {
+	ExecutionTimeout      *int64 `json:"executionTimeout,omitempty"`
+	RetentionPeriodInDays *int64 `json:"retentionPeriodInDays,omitempty"`
 }
 
 // A function's environment variable settings. You can use environment variables
@@ -211,8 +258,7 @@ type EventSourceMappingConfiguration struct {
 	ParallelizationFactor *int64                           `json:"parallelizationFactor,omitempty"`
 	// The provisioned mode (https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventsourcemapping.html#invocation-eventsourcemapping-provisioned-mode)
 	// configuration for the event source. Use Provisioned Mode to customize the
-	// minimum and maximum number of event pollers for your event source. An event
-	// poller is a compute unit that provides approximately 5 MBps of throughput.
+	// minimum and maximum number of event pollers for your event source.
 	ProvisionedPollerConfig *ProvisionedPollerConfig `json:"provisionedPollerConfig,omitempty"`
 	Queues                  []*string                `json:"queues,omitempty"`
 	// (Amazon SQS only) The scaling configuration for the event source. To remove
@@ -236,6 +282,11 @@ type EventSourceMappingConfiguration struct {
 // to define which metrics you want your event source mapping to produce.
 type EventSourceMappingMetricsConfig struct {
 	Metrics []*string `json:"metrics,omitempty"`
+}
+
+// Information about a durable execution (https://docs.aws.amazon.com/lambda/latest/dg/durable-functions.html).
+type Execution struct {
+	FunctionARN *string `json:"functionARN,omitempty"`
 }
 
 // Details about the connection between a Lambda function and an Amazon EFS
@@ -289,12 +340,19 @@ type FunctionCodeLocation struct {
 // Details about a function's configuration.
 type FunctionConfiguration struct {
 	Architectures []*string `json:"architectures,omitempty"`
-	CodeSHA256    *string   `json:"codeSHA256,omitempty"`
-	CodeSize      *int64    `json:"codeSize,omitempty"`
+	// Configuration for the capacity provider that manages compute resources for
+	// Lambda functions.
+	CapacityProviderConfig *CapacityProviderConfig `json:"capacityProviderConfig,omitempty"`
+	CodeSHA256             *string                 `json:"codeSHA256,omitempty"`
+	CodeSize               *int64                  `json:"codeSize,omitempty"`
+	ConfigSHA256           *string                 `json:"configSHA256,omitempty"`
 	// The dead-letter queue (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async-retain-records.html#invocation-dlq)
 	// for failed asynchronous invocations.
 	DeadLetterConfig *DeadLetterConfig `json:"deadLetterConfig,omitempty"`
 	Description      *string           `json:"description,omitempty"`
+	// Configuration settings for durable functions (https://docs.aws.amazon.com/lambda/latest/dg/durable-functions.html),
+	// including execution timeout and retention period for execution history.
+	DurableConfig *DurableConfig `json:"durableConfig,omitempty"`
 	// The results of an operation to update or read environment variables. If the
 	// operation succeeds, the response contains the environment variables. If it
 	// fails, the response contains details about the error.
@@ -333,7 +391,12 @@ type FunctionConfiguration struct {
 	State           *string            `json:"state,omitempty"`
 	StateReason     *string            `json:"stateReason,omitempty"`
 	StateReasonCode *string            `json:"stateReasonCode,omitempty"`
-	Timeout         *int64             `json:"timeout,omitempty"`
+	// Specifies the tenant isolation mode configuration for a Lambda function.
+	// This allows you to configure specific tenant isolation strategies for your
+	// function invocations. Tenant isolation configuration cannot be modified after
+	// function creation.
+	TenancyConfig *TenancyConfig `json:"tenancyConfig,omitempty"`
+	Timeout       *int64         `json:"timeout,omitempty"`
 	// The function's X-Ray tracing configuration.
 	TracingConfig *TracingConfigResponse `json:"tracingConfig,omitempty"`
 	Version       *string                `json:"version,omitempty"`
@@ -366,6 +429,13 @@ type FunctionURLConfig_SDK struct {
 	LastModifiedTime *string `json:"lastModifiedTime,omitempty"`
 }
 
+// Information about a function version that uses a specific capacity provider,
+// including its ARN and current state.
+type FunctionVersionsByCapacityProviderListItem struct {
+	FunctionARN *string `json:"functionARN,omitempty"`
+	State       *string `json:"state,omitempty"`
+}
+
 // Configuration values that override the container image Dockerfile settings.
 // For more information, see Container image settings (https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#images-parms).
 type ImageConfig struct {
@@ -387,6 +457,17 @@ type ImageConfigResponse struct {
 	// Configuration values that override the container image Dockerfile settings.
 	// For more information, see Container image settings (https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#images-parms).
 	ImageConfig *ImageConfig `json:"imageConfig,omitempty"`
+}
+
+// Specifications that define the characteristics and constraints for compute
+// instances used by the capacity provider.
+type InstanceRequirements struct {
+	Architectures []*string `json:"architectures,omitempty"`
+}
+
+// Details about a function invocation that completed.
+type InvocationCompletedDetails struct {
+	RequestID *string `json:"requestID,omitempty"`
 }
 
 // A chunk of the streamed response payload.
@@ -430,6 +511,13 @@ type KafkaSchemaRegistryConfig struct {
 // attributes you want to validate and filter using your schema registry.
 type KafkaSchemaValidationConfig struct {
 	Attribute *string `json:"attribute,omitempty"`
+}
+
+// Configuration for Lambda-managed instances used by the capacity provider.
+type LambdaManagedInstancesCapacityProviderConfig struct {
+	CapacityProviderARN                   *string  `json:"capacityProviderARN,omitempty"`
+	ExecutionEnvironmentMemoryGiBPerVCPU  *float64 `json:"executionEnvironmentMemoryGiBPerVCPU,omitempty"`
+	PerExecutionEnvironmentMaxConcurrency *int64   `json:"perExecutionEnvironmentMaxConcurrency,omitempty"`
 }
 
 // An Lambda layer (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html).
@@ -514,11 +602,11 @@ type ProvisionedConcurrencyConfigListItem struct {
 
 // The provisioned mode (https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventsourcemapping.html#invocation-eventsourcemapping-provisioned-mode)
 // configuration for the event source. Use Provisioned Mode to customize the
-// minimum and maximum number of event pollers for your event source. An event
-// poller is a compute unit that provides approximately 5 MBps of throughput.
+// minimum and maximum number of event pollers for your event source.
 type ProvisionedPollerConfig struct {
-	MaximumPollers *int64 `json:"maximumPollers,omitempty"`
-	MinimumPollers *int64 `json:"minimumPollers,omitempty"`
+	MaximumPollers  *int64  `json:"maximumPollers,omitempty"`
+	MinimumPollers  *int64  `json:"minimumPollers,omitempty"`
+	PollerGroupName *string `json:"pollerGroupName,omitempty"`
 }
 
 type PutFunctionConcurrencyOutput struct {
@@ -599,6 +687,14 @@ type SourceAccessConfiguration struct {
 type TagsError struct {
 	ErrorCode *string `json:"errorCode,omitempty"`
 	Message   *string `json:"message,omitempty"`
+}
+
+// Specifies the tenant isolation mode configuration for a Lambda function.
+// This allows you to configure specific tenant isolation strategies for your
+// function invocations. Tenant isolation configuration cannot be modified after
+// function creation.
+type TenancyConfig struct {
+	TenantIsolationMode *string `json:"tenantIsolationMode,omitempty"`
 }
 
 // The function's X-Ray (https://docs.aws.amazon.com/lambda/latest/dg/services-xray.html)

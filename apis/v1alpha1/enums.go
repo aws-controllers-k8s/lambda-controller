@@ -33,6 +33,28 @@ const (
 	Architecture_x86_64 Architecture = "x86_64"
 )
 
+type CapacityProviderPredefinedMetricType string
+
+const (
+	CapacityProviderPredefinedMetricType_LambdaCapacityProviderAverageCPUUtilization CapacityProviderPredefinedMetricType = "LambdaCapacityProviderAverageCPUUtilization"
+)
+
+type CapacityProviderScalingMode string
+
+const (
+	CapacityProviderScalingMode_Auto   CapacityProviderScalingMode = "Auto"
+	CapacityProviderScalingMode_Manual CapacityProviderScalingMode = "Manual"
+)
+
+type CapacityProviderState string
+
+const (
+	CapacityProviderState_Active   CapacityProviderState = "Active"
+	CapacityProviderState_Deleting CapacityProviderState = "Deleting"
+	CapacityProviderState_Failed   CapacityProviderState = "Failed"
+	CapacityProviderState_Pending  CapacityProviderState = "Pending"
+)
+
 type CodeSigningPolicy string
 
 const (
@@ -60,6 +82,45 @@ const (
 	EventSourcePosition_TRIM_HORIZON EventSourcePosition = "TRIM_HORIZON"
 )
 
+type EventType string
+
+const (
+	EventType_CallbackFailed         EventType = "CallbackFailed"
+	EventType_CallbackStarted        EventType = "CallbackStarted"
+	EventType_CallbackSucceeded      EventType = "CallbackSucceeded"
+	EventType_CallbackTimedOut       EventType = "CallbackTimedOut"
+	EventType_ChainedInvokeFailed    EventType = "ChainedInvokeFailed"
+	EventType_ChainedInvokeStarted   EventType = "ChainedInvokeStarted"
+	EventType_ChainedInvokeStopped   EventType = "ChainedInvokeStopped"
+	EventType_ChainedInvokeSucceeded EventType = "ChainedInvokeSucceeded"
+	EventType_ChainedInvokeTimedOut  EventType = "ChainedInvokeTimedOut"
+	EventType_ContextFailed          EventType = "ContextFailed"
+	EventType_ContextStarted         EventType = "ContextStarted"
+	EventType_ContextSucceeded       EventType = "ContextSucceeded"
+	EventType_ExecutionFailed        EventType = "ExecutionFailed"
+	EventType_ExecutionStarted       EventType = "ExecutionStarted"
+	EventType_ExecutionStopped       EventType = "ExecutionStopped"
+	EventType_ExecutionSucceeded     EventType = "ExecutionSucceeded"
+	EventType_ExecutionTimedOut      EventType = "ExecutionTimedOut"
+	EventType_InvocationCompleted    EventType = "InvocationCompleted"
+	EventType_StepFailed             EventType = "StepFailed"
+	EventType_StepStarted            EventType = "StepStarted"
+	EventType_StepSucceeded          EventType = "StepSucceeded"
+	EventType_WaitCancelled          EventType = "WaitCancelled"
+	EventType_WaitStarted            EventType = "WaitStarted"
+	EventType_WaitSucceeded          EventType = "WaitSucceeded"
+)
+
+type ExecutionStatus string
+
+const (
+	ExecutionStatus_FAILED    ExecutionStatus = "FAILED"
+	ExecutionStatus_RUNNING   ExecutionStatus = "RUNNING"
+	ExecutionStatus_STOPPED   ExecutionStatus = "STOPPED"
+	ExecutionStatus_SUCCEEDED ExecutionStatus = "SUCCEEDED"
+	ExecutionStatus_TIMED_OUT ExecutionStatus = "TIMED_OUT"
+)
+
 type FullDocument string
 
 const (
@@ -84,6 +145,12 @@ type FunctionVersion string
 
 const (
 	FunctionVersion_ALL FunctionVersion = "ALL"
+)
+
+type FunctionVersionLatestPublished string
+
+const (
+	FunctionVersionLatestPublished_LATEST_PUBLISHED FunctionVersionLatestPublished = "LATEST_PUBLISHED"
 )
 
 type InvocationType string
@@ -127,27 +194,40 @@ const (
 type LastUpdateStatusReasonCode string
 
 const (
-	LastUpdateStatusReasonCode_DisabledKMSKey              LastUpdateStatusReasonCode = "DisabledKMSKey"
-	LastUpdateStatusReasonCode_EFSIOError                  LastUpdateStatusReasonCode = "EFSIOError"
-	LastUpdateStatusReasonCode_EFSMountConnectivityError   LastUpdateStatusReasonCode = "EFSMountConnectivityError"
-	LastUpdateStatusReasonCode_EFSMountFailure             LastUpdateStatusReasonCode = "EFSMountFailure"
-	LastUpdateStatusReasonCode_EFSMountTimeout             LastUpdateStatusReasonCode = "EFSMountTimeout"
-	LastUpdateStatusReasonCode_EniLimitExceeded            LastUpdateStatusReasonCode = "EniLimitExceeded"
-	LastUpdateStatusReasonCode_FunctionError               LastUpdateStatusReasonCode = "FunctionError"
-	LastUpdateStatusReasonCode_ImageAccessDenied           LastUpdateStatusReasonCode = "ImageAccessDenied"
-	LastUpdateStatusReasonCode_ImageDeleted                LastUpdateStatusReasonCode = "ImageDeleted"
-	LastUpdateStatusReasonCode_InsufficientRolePermissions LastUpdateStatusReasonCode = "InsufficientRolePermissions"
-	LastUpdateStatusReasonCode_InternalError               LastUpdateStatusReasonCode = "InternalError"
-	LastUpdateStatusReasonCode_InvalidConfiguration        LastUpdateStatusReasonCode = "InvalidConfiguration"
-	LastUpdateStatusReasonCode_InvalidImage                LastUpdateStatusReasonCode = "InvalidImage"
-	LastUpdateStatusReasonCode_InvalidRuntime              LastUpdateStatusReasonCode = "InvalidRuntime"
-	LastUpdateStatusReasonCode_InvalidSecurityGroup        LastUpdateStatusReasonCode = "InvalidSecurityGroup"
-	LastUpdateStatusReasonCode_InvalidStateKMSKey          LastUpdateStatusReasonCode = "InvalidStateKMSKey"
-	LastUpdateStatusReasonCode_InvalidSubnet               LastUpdateStatusReasonCode = "InvalidSubnet"
-	LastUpdateStatusReasonCode_InvalidZipFileException     LastUpdateStatusReasonCode = "InvalidZipFileException"
-	LastUpdateStatusReasonCode_KMSKeyAccessDenied          LastUpdateStatusReasonCode = "KMSKeyAccessDenied"
-	LastUpdateStatusReasonCode_KMSKeyNotFound              LastUpdateStatusReasonCode = "KMSKeyNotFound"
-	LastUpdateStatusReasonCode_SubnetOutOfIPAddresses      LastUpdateStatusReasonCode = "SubnetOutOfIPAddresses"
+	LastUpdateStatusReasonCode_CapacityProviderScalingLimitExceeded  LastUpdateStatusReasonCode = "CapacityProviderScalingLimitExceeded"
+	LastUpdateStatusReasonCode_DisabledKMSKey                        LastUpdateStatusReasonCode = "DisabledKMSKey"
+	LastUpdateStatusReasonCode_DisallowedByVpcEncryptionControl      LastUpdateStatusReasonCode = "DisallowedByVpcEncryptionControl"
+	LastUpdateStatusReasonCode_EC2RequestLimitExceeded               LastUpdateStatusReasonCode = "EC2RequestLimitExceeded"
+	LastUpdateStatusReasonCode_EFSIOError                            LastUpdateStatusReasonCode = "EFSIOError"
+	LastUpdateStatusReasonCode_EFSMountConnectivityError             LastUpdateStatusReasonCode = "EFSMountConnectivityError"
+	LastUpdateStatusReasonCode_EFSMountFailure                       LastUpdateStatusReasonCode = "EFSMountFailure"
+	LastUpdateStatusReasonCode_EFSMountTimeout                       LastUpdateStatusReasonCode = "EFSMountTimeout"
+	LastUpdateStatusReasonCode_EniLimitExceeded                      LastUpdateStatusReasonCode = "EniLimitExceeded"
+	LastUpdateStatusReasonCode_FunctionError                         LastUpdateStatusReasonCode = "FunctionError"
+	LastUpdateStatusReasonCode_FunctionError_ExtensionInitError      LastUpdateStatusReasonCode = "FunctionError.ExtensionInitError"
+	LastUpdateStatusReasonCode_FunctionError_InitResourceExhausted   LastUpdateStatusReasonCode = "FunctionError.InitResourceExhausted"
+	LastUpdateStatusReasonCode_FunctionError_InitTimeout             LastUpdateStatusReasonCode = "FunctionError.InitTimeout"
+	LastUpdateStatusReasonCode_FunctionError_InvalidEntryPoint       LastUpdateStatusReasonCode = "FunctionError.InvalidEntryPoint"
+	LastUpdateStatusReasonCode_FunctionError_InvalidWorkingDirectory LastUpdateStatusReasonCode = "FunctionError.InvalidWorkingDirectory"
+	LastUpdateStatusReasonCode_FunctionError_PermissionDenied        LastUpdateStatusReasonCode = "FunctionError.PermissionDenied"
+	LastUpdateStatusReasonCode_FunctionError_RuntimeInitError        LastUpdateStatusReasonCode = "FunctionError.RuntimeInitError"
+	LastUpdateStatusReasonCode_FunctionError_TooManyExtensions       LastUpdateStatusReasonCode = "FunctionError.TooManyExtensions"
+	LastUpdateStatusReasonCode_ImageAccessDenied                     LastUpdateStatusReasonCode = "ImageAccessDenied"
+	LastUpdateStatusReasonCode_ImageDeleted                          LastUpdateStatusReasonCode = "ImageDeleted"
+	LastUpdateStatusReasonCode_InsufficientCapacity                  LastUpdateStatusReasonCode = "InsufficientCapacity"
+	LastUpdateStatusReasonCode_InsufficientRolePermissions           LastUpdateStatusReasonCode = "InsufficientRolePermissions"
+	LastUpdateStatusReasonCode_InternalError                         LastUpdateStatusReasonCode = "InternalError"
+	LastUpdateStatusReasonCode_InvalidConfiguration                  LastUpdateStatusReasonCode = "InvalidConfiguration"
+	LastUpdateStatusReasonCode_InvalidImage                          LastUpdateStatusReasonCode = "InvalidImage"
+	LastUpdateStatusReasonCode_InvalidRuntime                        LastUpdateStatusReasonCode = "InvalidRuntime"
+	LastUpdateStatusReasonCode_InvalidSecurityGroup                  LastUpdateStatusReasonCode = "InvalidSecurityGroup"
+	LastUpdateStatusReasonCode_InvalidStateKMSKey                    LastUpdateStatusReasonCode = "InvalidStateKMSKey"
+	LastUpdateStatusReasonCode_InvalidSubnet                         LastUpdateStatusReasonCode = "InvalidSubnet"
+	LastUpdateStatusReasonCode_InvalidZipFileException               LastUpdateStatusReasonCode = "InvalidZipFileException"
+	LastUpdateStatusReasonCode_KMSKeyAccessDenied                    LastUpdateStatusReasonCode = "KMSKeyAccessDenied"
+	LastUpdateStatusReasonCode_KMSKeyNotFound                        LastUpdateStatusReasonCode = "KMSKeyNotFound"
+	LastUpdateStatusReasonCode_SubnetOutOfIPAddresses                LastUpdateStatusReasonCode = "SubnetOutOfIPAddresses"
+	LastUpdateStatusReasonCode_VcpuLimitExceeded                     LastUpdateStatusReasonCode = "VcpuLimitExceeded"
 )
 
 type LogFormat string
@@ -162,6 +242,40 @@ type LogType string
 const (
 	LogType_None LogType = "None"
 	LogType_Tail LogType = "Tail"
+)
+
+type OperationAction string
+
+const (
+	OperationAction_CANCEL  OperationAction = "CANCEL"
+	OperationAction_FAIL    OperationAction = "FAIL"
+	OperationAction_RETRY   OperationAction = "RETRY"
+	OperationAction_START   OperationAction = "START"
+	OperationAction_SUCCEED OperationAction = "SUCCEED"
+)
+
+type OperationStatus string
+
+const (
+	OperationStatus_CANCELLED OperationStatus = "CANCELLED"
+	OperationStatus_FAILED    OperationStatus = "FAILED"
+	OperationStatus_PENDING   OperationStatus = "PENDING"
+	OperationStatus_READY     OperationStatus = "READY"
+	OperationStatus_STARTED   OperationStatus = "STARTED"
+	OperationStatus_STOPPED   OperationStatus = "STOPPED"
+	OperationStatus_SUCCEEDED OperationStatus = "SUCCEEDED"
+	OperationStatus_TIMED_OUT OperationStatus = "TIMED_OUT"
+)
+
+type OperationType string
+
+const (
+	OperationType_CALLBACK       OperationType = "CALLBACK"
+	OperationType_CHAINED_INVOKE OperationType = "CHAINED_INVOKE"
+	OperationType_CONTEXT        OperationType = "CONTEXT"
+	OperationType_EXECUTION      OperationType = "EXECUTION"
+	OperationType_STEP           OperationType = "STEP"
+	OperationType_WAIT           OperationType = "WAIT"
 )
 
 type PackageType string
@@ -206,6 +320,7 @@ const (
 	Runtime_java11          Runtime = "java11"
 	Runtime_java17          Runtime = "java17"
 	Runtime_java21          Runtime = "java21"
+	Runtime_java25          Runtime = "java25"
 	Runtime_java8           Runtime = "java8"
 	Runtime_java8_al2       Runtime = "java8.al2"
 	Runtime_nodejs          Runtime = "nodejs"
@@ -216,6 +331,7 @@ const (
 	Runtime_nodejs18_x      Runtime = "nodejs18.x"
 	Runtime_nodejs20_x      Runtime = "nodejs20.x"
 	Runtime_nodejs22_x      Runtime = "nodejs22.x"
+	Runtime_nodejs24_x      Runtime = "nodejs24.x"
 	Runtime_nodejs4_3       Runtime = "nodejs4.3"
 	Runtime_nodejs4_3_edge  Runtime = "nodejs4.3-edge"
 	Runtime_nodejs6_10      Runtime = "nodejs6.10"
@@ -228,6 +344,7 @@ const (
 	Runtime_python3_11      Runtime = "python3.11"
 	Runtime_python3_12      Runtime = "python3.12"
 	Runtime_python3_13      Runtime = "python3.13"
+	Runtime_python3_14      Runtime = "python3.14"
 	Runtime_python3_6       Runtime = "python3.6"
 	Runtime_python3_7       Runtime = "python3.7"
 	Runtime_python3_8       Runtime = "python3.8"
@@ -276,39 +393,57 @@ const (
 type State string
 
 const (
-	State_Active   State = "Active"
-	State_Failed   State = "Failed"
-	State_Inactive State = "Inactive"
-	State_Pending  State = "Pending"
+	State_Active             State = "Active"
+	State_ActiveNonInvocable State = "ActiveNonInvocable"
+	State_Deactivated        State = "Deactivated"
+	State_Deactivating       State = "Deactivating"
+	State_Deleting           State = "Deleting"
+	State_Failed             State = "Failed"
+	State_Inactive           State = "Inactive"
+	State_Pending            State = "Pending"
 )
 
 type StateReasonCode string
 
 const (
-	StateReasonCode_Creating                    StateReasonCode = "Creating"
-	StateReasonCode_DisabledKMSKey              StateReasonCode = "DisabledKMSKey"
-	StateReasonCode_EFSIOError                  StateReasonCode = "EFSIOError"
-	StateReasonCode_EFSMountConnectivityError   StateReasonCode = "EFSMountConnectivityError"
-	StateReasonCode_EFSMountFailure             StateReasonCode = "EFSMountFailure"
-	StateReasonCode_EFSMountTimeout             StateReasonCode = "EFSMountTimeout"
-	StateReasonCode_EniLimitExceeded            StateReasonCode = "EniLimitExceeded"
-	StateReasonCode_FunctionError               StateReasonCode = "FunctionError"
-	StateReasonCode_Idle                        StateReasonCode = "Idle"
-	StateReasonCode_ImageAccessDenied           StateReasonCode = "ImageAccessDenied"
-	StateReasonCode_ImageDeleted                StateReasonCode = "ImageDeleted"
-	StateReasonCode_InsufficientRolePermissions StateReasonCode = "InsufficientRolePermissions"
-	StateReasonCode_InternalError               StateReasonCode = "InternalError"
-	StateReasonCode_InvalidConfiguration        StateReasonCode = "InvalidConfiguration"
-	StateReasonCode_InvalidImage                StateReasonCode = "InvalidImage"
-	StateReasonCode_InvalidRuntime              StateReasonCode = "InvalidRuntime"
-	StateReasonCode_InvalidSecurityGroup        StateReasonCode = "InvalidSecurityGroup"
-	StateReasonCode_InvalidStateKMSKey          StateReasonCode = "InvalidStateKMSKey"
-	StateReasonCode_InvalidSubnet               StateReasonCode = "InvalidSubnet"
-	StateReasonCode_InvalidZipFileException     StateReasonCode = "InvalidZipFileException"
-	StateReasonCode_KMSKeyAccessDenied          StateReasonCode = "KMSKeyAccessDenied"
-	StateReasonCode_KMSKeyNotFound              StateReasonCode = "KMSKeyNotFound"
-	StateReasonCode_Restoring                   StateReasonCode = "Restoring"
-	StateReasonCode_SubnetOutOfIPAddresses      StateReasonCode = "SubnetOutOfIPAddresses"
+	StateReasonCode_CapacityProviderScalingLimitExceeded  StateReasonCode = "CapacityProviderScalingLimitExceeded"
+	StateReasonCode_Creating                              StateReasonCode = "Creating"
+	StateReasonCode_DisabledKMSKey                        StateReasonCode = "DisabledKMSKey"
+	StateReasonCode_DisallowedByVpcEncryptionControl      StateReasonCode = "DisallowedByVpcEncryptionControl"
+	StateReasonCode_DrainingDurableExecutions             StateReasonCode = "DrainingDurableExecutions"
+	StateReasonCode_EC2RequestLimitExceeded               StateReasonCode = "EC2RequestLimitExceeded"
+	StateReasonCode_EFSIOError                            StateReasonCode = "EFSIOError"
+	StateReasonCode_EFSMountConnectivityError             StateReasonCode = "EFSMountConnectivityError"
+	StateReasonCode_EFSMountFailure                       StateReasonCode = "EFSMountFailure"
+	StateReasonCode_EFSMountTimeout                       StateReasonCode = "EFSMountTimeout"
+	StateReasonCode_EniLimitExceeded                      StateReasonCode = "EniLimitExceeded"
+	StateReasonCode_FunctionError                         StateReasonCode = "FunctionError"
+	StateReasonCode_FunctionError_ExtensionInitError      StateReasonCode = "FunctionError.ExtensionInitError"
+	StateReasonCode_FunctionError_InitResourceExhausted   StateReasonCode = "FunctionError.InitResourceExhausted"
+	StateReasonCode_FunctionError_InitTimeout             StateReasonCode = "FunctionError.InitTimeout"
+	StateReasonCode_FunctionError_InvalidEntryPoint       StateReasonCode = "FunctionError.InvalidEntryPoint"
+	StateReasonCode_FunctionError_InvalidWorkingDirectory StateReasonCode = "FunctionError.InvalidWorkingDirectory"
+	StateReasonCode_FunctionError_PermissionDenied        StateReasonCode = "FunctionError.PermissionDenied"
+	StateReasonCode_FunctionError_RuntimeInitError        StateReasonCode = "FunctionError.RuntimeInitError"
+	StateReasonCode_FunctionError_TooManyExtensions       StateReasonCode = "FunctionError.TooManyExtensions"
+	StateReasonCode_Idle                                  StateReasonCode = "Idle"
+	StateReasonCode_ImageAccessDenied                     StateReasonCode = "ImageAccessDenied"
+	StateReasonCode_ImageDeleted                          StateReasonCode = "ImageDeleted"
+	StateReasonCode_InsufficientCapacity                  StateReasonCode = "InsufficientCapacity"
+	StateReasonCode_InsufficientRolePermissions           StateReasonCode = "InsufficientRolePermissions"
+	StateReasonCode_InternalError                         StateReasonCode = "InternalError"
+	StateReasonCode_InvalidConfiguration                  StateReasonCode = "InvalidConfiguration"
+	StateReasonCode_InvalidImage                          StateReasonCode = "InvalidImage"
+	StateReasonCode_InvalidRuntime                        StateReasonCode = "InvalidRuntime"
+	StateReasonCode_InvalidSecurityGroup                  StateReasonCode = "InvalidSecurityGroup"
+	StateReasonCode_InvalidStateKMSKey                    StateReasonCode = "InvalidStateKMSKey"
+	StateReasonCode_InvalidSubnet                         StateReasonCode = "InvalidSubnet"
+	StateReasonCode_InvalidZipFileException               StateReasonCode = "InvalidZipFileException"
+	StateReasonCode_KMSKeyAccessDenied                    StateReasonCode = "KMSKeyAccessDenied"
+	StateReasonCode_KMSKeyNotFound                        StateReasonCode = "KMSKeyNotFound"
+	StateReasonCode_Restoring                             StateReasonCode = "Restoring"
+	StateReasonCode_SubnetOutOfIPAddresses                StateReasonCode = "SubnetOutOfIPAddresses"
+	StateReasonCode_VcpuLimitExceeded                     StateReasonCode = "VcpuLimitExceeded"
 )
 
 type SystemLogLevel string
@@ -317,6 +452,12 @@ const (
 	SystemLogLevel_DEBUG SystemLogLevel = "DEBUG"
 	SystemLogLevel_INFO  SystemLogLevel = "INFO"
 	SystemLogLevel_WARN  SystemLogLevel = "WARN"
+)
+
+type TenantIsolationMode string
+
+const (
+	TenantIsolationMode_PER_TENANT TenantIsolationMode = "PER_TENANT"
 )
 
 type ThrottleReason string

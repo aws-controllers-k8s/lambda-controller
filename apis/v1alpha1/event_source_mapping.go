@@ -46,12 +46,12 @@ type EventSourceMappingSpec struct {
 	//
 	//   - DocumentDB – Default 100. Max 10,000.
 	BatchSize *int64 `json:"batchSize,omitempty"`
-	// (Kinesis and DynamoDB Streams only) If the function returns an error, split
-	// the batch in two and retry.
+	// (Kinesis, DynamoDB Streams, Amazon MSK, and self-managed Apache Kafka) If
+	// the function returns an error, split the batch in two and retry.
 	BisectBatchOnFunctionError *bool `json:"bisectBatchOnFunctionError,omitempty"`
-	// (Kinesis, DynamoDB Streams, Amazon MSK, and self-managed Kafka only) A configuration
-	// object that specifies the destination of an event after Lambda processes
-	// it.
+	// (Kinesis, DynamoDB Streams, Amazon MSK, and self-managed Apache Kafka) A
+	// configuration object that specifies the destination of an event after Lambda
+	// processes it.
 	DestinationConfig *DestinationConfig `json:"destinationConfig,omitempty"`
 	// When true, the event source mapping is active. When false, Lambda pauses
 	// polling and invocation.
@@ -96,11 +96,11 @@ type EventSourceMappingSpec struct {
 	// The length constraint applies only to the full ARN. If you specify only the
 	// function name, it's limited to 64 characters in length.
 	//
-	// Regex Pattern: `^(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}(-gov)?-[a-z]+-\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
+	// Regex Pattern: `^(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}((-gov)|(-iso([a-z]?)))?-[a-z]+-\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_\.]+)(:(\$LATEST(\.PUBLISHED)?|[a-zA-Z0-9-_]+))?$`
 	FunctionName *string                                  `json:"functionName,omitempty"`
 	FunctionRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"functionRef,omitempty"`
-	// (Kinesis, DynamoDB Streams, and Amazon SQS) A list of current response type
-	// enums applied to the event source mapping.
+	// (Kinesis, DynamoDB Streams, Amazon MSK, self-managed Apache Kafka, and Amazon
+	// SQS) A list of current response type enums applied to the event source mapping.
 	FunctionResponseTypes []*string `json:"functionResponseTypes,omitempty"`
 	// The maximum amount of time, in seconds, that Lambda spends gathering records
 	// before invoking the function. You can configure MaximumBatchingWindowInSeconds
@@ -118,12 +118,13 @@ type EventSourceMappingSpec struct {
 	// you set BatchSize to a value greater than 10, you must set MaximumBatchingWindowInSeconds
 	// to at least 1.
 	MaximumBatchingWindowInSeconds *int64 `json:"maximumBatchingWindowInSeconds,omitempty"`
-	// (Kinesis and DynamoDB Streams only) Discard records older than the specified
-	// age. The default value is infinite (-1).
+	// (Kinesis, DynamoDB Streams, Amazon MSK, and self-managed Apache Kafka) Discard
+	// records older than the specified age. The default value is infinite (-1).
 	MaximumRecordAgeInSeconds *int64 `json:"maximumRecordAgeInSeconds,omitempty"`
-	// (Kinesis and DynamoDB Streams only) Discard records after the specified number
-	// of retries. The default value is infinite (-1). When set to infinite (-1),
-	// failed records are retried until the record expires.
+	// (Kinesis, DynamoDB Streams, Amazon MSK, and self-managed Apache Kafka) Discard
+	// records after the specified number of retries. The default value is infinite
+	// (-1). When set to infinite (-1), failed records are retried until the record
+	// expires.
 	MaximumRetryAttempts *int64 `json:"maximumRetryAttempts,omitempty"`
 	// (Kinesis and DynamoDB Streams only) The number of batches to process from
 	// each shard concurrently.
@@ -173,7 +174,7 @@ type EventSourceMappingStatus struct {
 	Conditions []*ackv1alpha1.Condition `json:"conditions"`
 	// The ARN of the Lambda function.
 	//
-	// Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:lambda:[a-z]{2}(-gov)?-[a-z]+-\d{1}:\d{12}:function:[a-zA-Z0-9-_]+(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
+	// Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:lambda:[a-z]{2}((-gov)|(-iso([a-z]?)))?-[a-z]+-\d{1}:\d{12}:function:[a-zA-Z0-9-_]+(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
 	// +kubebuilder:validation:Optional
 	FunctionARN *string `json:"functionARN,omitempty"`
 	// The date that the event source mapping was last updated or that its state

@@ -30,9 +30,10 @@ import (
 )
 
 var (
-	ErrFunctionPending         = errors.New("function in 'Pending' state, cannot be modified or deleted")
-	ErrSourceImageDoesNotExist = errors.New("source image does not exist")
-	ErrCannotSetFunctionCSC    = errors.New("cannot set function code signing config when package type is Image")
+	ErrFunctionPending           = errors.New("function in 'Pending' state, cannot be modified or deleted")
+	ErrSourceImageDoesNotExist   = errors.New("source image does not exist")
+	ErrCannotSetFunctionCSC      = errors.New("cannot set function code signing config when package type is Image")
+	ErrCannotModifyTenancyConfig = errors.New("tenancy config cannot be modified after function creation")
 )
 
 var (
@@ -104,6 +105,9 @@ func (rm *resourceManager) customUpdateFunction(
 			}
 		}
 	}
+	if delta.DifferentAt("Spec.TenancyConfig") {
+		return updatedStatusResource, ackerr.NewTerminalError(ErrCannotModifyTenancyConfig)
+	}
 
 	// Only try to update Spec.Code or Spec.Configuration at once. It is
 	// not correct to sequentially call UpdateFunctionConfiguration and
@@ -124,7 +128,8 @@ func (rm *resourceManager) customUpdateFunction(
 		"Spec.Tags",
 		"Spec.ReservedConcurrentExecutions",
 		"Spec.FunctionEventInvokeConfig",
-		"Spec.CodeSigningConfigARN"):
+		"Spec.CodeSigningConfigARN",
+		"Spec.TenancyConfig"):
 		err = rm.updateFunctionConfiguration(ctx, desired, delta)
 		if err != nil {
 			return updatedStatusResource, err
