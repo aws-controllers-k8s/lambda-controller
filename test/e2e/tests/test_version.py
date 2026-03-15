@@ -17,9 +17,6 @@
 import pytest
 import time
 import logging
-import hashlib
-import base64
-
 from acktest.resources import random_suffix_name
 from acktest.aws.identity import get_region
 from acktest.k8s import resource as k8s
@@ -27,8 +24,8 @@ from acktest.k8s import resource as k8s
 from e2e import service_marker, CRD_GROUP, CRD_VERSION, load_lambda_resource
 from e2e.replacement_values import REPLACEMENT_VALUES
 from e2e.bootstrap_resources import get_bootstrap_resources
-from e2e.service_bootstrap import LAMBDA_FUNCTION_FILE_ZIP, LAMBDA_FUNCTION_FILE_PATH_ZIP
-from e2e.tests.helper import LambdaValidator
+from e2e.service_bootstrap import LAMBDA_FUNCTION_FILE_ZIP
+from e2e.tests.helper import LambdaValidator, get_s3_object_sha256
 
 RESOURCE_PLURAL = "versions"
 
@@ -183,11 +180,8 @@ class TestVersion:
 
         resource_name = random_suffix_name("lambda-version", 24)
 
-        archive_1 = open(LAMBDA_FUNCTION_FILE_PATH_ZIP, 'rb') 
-        readFile_1 = archive_1.read() 
-        hash_1 = hashlib.sha256(readFile_1) 
-        binary_hash_1 = hash_1.digest() 
-        base64_hash_1 = base64.b64encode(binary_hash_1).decode('utf-8')
+        resources = get_bootstrap_resources()
+        base64_hash_1 = get_s3_object_sha256(resources.FunctionsBucket.name, "main.zip")
 
         replacements = REPLACEMENT_VALUES.copy()
         replacements["AWS_REGION"] = get_region()

@@ -17,9 +17,6 @@
 import pytest
 import time
 import logging
-import hashlib
-import base64
-
 from acktest import tags
 from acktest.resources import random_suffix_name
 from acktest.aws.identity import get_region, get_account_id
@@ -28,9 +25,9 @@ from acktest.k8s import resource as k8s
 from e2e import service_marker, CRD_GROUP, CRD_VERSION, load_lambda_resource
 from e2e.replacement_values import REPLACEMENT_VALUES
 from e2e.bootstrap_resources import get_bootstrap_resources
-from e2e.service_bootstrap import LAMBDA_FUNCTION_FILE_ZIP, LAMBDA_FUNCTION_FILE_PATH_ZIP
-from e2e.service_bootstrap import LAMBDA_FUNCTION_UPDATED_FILE_ZIP, LAMBDA_FUNCTION_UPDATED_FILE_PATH_ZIP
-from e2e.tests.helper import LambdaValidator
+from e2e.service_bootstrap import LAMBDA_FUNCTION_FILE_ZIP
+from e2e.service_bootstrap import LAMBDA_FUNCTION_UPDATED_FILE_ZIP
+from e2e.tests.helper import LambdaValidator, get_s3_object_sha256
 
 RESOURCE_PLURAL = "functions"
 
@@ -736,13 +733,15 @@ class TestFunction:
         resources = get_bootstrap_resources()
         logging.debug(resources)
 
+        region = get_region()
+
         replacements = REPLACEMENT_VALUES.copy()
         replacements["FUNCTION_NAME"] = resource_name
         replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
         replacements["LAMBDA_ROLE"] = resources.EICRole.arn
         replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
-        replacements["AWS_REGION"] = get_region()
-        replacements["LAYERS"] = "arn:aws:lambda:us-west-2:336392948345:layer:AWSSDKPandas-Python310:14"
+        replacements["AWS_REGION"] = region
+        replacements["LAYERS"] = f"arn:aws:lambda:{region}:336392948345:layer:AWSSDKPandas-Python310:14"
 
         # Load Lambda CR
         resource_data = load_lambda_resource(
@@ -772,7 +771,7 @@ class TestFunction:
         assert lambda_validator.function_exists(resource_name)
 
         # Update cr
-        layers_list = ["arn:aws:lambda:us-west-2:017000801446:layer:AWSLambdaPowertoolsPythonV2:68", "arn:aws:lambda:us-west-2:580247275435:layer:LambdaInsightsExtension:52"]
+        layers_list = [f"arn:aws:lambda:{region}:017000801446:layer:AWSLambdaPowertoolsPythonV2:68", f"arn:aws:lambda:{region}:580247275435:layer:LambdaInsightsExtension:52"]
         cr["spec"]["layers"] = layers_list
 
         #Patch k8s resource
@@ -876,21 +875,13 @@ class TestFunction:
         resources = get_bootstrap_resources()
         logging.debug(resources)
 
-        archive_1 = open(LAMBDA_FUNCTION_FILE_PATH_ZIP, 'rb') 
-        readFile_1 = archive_1.read() 
-        hash_1 = hashlib.sha256(readFile_1) 
-        binary_hash_1 = hash_1.digest() 
-        base64_hash_1 = base64.b64encode(binary_hash_1).decode('utf-8')
-
-        archive_2 = open(LAMBDA_FUNCTION_UPDATED_FILE_PATH_ZIP, 'rb') 
-        readFile_2 = archive_2.read() 
-        hash_2 = hashlib.sha256(readFile_2) 
-        binary_hash_2 = hash_2.digest() 
-        base64_hash_2 = base64.b64encode(binary_hash_2).decode('utf-8')
+        bucket_name = resources.FunctionsBucket.name
+        base64_hash_1 = get_s3_object_sha256(bucket_name, "main.zip")
+        base64_hash_2 = get_s3_object_sha256(bucket_name, "updated_main.zip")
 
         replacements = REPLACEMENT_VALUES.copy()
         replacements["FUNCTION_NAME"] = resource_name
-        replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
+        replacements["BUCKET_NAME"] = bucket_name
         replacements["LAMBDA_ROLE"] = resources.BasicRole.arn
         replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
         replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "0"
@@ -925,7 +916,7 @@ class TestFunction:
 
         # Assert that the original code.s3Bucket and code.s3Key is still part of
         # the function's CR
-        assert cr["spec"]["code"]["s3Bucket"] == resources.FunctionsBucket.name
+        assert cr["spec"]["code"]["s3Bucket"] == bucket_name
         assert cr["spec"]["code"]["s3Key"] == LAMBDA_FUNCTION_FILE_ZIP
 
         # Check Lambda function exists
@@ -952,28 +943,20 @@ class TestFunction:
 
         # Check Lambda function doesn't exist
         assert not lambda_validator.function_exists(resource_name)
-    
+
     def test_function_update_code_and_architecture(self, lambda_client):
         resource_name = random_suffix_name("functionupdatecode", 24)
 
         resources = get_bootstrap_resources()
         logging.debug(resources)
 
-        archive_1 = open(LAMBDA_FUNCTION_FILE_PATH_ZIP, 'rb') 
-        readFile_1 = archive_1.read() 
-        hash_1 = hashlib.sha256(readFile_1) 
-        binary_hash_1 = hash_1.digest() 
-        base64_hash_1 = base64.b64encode(binary_hash_1).decode('utf-8')
-
-        archive_2 = open(LAMBDA_FUNCTION_UPDATED_FILE_PATH_ZIP, 'rb') 
-        readFile_2 = archive_2.read() 
-        hash_2 = hashlib.sha256(readFile_2) 
-        binary_hash_2 = hash_2.digest() 
-        base64_hash_2 = base64.b64encode(binary_hash_2).decode('utf-8')
+        bucket_name = resources.FunctionsBucket.name
+        base64_hash_1 = get_s3_object_sha256(bucket_name, "main.zip")
+        base64_hash_2 = get_s3_object_sha256(bucket_name, "updated_main.zip")
 
         replacements = REPLACEMENT_VALUES.copy()
         replacements["FUNCTION_NAME"] = resource_name
-        replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
+        replacements["BUCKET_NAME"] = bucket_name
         replacements["LAMBDA_ROLE"] = resources.BasicRole.arn
         replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
         replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "0"
@@ -1008,7 +991,7 @@ class TestFunction:
 
         # Assert that the original code.s3Bucket and code.s3Key is still part of
         # the function's CR
-        assert cr["spec"]["code"]["s3Bucket"] == resources.FunctionsBucket.name
+        assert cr["spec"]["code"]["s3Bucket"] == bucket_name
         assert cr["spec"]["code"]["s3Key"] == LAMBDA_FUNCTION_FILE_ZIP
 
         # Check Lambda function exists
