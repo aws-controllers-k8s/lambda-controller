@@ -47,7 +47,7 @@ spec:
                   The type of authentication that your function URL uses. Set to AWS_IAM if
                   you want to restrict access to authenticated users only. Set to NONE if you
                   want to bypass IAM authentication to create a public endpoint. For more information,
-                  see Security and auth model for Lambda function URLs (https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html).
+                  see Control access to Lambda function URLs (https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html).
                 type: string
               cors:
                 description: |-
@@ -91,7 +91,7 @@ spec:
                   The length constraint applies only to the full ARN. If you specify only the
                   function name, it is limited to 64 characters in length.
 
-                  Regex Pattern: `^(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}(-gov)?-[a-z]+-\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
+                  Regex Pattern: `^(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}((-gov)|(-iso([a-z]?)))?-[a-z]+-\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
                 type: string
               functionRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around
@@ -114,7 +114,7 @@ spec:
                 description: |-
                   The alias name.
 
-                  Regex Pattern: `^(^\$LATEST$)|((?!^[0-9]+$)([a-zA-Z0-9-_]+))$`
+                  Regex Pattern: `^((?!^\d+$)^[0-9a-zA-Z-_]+$)$`
                 type: string
             required:
             - authType
@@ -195,7 +195,7 @@ spec:
                 description: |-
                   The Amazon Resource Name (ARN) of your function.
 
-                  Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:lambda:[a-z]{2}(-gov)?-[a-z]+-\d{1}:\d{12}:function:[a-zA-Z0-9-_]+(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
+                  Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:lambda:[a-z]{2}((-gov)|(-iso([a-z]?)))?-[a-z]+-\d{1}:\d{12}:function:[a-zA-Z0-9-_]+(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
                 type: string
               functionURL:
                 description: The HTTP URL endpoint for your function.

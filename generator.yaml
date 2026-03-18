@@ -1,5 +1,6 @@
 ignore:
   resource_names:
+  - CapacityProvider
     # Function
     # Alias
     # CodeSigningConfig
@@ -29,6 +30,18 @@ ignore:
   - VpcConfig.Ipv6AllowedForDualStack
   - AddPermissionInput.FunctionName # We grab this from the Alias resource
   - AddPermissionInput.Qualifier # We grab this from the Alias resource   
+  - PublishVersionInput.PublishTo
+  - PublishVersionOutput.PublishTo
+  - PublishVersionOutput.CapacityProviderConfig
+  - PublishVersionOutput.DurableConfig
+  - AddPermissionInput.InvokedViaFunctionUrl
+  - CreateFunctionInput.PublishTo
+  - CreateFunctionInput.CapacityProviderConfig
+  - CreateFunctionOutput.CapacityProviderConfig
+  - CreateFunctionInput.DurableConfig
+  - CreateFunctionOutput.DurableConfig
+  - CreateFunctionOutput.ConfigSha256
+  - PublishVersionOutput.ConfigSha256
 operations:
   GetFunction:
     output_wrapper_field_path: Configuration
@@ -100,6 +113,8 @@ resources:
         from:
           operation: PutFunctionConcurrency
           path: ReservedConcurrentExecutions
+      TenancyConfig:
+        is_immutable: true
       Code:
         compare:
           is_ignored: false

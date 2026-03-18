@@ -28,7 +28,7 @@ type FunctionURLConfigSpec struct {
 	// The type of authentication that your function URL uses. Set to AWS_IAM if
 	// you want to restrict access to authenticated users only. Set to NONE if you
 	// want to bypass IAM authentication to create a public endpoint. For more information,
-	// see Security and auth model for Lambda function URLs (https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html).
+	// see Control access to Lambda function URLs (https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html).
 	// +kubebuilder:validation:Required
 	AuthType *string `json:"authType"`
 	// The cross-origin resource sharing (CORS) (https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
@@ -47,12 +47,12 @@ type FunctionURLConfigSpec struct {
 	// The length constraint applies only to the full ARN. If you specify only the
 	// function name, it is limited to 64 characters in length.
 	//
-	// Regex Pattern: `^(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}(-gov)?-[a-z]+-\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
+	// Regex Pattern: `^(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}((-gov)|(-iso([a-z]?)))?-[a-z]+-\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
 	FunctionName *string                                  `json:"functionName,omitempty"`
 	FunctionRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"functionRef,omitempty"`
 	// The alias name.
 	//
-	// Regex Pattern: `^(^\$LATEST$)|((?!^[0-9]+$)([a-zA-Z0-9-_]+))$`
+	// Regex Pattern: `^((?!^\d+$)^[0-9a-zA-Z-_]+$)$`
 	Qualifier *string `json:"qualifier,omitempty"`
 }
 
@@ -75,7 +75,7 @@ type FunctionURLConfigStatus struct {
 	CreationTime *string `json:"creationTime,omitempty"`
 	// The Amazon Resource Name (ARN) of your function.
 	//
-	// Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:lambda:[a-z]{2}(-gov)?-[a-z]+-\d{1}:\d{12}:function:[a-zA-Z0-9-_]+(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
+	// Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:lambda:[a-z]{2}((-gov)|(-iso([a-z]?)))?-[a-z]+-\d{1}:\d{12}:function:[a-zA-Z0-9-_]+(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
 	// +kubebuilder:validation:Optional
 	FunctionARN *string `json:"functionARN,omitempty"`
 	// The HTTP URL endpoint for your function.

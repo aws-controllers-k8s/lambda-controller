@@ -106,7 +106,7 @@ spec:
                   The length constraint applies only to the full ARN. If you specify only the
                   function name, it is limited to 64 characters in length.
 
-                  Regex Pattern: `^(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}(-gov)?-[a-z]+-\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
+                  Regex Pattern: `^(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}((-gov)|(-iso([a-z]?)))?-[a-z]+-\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
                 type: string
               functionRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around
@@ -273,7 +273,7 @@ spec:
                 description: |-
                   The function's Amazon Resource Name (ARN).
 
-                  Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:lambda:[a-z]{2}(-gov)?-[a-z]+-\d{1}:\d{12}:function:[a-zA-Z0-9-_\.]+(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
+                  Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:lambda:[a-z]{2}((-gov)|(-iso([a-z]?)))?-[a-z]+-\d{1}:\d{12}:function:[a-zA-Z0-9-_\.]+(:(\$LATEST(\.PUBLISHED)?|[a-zA-Z0-9-_]+))?$`
                 type: string
               handler:
                 description: |-
@@ -372,7 +372,7 @@ spec:
                 description: |-
                   For Lambda@Edge functions, the ARN of the main function.
 
-                  Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:lambda:[a-z]{2}(-gov)?-[a-z]+-\d{1}:\d{12}:function:[a-zA-Z0-9-_]+(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
+                  Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:lambda:[a-z]{2}((-gov)|(-iso([a-z]?)))?-[a-z]+-\d{1}:\d{12}:function:[a-zA-Z0-9-_]+(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
                 type: string
               memorySize:
                 description: The amount of memory available to the function at runtime.
@@ -444,6 +444,15 @@ spec:
                   The reason code for the function's current state. When the code is Creating,
                   you can't invoke or modify the function.
                 type: string
+              tenancyConfig:
+                description: |-
+                  The function's tenant isolation configuration settings. Determines whether
+                  the Lambda function runs on a shared or dedicated infrastructure per unique
+                  tenant.
+                properties:
+                  tenantIsolationMode:
+                    type: string
+                type: object
               timeout:
                 description: |-
                   The amount of time in seconds that Lambda allows a function to run before
