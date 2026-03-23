@@ -98,6 +98,19 @@ spec:
               description:
                 description: A description of the function.
                 type: string
+              durableConfig:
+                description: |-
+                  Configuration settings for durable functions. Enables creating functions
+                  with durability that can remember their state and continue execution even
+                  after interruptions.
+                properties:
+                  executionTimeout:
+                    format: int64
+                    type: integer
+                  retentionPeriodInDays:
+                    format: int64
+                    type: integer
+                type: object
               environment:
                 description: Environment variables that are accessible from function
                   code during execution.

@@ -16,6 +16,8 @@ package function
 import (
 	"context"
 	"errors"
+	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -167,6 +169,25 @@ func (rm *resourceManager) updateFunctionConfiguration(
 			deadLetterConfig.TargetArn = deadLetterConfigCopy.TargetARN
 		}
 		input.DeadLetterConfig = deadLetterConfig
+	}
+
+	if delta.DifferentAt("Spec.DurableConfig") {
+		if dspec.DurableConfig != nil {
+			durableConfig := &svcsdktypes.DurableConfig{}
+			if dspec.DurableConfig.ExecutionTimeout != nil {
+				if *dspec.DurableConfig.ExecutionTimeout > math.MaxInt32 || *dspec.DurableConfig.ExecutionTimeout < math.MinInt32 {
+					return fmt.Errorf("error: field ExecutionTimeout is of type int32")
+				}
+				durableConfig.ExecutionTimeout = aws.Int32(int32(*dspec.DurableConfig.ExecutionTimeout))
+			}
+			if dspec.DurableConfig.RetentionPeriodInDays != nil {
+				if *dspec.DurableConfig.RetentionPeriodInDays > math.MaxInt32 || *dspec.DurableConfig.RetentionPeriodInDays < math.MinInt32 {
+					return fmt.Errorf("error: field RetentionPeriodInDays is of type int32")
+				}
+				durableConfig.RetentionPeriodInDays = aws.Int32(int32(*dspec.DurableConfig.RetentionPeriodInDays))
+			}
+			input.DurableConfig = durableConfig
+		}
 	}
 
 	if delta.DifferentAt("Spec.Description") {

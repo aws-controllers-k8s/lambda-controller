@@ -2125,6 +2125,11 @@ func (in *FunctionSpec) DeepCopyInto(out *FunctionSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.DurableConfig != nil {
+		in, out := &in.DurableConfig, &out.DurableConfig
+		*out = new(DurableConfig)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Environment != nil {
 		in, out := &in.Environment, &out.Environment
 		*out = new(Environment)
@@ -4066,6 +4071,11 @@ func (in *VersionStatus) DeepCopyInto(out *VersionStatus) {
 	if in.DeadLetterConfig != nil {
 		in, out := &in.DeadLetterConfig, &out.DeadLetterConfig
 		*out = new(DeadLetterConfig)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.DurableConfig != nil {
+		in, out := &in.DurableConfig, &out.DurableConfig
+		*out = new(DurableConfig)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Environment != nil {

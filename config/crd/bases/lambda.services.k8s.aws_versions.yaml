@@ -227,6 +227,18 @@ spec:
                   targetARN:
                     type: string
                 type: object
+              durableConfig:
+                description: |-
+                  The function's durable execution configuration settings, if the function
+                  is configured for durability.
+                properties:
+                  executionTimeout:
+                    format: int64
+                    type: integer
+                  retentionPeriodInDays:
+                    format: int64
+                    type: integer
+                type: object
               environment:
                 description: |-
                   The function's environment variables (https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html).

@@ -81,6 +81,10 @@ type VersionStatus struct {
 	// The function's dead letter queue.
 	// +kubebuilder:validation:Optional
 	DeadLetterConfig *DeadLetterConfig `json:"deadLetterConfig,omitempty"`
+	// The function's durable execution configuration settings, if the function
+	// is configured for durability.
+	// +kubebuilder:validation:Optional
+	DurableConfig *DurableConfig `json:"durableConfig,omitempty"`
 	// The function's environment variables (https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html).
 	// Omitted from CloudTrail logs.
 	// +kubebuilder:validation:Optional
