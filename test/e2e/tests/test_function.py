@@ -1169,10 +1169,8 @@ class TestFunction:
         assert function["Configuration"]["DurableConfig"]["RetentionPeriodInDays"] == 30
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=10, period_length=DELETE_WAIT_AFTER_SECONDS)
         assert deleted is True
-
-        time.sleep(DELETE_WAIT_AFTER_SECONDS)
 
         # Check Lambda function doesn't exist
         assert not lambda_validator.function_exists(resource_name)

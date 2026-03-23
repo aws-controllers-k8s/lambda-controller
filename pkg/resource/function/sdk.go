@@ -1022,6 +1022,10 @@ func (rm *resourceManager) sdkDelete(
 	defer func() {
 		exit(err)
 	}()
+	if isFunctionDeleting(r) {
+		return r, requeueWaitWhileDeleting
+	}
+
 	input, err := rm.newDeleteRequestPayload(r)
 	if err != nil {
 		return nil, err
@@ -1030,6 +1034,14 @@ func (rm *resourceManager) sdkDelete(
 	_ = resp
 	resp, err = rm.sdkapi.DeleteFunction(ctx, input)
 	rm.metrics.RecordAPICall("DELETE", "DeleteFunction", err)
+	if err == nil {
+		// Durable Functions need to drain durable function executions before the Function is fully deleted.
+		// This can result in the Function persisting in the "deleting" state for an extended period.
+		if r.ko.Spec.DurableConfig != nil {
+			return r, requeueWaitWhileDeleting
+		}
+	}
+
 	return nil, err
 }
 

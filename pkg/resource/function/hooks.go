@@ -33,6 +33,7 @@ import (
 
 var (
 	ErrFunctionPending           = errors.New("function in 'Pending' state, cannot be modified or deleted")
+	ErrFunctionDeleting          = errors.New("function in 'Deleting' state, cannot be modified or deleted")
 	ErrSourceImageDoesNotExist   = errors.New("source image does not exist")
 	ErrCannotSetFunctionCSC      = errors.New("cannot set function code signing config when package type is Image")
 	ErrCannotModifyTenancyConfig = errors.New("tenancy config cannot be modified after function creation")
@@ -41,6 +42,10 @@ var (
 var (
 	requeueWaitWhilePending = ackrequeue.NeededAfter(
 		ErrFunctionPending,
+		5*time.Second,
+	)
+	requeueWaitWhileDeleting = ackrequeue.NeededAfter(
+		ErrFunctionDeleting,
 		5*time.Second,
 	)
 	requeueWaitWhileSourceImageDoesNotExist = ackrequeue.NeededAfter(
@@ -57,6 +62,16 @@ func isFunctionPending(r *resource) bool {
 	}
 	state := *r.ko.Status.State
 	return state == string(svcapitypes.State_Pending)
+}
+
+// isFunctionDeleting returns true if the supplied Lambda Function is in the
+// process of being deleted
+func isFunctionDeleting(r *resource) bool {
+	if r.ko.Status.State == nil {
+		return false
+	}
+	state := *r.ko.Status.State
+	return state == string(svcapitypes.State_Deleting)
 }
 
 // customUpdateFunction patches each of the resource properties in the backend AWS
