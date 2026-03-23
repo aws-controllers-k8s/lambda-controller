@@ -1098,3 +1098,81 @@ class TestFunction:
 
         # Check Lambda function doesn't exist
         assert not lambda_validator.function_exists(resource_name)
+
+    def test_function_durable_config(self, lambda_client):
+        resource_name = random_suffix_name("functiondurableconfig", 24)
+
+        resources = get_bootstrap_resources()
+        logging.debug(resources)
+
+        replacements = REPLACEMENT_VALUES.copy()
+        replacements["FUNCTION_NAME"] = resource_name
+        replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
+        replacements["LAMBDA_ROLE"] = resources.BasicRole.arn
+        replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
+        replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "0"
+        replacements["AWS_REGION"] = get_region()
+        replacements["EXECUTION_TIMEOUT"] = "3600"
+        replacements["RETENTION_PERIOD_IN_DAYS"] = "14"
+
+        # Load Lambda CR
+        resource_data = load_lambda_resource(
+            "function_durable_config",
+            additional_replacements=replacements,
+        )
+        logging.debug(resource_data)
+
+        # Create k8s resource
+        ref = k8s.CustomResourceReference(
+            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            resource_name, namespace="default",
+        )
+        k8s.create_custom_resource(ref, resource_data)
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        assert cr is not None
+        assert k8s.get_resource_exists(ref)
+
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+        cr = k8s.wait_resource_consumed_by_controller(ref)
+
+        lambda_validator = LambdaValidator(lambda_client)
+
+        # Check Lambda function exists
+        assert lambda_validator.function_exists(resource_name)
+
+        # Verify durableConfig was set in the CR spec
+        assert cr["spec"]["durableConfig"]["executionTimeout"] == 3600
+        assert cr["spec"]["durableConfig"]["retentionPeriodInDays"] == 14
+
+        # Check Lambda function exists and is properly configured
+        function = lambda_validator.get_function(resource_name)
+        assert function is not None
+
+        # Verify durableConfig was applied to the Lambda function
+        assert function["Configuration"]["DurableConfig"]["ExecutionTimeout"] == 3600
+        assert function["Configuration"]["DurableConfig"]["RetentionPeriodInDays"] == 14
+
+        # Update durableConfig fields
+        cr["spec"]["durableConfig"]["executionTimeout"] = 7200
+        cr["spec"]["durableConfig"]["retentionPeriodInDays"] = 30
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        # Check function updated fields
+        function = lambda_validator.get_function(resource_name)
+        assert function is not None
+        assert function["Configuration"]["DurableConfig"]["ExecutionTimeout"] == 7200
+        assert function["Configuration"]["DurableConfig"]["RetentionPeriodInDays"] == 30
+
+        # Delete k8s resource
+        _, deleted = k8s.delete_custom_resource(ref)
+        assert deleted is True
+
+        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+
+        # Check Lambda function doesn't exist
+        assert not lambda_validator.function_exists(resource_name)
