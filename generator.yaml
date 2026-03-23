@@ -113,6 +113,10 @@ resources:
           path: ReservedConcurrentExecutions
       TenancyConfig:
         is_immutable: true
+      DurableConfig:
+        late_initialize: {
+          skip_incomplete_check: {}
+        }
       Code:
         compare:
           is_ignored: false

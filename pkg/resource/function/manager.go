@@ -50,7 +50,7 @@ var (
 // +kubebuilder:rbac:groups=lambda.services.k8s.aws,resources=functions,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=lambda.services.k8s.aws,resources=functions/status,verbs=get;update;patch
 
-var lateInitializeFieldNames = []string{}
+var lateInitializeFieldNames = []string{"DurableConfig"}
 
 // resourceManager is responsible for providing a consistent way to perform
 // CRUD operations in a backend AWS service API for Book custom resources.
@@ -257,7 +257,12 @@ func (rm *resourceManager) lateInitializeFromReadOneOutput(
 	observed acktypes.AWSResource,
 	latest acktypes.AWSResource,
 ) acktypes.AWSResource {
-	return latest
+	observedKo := rm.concreteResource(observed).ko.DeepCopy()
+	latestKo := rm.concreteResource(latest).ko.DeepCopy()
+	if observedKo.Spec.DurableConfig != nil && latestKo.Spec.DurableConfig == nil {
+		latestKo.Spec.DurableConfig = observedKo.Spec.DurableConfig
+	}
+	return &resource{latestKo}
 }
 
 // IsSynced returns true if the resource is synced.
