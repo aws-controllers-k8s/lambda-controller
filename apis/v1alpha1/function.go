@@ -42,6 +42,10 @@ type FunctionSpec struct {
 	DeadLetterConfig *DeadLetterConfig `json:"deadLetterConfig,omitempty"`
 	// A description of the function.
 	Description *string `json:"description,omitempty"`
+	// Configuration settings for durable functions. Enables creating functions
+	// with durability that can remember their state and continue execution even
+	// after interruptions.
+	DurableConfig *DurableConfig `json:"durableConfig,omitempty"`
 	// Environment variables that are accessible from function code during execution.
 	Environment *Environment `json:"environment,omitempty"`
 	// The size of the function's /tmp directory in MB. The default value is 512,

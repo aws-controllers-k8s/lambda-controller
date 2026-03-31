@@ -110,6 +110,24 @@ func newResourceDelta(
 			delta.Add("Spec.Description", a.ko.Spec.Description, b.ko.Spec.Description)
 		}
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.DurableConfig, b.ko.Spec.DurableConfig) {
+		delta.Add("Spec.DurableConfig", a.ko.Spec.DurableConfig, b.ko.Spec.DurableConfig)
+	} else if a.ko.Spec.DurableConfig != nil && b.ko.Spec.DurableConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.DurableConfig.ExecutionTimeout, b.ko.Spec.DurableConfig.ExecutionTimeout) {
+			delta.Add("Spec.DurableConfig.ExecutionTimeout", a.ko.Spec.DurableConfig.ExecutionTimeout, b.ko.Spec.DurableConfig.ExecutionTimeout)
+		} else if a.ko.Spec.DurableConfig.ExecutionTimeout != nil && b.ko.Spec.DurableConfig.ExecutionTimeout != nil {
+			if *a.ko.Spec.DurableConfig.ExecutionTimeout != *b.ko.Spec.DurableConfig.ExecutionTimeout {
+				delta.Add("Spec.DurableConfig.ExecutionTimeout", a.ko.Spec.DurableConfig.ExecutionTimeout, b.ko.Spec.DurableConfig.ExecutionTimeout)
+			}
+		}
+		if ackcompare.HasNilDifference(a.ko.Spec.DurableConfig.RetentionPeriodInDays, b.ko.Spec.DurableConfig.RetentionPeriodInDays) {
+			delta.Add("Spec.DurableConfig.RetentionPeriodInDays", a.ko.Spec.DurableConfig.RetentionPeriodInDays, b.ko.Spec.DurableConfig.RetentionPeriodInDays)
+		} else if a.ko.Spec.DurableConfig.RetentionPeriodInDays != nil && b.ko.Spec.DurableConfig.RetentionPeriodInDays != nil {
+			if *a.ko.Spec.DurableConfig.RetentionPeriodInDays != *b.ko.Spec.DurableConfig.RetentionPeriodInDays {
+				delta.Add("Spec.DurableConfig.RetentionPeriodInDays", a.ko.Spec.DurableConfig.RetentionPeriodInDays, b.ko.Spec.DurableConfig.RetentionPeriodInDays)
+			}
+		}
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.Environment, b.ko.Spec.Environment) {
 		delta.Add("Spec.Environment", a.ko.Spec.Environment, b.ko.Spec.Environment)
 	} else if a.ko.Spec.Environment != nil && b.ko.Spec.Environment != nil {

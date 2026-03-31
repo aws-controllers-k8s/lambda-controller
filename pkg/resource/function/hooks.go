@@ -16,6 +16,8 @@ package function
 import (
 	"context"
 	"errors"
+	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -31,6 +33,7 @@ import (
 
 var (
 	ErrFunctionPending           = errors.New("function in 'Pending' state, cannot be modified or deleted")
+	ErrFunctionDeleting          = errors.New("function in 'Deleting' state, cannot be modified or deleted")
 	ErrSourceImageDoesNotExist   = errors.New("source image does not exist")
 	ErrCannotSetFunctionCSC      = errors.New("cannot set function code signing config when package type is Image")
 	ErrCannotModifyTenancyConfig = errors.New("tenancy config cannot be modified after function creation")
@@ -39,6 +42,10 @@ var (
 var (
 	requeueWaitWhilePending = ackrequeue.NeededAfter(
 		ErrFunctionPending,
+		5*time.Second,
+	)
+	requeueWaitWhileDeleting = ackrequeue.NeededAfter(
+		ErrFunctionDeleting,
 		5*time.Second,
 	)
 	requeueWaitWhileSourceImageDoesNotExist = ackrequeue.NeededAfter(
@@ -55,6 +62,16 @@ func isFunctionPending(r *resource) bool {
 	}
 	state := *r.ko.Status.State
 	return state == string(svcapitypes.State_Pending)
+}
+
+// isFunctionDeleting returns true if the supplied Lambda Function is in the
+// process of being deleted
+func isFunctionDeleting(r *resource) bool {
+	if r.ko.Status.State == nil {
+		return false
+	}
+	state := *r.ko.Status.State
+	return state == string(svcapitypes.State_Deleting)
 }
 
 // customUpdateFunction patches each of the resource properties in the backend AWS
@@ -167,6 +184,25 @@ func (rm *resourceManager) updateFunctionConfiguration(
 			deadLetterConfig.TargetArn = deadLetterConfigCopy.TargetARN
 		}
 		input.DeadLetterConfig = deadLetterConfig
+	}
+
+	if delta.DifferentAt("Spec.DurableConfig") {
+		if dspec.DurableConfig != nil {
+			durableConfig := &svcsdktypes.DurableConfig{}
+			if dspec.DurableConfig.ExecutionTimeout != nil {
+				if *dspec.DurableConfig.ExecutionTimeout > math.MaxInt32 || *dspec.DurableConfig.ExecutionTimeout < math.MinInt32 {
+					return fmt.Errorf("error: field ExecutionTimeout is of type int32")
+				}
+				durableConfig.ExecutionTimeout = aws.Int32(int32(*dspec.DurableConfig.ExecutionTimeout))
+			}
+			if dspec.DurableConfig.RetentionPeriodInDays != nil {
+				if *dspec.DurableConfig.RetentionPeriodInDays > math.MaxInt32 || *dspec.DurableConfig.RetentionPeriodInDays < math.MinInt32 {
+					return fmt.Errorf("error: field RetentionPeriodInDays is of type int32")
+				}
+				durableConfig.RetentionPeriodInDays = aws.Int32(int32(*dspec.DurableConfig.RetentionPeriodInDays))
+			}
+			input.DurableConfig = durableConfig
+		}
 	}
 
 	if delta.DifferentAt("Spec.Description") {
