@@ -38,6 +38,11 @@ CREATE_WAIT_AFTER_SECONDS = 30
 UPDATE_WAIT_AFTER_SECONDS = 30
 DELETE_WAIT_AFTER_SECONDS = 30
 
+CONTROLLER_WAIT_PERIODS = 10
+CONTROLLER_PERIOD_LENGTH = 10
+DELETE_WAIT_PERIODS = 3
+DELETE_PERIOD_LENGTH = 10
+
 def get_testing_image_url():
     aws_region = get_region()
     account_id = get_account_id()
@@ -68,7 +73,7 @@ def code_signing_config():
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
@@ -77,7 +82,7 @@ def code_signing_config():
 
         yield (ref, cr)
 
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted
 
 @service_marker
@@ -112,14 +117,14 @@ class TestFunction:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         lambda_validator = LambdaValidator(lambda_client)
 
@@ -161,7 +166,7 @@ class TestFunction:
         )
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted is True
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
@@ -197,14 +202,14 @@ class TestFunction:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         lambda_validator = LambdaValidator(lambda_client)
         # Check Lambda function exists
@@ -225,7 +230,7 @@ class TestFunction:
         assert reservedConcurrentExecutions == 0
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted is True
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
@@ -262,14 +267,14 @@ class TestFunction:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         lambda_validator = LambdaValidator(lambda_client)
         # Check Lambda function exists
@@ -289,7 +294,7 @@ class TestFunction:
         assert function_csc_arn is None
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted is True
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
@@ -321,14 +326,14 @@ class TestFunction:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         lambda_validator = LambdaValidator(lambda_client)
         # Check Lambda function exists
@@ -347,7 +352,7 @@ class TestFunction:
         assert function["Configuration"]["EphemeralStorage"]["Size"] == 1024
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted is True
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
@@ -379,14 +384,14 @@ class TestFunction:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         lambda_validator = LambdaValidator(lambda_client)
         # Check Lambda function exists
@@ -398,7 +403,7 @@ class TestFunction:
 
         time.sleep(UPDATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
         # assert condition
         assert k8s.assert_condition_state_message(
             ref,
@@ -407,7 +412,7 @@ class TestFunction:
             "cannot set function code signing config when package type is Image",
         )
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         # Remove signing configuration
         cr["spec"]["codeSigningConfigARN"] = ""
@@ -416,7 +421,7 @@ class TestFunction:
         time.sleep(UPDATE_WAIT_AFTER_SECONDS)
         
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted is True
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
@@ -452,14 +457,14 @@ class TestFunction:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS*3)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         lambda_validator = LambdaValidator(lambda_client)
         # Check Lambda function exists
@@ -472,7 +477,7 @@ class TestFunction:
         assert function["Configuration"]["State"] == "Active"
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted is True
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
@@ -508,14 +513,14 @@ class TestFunction:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         lambda_validator = LambdaValidator(lambda_client)
 
@@ -534,7 +539,7 @@ class TestFunction:
         assert function["Configuration"]["SnapStart"]["ApplyOn"] == "PublishedVersions"
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted is True
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
@@ -571,14 +576,14 @@ class TestFunction:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         lambda_validator = LambdaValidator(lambda_client)
 
@@ -599,7 +604,7 @@ class TestFunction:
         assert function["Configuration"]["Architectures"] == ['arm64']
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted is True
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
@@ -634,14 +639,14 @@ class TestFunction:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         lambda_validator = LambdaValidator(lambda_client)
 
@@ -660,7 +665,7 @@ class TestFunction:
         assert function["Configuration"]["DeadLetterConfig"]["TargetArn"] == resources.EICQueueOnFailure.arn
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted is True
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
@@ -696,14 +701,14 @@ class TestFunction:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         lambda_validator = LambdaValidator(lambda_client)
 
@@ -722,7 +727,7 @@ class TestFunction:
         assert function["Configuration"]["Runtime"] == "java21"
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted is True
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
@@ -757,14 +762,14 @@ class TestFunction:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         lambda_validator = LambdaValidator(lambda_client)
 
@@ -785,7 +790,7 @@ class TestFunction:
             assert function["Configuration"]["Layers"][i]["Arn"] == layers_list[i]
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted is True
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
@@ -823,14 +828,14 @@ class TestFunction:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         lambda_validator = LambdaValidator(lambda_client)
 
@@ -851,7 +856,7 @@ class TestFunction:
         assert function_event_invoke_config["MaximumRetryAttempts"] == 2
         
         # Delete FunctionEventInvokeConfig
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
         cr["spec"]["functionEventInvokeConfig"] =  None
 
         # Patch k8s resource
@@ -862,7 +867,7 @@ class TestFunction:
         assert not lambda_validator.get_function_event_invoke_config(resource_name)
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted is True
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
@@ -912,14 +917,14 @@ class TestFunction:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         lambda_validator = LambdaValidator(lambda_client)
 
@@ -945,7 +950,7 @@ class TestFunction:
         assert function["Configuration"]["CodeSha256"] == base64_hash_2
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted is True
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
@@ -995,14 +1000,14 @@ class TestFunction:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         lambda_validator = LambdaValidator(lambda_client)
 
@@ -1030,7 +1035,7 @@ class TestFunction:
         assert function["Configuration"]["Architectures"] == ['arm64']
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted is True
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
@@ -1066,14 +1071,14 @@ class TestFunction:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         lambda_validator = LambdaValidator(lambda_client)
 
@@ -1091,7 +1096,7 @@ class TestFunction:
         assert function["Configuration"]["TenancyConfig"]["TenantIsolationMode"] == "PER_TENANT"
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted is True
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
@@ -1128,14 +1133,14 @@ class TestFunction:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         lambda_validator = LambdaValidator(lambda_client)
 

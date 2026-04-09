@@ -36,6 +36,11 @@ CREATE_WAIT_AFTER_SECONDS = 10
 UPDATE_WAIT_AFTER_SECONDS = 10
 DELETE_WAIT_AFTER_SECONDS = 10
 
+CONTROLLER_WAIT_PERIODS = 10
+CONTROLLER_PERIOD_LENGTH = 10
+DELETE_WAIT_PERIODS = 3
+DELETE_PERIOD_LENGTH = 10
+
 @pytest.fixture(scope="module")
 def lambda_function():
         resource_name = random_suffix_name("lambda-function", 24)
@@ -65,7 +70,7 @@ def lambda_function():
 
         # Create lambda function
         k8s.create_custom_resource(function_reference, resource_data)
-        function_resource = k8s.wait_resource_consumed_by_controller(function_reference)
+        function_resource = k8s.wait_resource_consumed_by_controller(function_reference, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert function_resource is not None
         assert k8s.get_resource_exists(function_reference)
@@ -74,7 +79,7 @@ def lambda_function():
 
         yield (function_reference, function_resource)
 
-        _, deleted = k8s.delete_custom_resource(function_reference)
+        _, deleted = k8s.delete_custom_resource(function_reference, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted
 
 @service_marker
@@ -105,14 +110,14 @@ class TestVersion:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         lambda_validator = LambdaValidator(lambda_client)
 
@@ -148,14 +153,14 @@ class TestVersion:
             resource_name_v2, namespace="default",
         )
         k8s.create_custom_resource(ref_v2, resource_data_v2)
-        cr_v2 = k8s.wait_resource_consumed_by_controller(ref_v2)
+        cr_v2 = k8s.wait_resource_consumed_by_controller(ref_v2, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr_v2 is not None
         assert k8s.get_resource_exists(ref_v2)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr_v2 = k8s.wait_resource_consumed_by_controller(ref_v2)
+        cr_v2 = k8s.wait_resource_consumed_by_controller(ref_v2, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         lambda_validator = LambdaValidator(lambda_client)
 
@@ -165,10 +170,10 @@ class TestVersion:
         assert lambda_validator.version_exists(lambda_function_name, version_number_2)
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted is True
 
-        _, deleted_2 = k8s.delete_custom_resource(ref_v2)
+        _, deleted_2 = k8s.delete_custom_resource(ref_v2, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted_2 is True
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
@@ -209,14 +214,14 @@ class TestVersion:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         lambda_validator = LambdaValidator(lambda_client)
 
@@ -226,7 +231,7 @@ class TestVersion:
         assert lambda_validator.version_exists(lambda_function_name, version_number)
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted is True
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
@@ -257,14 +262,14 @@ class TestVersion:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         lambda_validator = LambdaValidator(lambda_client)
 
@@ -273,7 +278,7 @@ class TestVersion:
         assert lambda_validator.version_exists(function_resource_name, version_number)
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted is True
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
@@ -312,14 +317,14 @@ class TestVersion:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         lambda_validator = LambdaValidator(lambda_client)
 
@@ -342,7 +347,7 @@ class TestVersion:
         assert function_event_invoke_config["MaximumRetryAttempts"] == 2
 
         # Delete FunctionEventInvokeConfig
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
         cr["spec"]["functionEventInvokeConfig"] =  None
 
         # Patch k8s resource
@@ -353,7 +358,7 @@ class TestVersion:
         assert not lambda_validator.get_function_event_invoke_config_alias(lambda_function_name, version_number)
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
@@ -389,14 +394,14 @@ class TestVersion:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         lambda_validator = LambdaValidator(lambda_client)
 
@@ -417,7 +422,7 @@ class TestVersion:
         assert provisioned_concurrency_config["RequestedProvisionedConcurrentExecutions"] == 2
 
         # Delete provisioned_concurrency from version
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
         cr["spec"]["provisionedConcurrencyConfig"] = None
 
         # Patch k8s resource     
@@ -428,7 +433,7 @@ class TestVersion:
         assert not lambda_validator.get_provisioned_concurrency_config(lambda_function_name, version_number)
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)

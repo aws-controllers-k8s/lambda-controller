@@ -33,6 +33,11 @@ CREATE_WAIT_AFTER_SECONDS = 10
 UPDATE_WAIT_AFTER_SECONDS = 10
 DELETE_WAIT_AFTER_SECONDS = 10
 
+CONTROLLER_WAIT_PERIODS = 10
+CONTROLLER_PERIOD_LENGTH = 10
+DELETE_WAIT_PERIODS = 3
+DELETE_PERIOD_LENGTH = 10
+
 @service_marker
 @pytest.mark.canary
 class TestCodeSigningConfig:
@@ -60,7 +65,7 @@ class TestCodeSigningConfig:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
@@ -86,7 +91,7 @@ class TestCodeSigningConfig:
         assert csc["Description"] == "new description"
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
