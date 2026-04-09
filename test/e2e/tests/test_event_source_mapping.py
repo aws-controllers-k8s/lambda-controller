@@ -34,6 +34,11 @@ CREATE_WAIT_AFTER_SECONDS = 20
 UPDATE_WAIT_AFTER_SECONDS = 20
 DELETE_WAIT_AFTER_SECONDS = 20
 
+CONTROLLER_WAIT_PERIODS = 10
+CONTROLLER_PERIOD_LENGTH = 10
+DELETE_WAIT_PERIODS = 3
+DELETE_PERIOD_LENGTH = 10
+
 @pytest.fixture(scope="module")
 def lambda_function():
         resource_name = random_suffix_name("lambda-function", 24)
@@ -63,7 +68,7 @@ def lambda_function():
 
         # Create lambda function
         k8s.create_custom_resource(function_reference, resource_data)
-        function_resource = k8s.wait_resource_consumed_by_controller(function_reference)
+        function_resource = k8s.wait_resource_consumed_by_controller(function_reference, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert function_resource is not None
         assert k8s.get_resource_exists(function_reference)
@@ -72,7 +77,7 @@ def lambda_function():
 
         yield (function_reference, function_resource)
 
-        _, deleted = k8s.delete_custom_resource(function_reference)
+        _, deleted = k8s.delete_custom_resource(function_reference, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted
 
 @service_marker
@@ -106,7 +111,7 @@ class TestEventSourceMapping:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
@@ -147,7 +152,7 @@ class TestEventSourceMapping:
 
 
         # Delete the filterCriteria field
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
         cr["spec"]["filterCriteria"] = None
 
         # Patch k8s resource
@@ -160,7 +165,7 @@ class TestEventSourceMapping:
         assert "FilterCriteria" not in esm
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
@@ -196,7 +201,7 @@ class TestEventSourceMapping:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
@@ -234,7 +239,7 @@ class TestEventSourceMapping:
         ]
 
         # Delete the filterCriteria field
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
         cr["spec"]["filterCriteria"] = None
 
         # Patch k8s resource
@@ -247,7 +252,7 @@ class TestEventSourceMapping:
         assert "FilterCriteria" not in esm
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
@@ -284,7 +289,7 @@ class TestEventSourceMapping:
             resource_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)
-        cr = k8s.wait_resource_consumed_by_controller(ref)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
 
         assert cr is not None
         assert k8s.get_resource_exists(ref)
@@ -316,7 +321,7 @@ class TestEventSourceMapping:
         assert esm["MaximumRetryAttempts"] == 3
 
         # Delete k8s resource
-        _, deleted = k8s.delete_custom_resource(ref)
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
         assert deleted
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
