@@ -475,7 +475,28 @@ class TestAlias:
         # Verify permission2 was updated (need to examine contents)
         permission2_updated = False
         for statement in policy["Statement"]:
-            if (statement.get("Sid") == "permission2" and 
+            if (statement.get("Sid") == "permission2" and
                 "updated-rule" in statement.get("Condition", {}).get("ArnLike", {}).get("AWS:SourceArn", "")):
                 permission2_updated = True
         assert permission2_updated
+
+    def test_alias_permission_missing_statement_id(self, lambda_client, lambda_alias):
+        (ref, cr, lambda_function_name, resource_name) = lambda_alias
+
+        # Patch with a permission missing statementID
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
+        cr["spec"]["permissions"] = [
+            {
+                "action": "lambda:InvokeFunction",
+                "principal": "events.amazonaws.com",
+            }
+        ]
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        assert k8s.assert_condition_state_message(
+            ref,
+            "ACK.Terminal",
+            "True",
+            "permission is missing required field 'statementID'",
+        )

@@ -442,13 +442,16 @@ func (rm *resourceManager) syncPermissions(
 	exit := rlog.Trace("rm.syncPermissions")
 	defer func() { exit(err) }()
 
+	for _, p := range desired.ko.Spec.Permissions {
+		if p.StatementID == nil || *p.StatementID == "" {
+			return ackerr.NewTerminalError(fmt.Errorf("permission is missing required field 'statementID'"))
+		}
+	}
+
 	toRemove, toAdd := comparePermissions(desired.ko.Spec.Permissions, latest.ko.Spec.Permissions)
 
 	// Process removals first to avoid conflicts
 	for _, p := range toRemove {
-		if p.StatementID == nil {
-			continue
-		}
 		rlog.Debug("removing permission", "statement_id", p.StatementID)
 		if err = rm.removePermission(ctx, desired, p.StatementID); err != nil {
 			return err
@@ -457,9 +460,6 @@ func (rm *resourceManager) syncPermissions(
 
 	// Then process additions
 	for _, p := range toAdd {
-		if p.StatementID == nil {
-			continue
-		}
 		rlog.Debug("adding permission", "statement_id", p.StatementID)
 		if err = rm.addPermission(ctx, desired, p); err != nil {
 			return err
