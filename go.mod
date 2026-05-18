@@ -8,7 +8,7 @@ require (
 	github.com/aws-controllers-k8s/kafka-controller v0.0.0-20230615185632-102279061de1
 	github.com/aws-controllers-k8s/kms-controller v1.0.30
 	github.com/aws-controllers-k8s/mq-controller v0.0.22
-	github.com/aws-controllers-k8s/runtime v0.58.0
+	github.com/aws-controllers-k8s/runtime v0.59.0
 	github.com/aws-controllers-k8s/s3-controller v0.1.5
 	github.com/aws-controllers-k8s/secretsmanager-controller v1.1.0
 	github.com/aws/aws-sdk-go v1.49.0
@@ -16,7 +16,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.88.5
 	github.com/aws/smithy-go v1.24.2
 	github.com/go-logr/logr v1.4.3
-	github.com/micahhausler/aws-iam-policy v0.4.4
+	github.com/micahhausler/aws-iam-policy v0.4.5-0.20260511184658-411e29b8ffd2
 	github.com/spf13/pflag v1.0.9
 	k8s.io/api v0.35.0
 	k8s.io/apimachinery v0.35.0
