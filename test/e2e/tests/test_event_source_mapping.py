@@ -124,8 +124,16 @@ class TestEventSourceMapping:
         # Check ESM exists
         assert lambda_validator.event_source_mapping_exists(esm_uuid)
 
+        # Check tags were applied on create
+        esm_arn = cr['status']['ackResourceMetadata']['arn']
+        aws_tags = lambda_validator.list_tags(esm_arn)
+        assert aws_tags is not None
+        assert aws_tags.get("environment") == "test"
+        assert aws_tags.get("owner") == "ack-e2e"
+
         # Update cr
         cr["spec"]["batchSize"] = 20
+        cr["spec"]["tags"] = {"environment": "prod", "team": "platform", "owner": None}
         cr["spec"]["filterCriteria"] = {
             "filters": [
                 {
@@ -150,6 +158,11 @@ class TestEventSourceMapping:
         ]
         assert esm["ScalingConfig"]["MaximumConcurrency"] == 4
 
+        # Check tags were updated (added "team", changed "environment", removed "owner")
+        aws_tags = lambda_validator.list_tags(esm_arn)
+        assert aws_tags.get("environment") == "prod"
+        assert aws_tags.get("team") == "platform"
+        assert "owner" not in aws_tags
 
         # Delete the filterCriteria field
         cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)

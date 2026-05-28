@@ -70,6 +70,11 @@ func newResourceDelta(
 			delta.Add("Spec.Description", a.ko.Spec.Description, b.ko.Spec.Description)
 		}
 	}
+	desiredACKTags, _ := convertToOrderedACKTags(a.ko.Spec.Tags)
+	latestACKTags, _ := convertToOrderedACKTags(b.ko.Spec.Tags)
+	if !ackcompare.MapStringStringEqual(desiredACKTags, latestACKTags) {
+		delta.Add("Spec.Tags", a.ko.Spec.Tags, b.ko.Spec.Tags)
+	}
 
 	return delta
 }

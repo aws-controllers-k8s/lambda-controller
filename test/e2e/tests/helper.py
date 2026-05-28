@@ -70,6 +70,14 @@ class LambdaValidator:
     def event_source_mapping_exists(self, esm_uuid: str) -> bool:
         return self.get_event_source_mapping(esm_uuid) is not None
 
+    def list_tags(self, resource_arn: str) -> dict:
+        try:
+            resp = self.lambda_client.list_tags(Resource=resource_arn)
+            return resp.get("Tags", {})
+        except Exception as e:
+            logging.debug(e)
+            return None
+
     def get_code_signing_config(self, code_signing_config_arn: str) -> dict:
         try:
             resp = self.lambda_client.get_code_signing_config(

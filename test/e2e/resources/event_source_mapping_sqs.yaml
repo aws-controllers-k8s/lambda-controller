@@ -10,3 +10,6 @@ spec:
   batchSize: $BATCH_SIZE
   maximumBatchingWindowInSeconds: $MAXIMUM_BATCHING_WINDOW_IN_SECONDS
   enabled: false
+  tags:
+    environment: test
+    owner: ack-e2e

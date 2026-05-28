@@ -61,6 +61,11 @@ spec:
               description:
                 description: Descriptive name for this code signing configuration.
                 type: string
+              tags:
+                additionalProperties:
+                  type: string
+                description: A list of tags to add to the code signing configuration.
+                type: object
             required:
             - allowedPublishers
             type: object

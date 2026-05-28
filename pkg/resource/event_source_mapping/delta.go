@@ -295,6 +295,11 @@ func newResourceDelta(
 			delta.Add("Spec.StartingPositionTimestamp", a.ko.Spec.StartingPositionTimestamp, b.ko.Spec.StartingPositionTimestamp)
 		}
 	}
+	desiredACKTags, _ := convertToOrderedACKTags(a.ko.Spec.Tags)
+	latestACKTags, _ := convertToOrderedACKTags(b.ko.Spec.Tags)
+	if !ackcompare.MapStringStringEqual(desiredACKTags, latestACKTags) {
+		delta.Add("Spec.Tags", a.ko.Spec.Tags, b.ko.Spec.Tags)
+	}
 	if len(a.ko.Spec.Topics) != len(b.ko.Spec.Topics) {
 		delta.Add("Spec.Topics", a.ko.Spec.Topics, b.ko.Spec.Topics)
 	} else if len(a.ko.Spec.Topics) > 0 {

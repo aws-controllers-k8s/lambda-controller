@@ -8,12 +8,10 @@ ignore:
     # FunctionUrlConfig
     # LayerVersion
   field_paths:
-  - CreateCodeSigningConfigInput.Tags
   - CreateEventSourceMappingInput.DocumentDBEventSourceConfig
   - CreateEventSourceMappingInput.KMSKeyArn
   - CreateEventSourceMappingInput.MetricsConfig
   - CreateEventSourceMappingInput.ProvisionedPollerConfig
-  - CreateEventSourceMappingInput.Tags
   - CreateEventSourceMappingOutput.FilterCriteriaError
   - CreateEventSourceMappingOutput.DocumentDBEventSourceConfig
   - CreateEventSourceMappingOutput.KMSKeyArn
@@ -209,8 +207,11 @@ resources:
     fields:
       AllowedPublishers:
         is_required: true
-    tags:
-      ignore: true
+    hooks:
+      sdk_read_one_post_set_output:
+        template_path: hooks/codesigningconfig/sdk_read_one_post_set_output.go.tpl
+      sdk_update_pre_build_request:
+        template_path: hooks/codesigningconfig/sdk_update_pre_build_request.go.tpl
   EventSourceMapping:
     fields:
       Queues:
@@ -250,10 +251,12 @@ resources:
     hooks:
       delta_pre_compare:
         code: customPreCompare(delta, a, b)
+      sdk_read_one_post_set_output:
+        template_path: hooks/eventsourcemapping/sdk_read_one_post_set_output.go.tpl
+      sdk_update_pre_build_request:
+        template_path: hooks/eventsourcemapping/sdk_update_pre_build_request.go.tpl
       sdk_update_post_build_request:
         template_path: hooks/eventsourcemapping/sdk_update_post_build_request.go.tpl
-    tags:
-      ignore: true
   FunctionUrlConfig:
     tags:
       ignore: true
