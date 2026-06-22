@@ -28,6 +28,7 @@ import (
 	kmsapitypes "github.com/aws-controllers-k8s/kms-controller/apis/v1alpha1"
 	ackv1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
+	ackrt "github.com/aws-controllers-k8s/runtime/pkg/runtime"
 	acktypes "github.com/aws-controllers-k8s/runtime/pkg/types"
 	s3apitypes "github.com/aws-controllers-k8s/s3-controller/apis/v1alpha1"
 
@@ -185,9 +186,17 @@ func (rm *resourceManager) resolveReferenceForCode_S3Bucket(
 			if arr.Name == nil || *arr.Name == "" {
 				return hasReferences, fmt.Errorf("provided resource reference is nil or empty: Code.S3BucketRef")
 			}
-			namespace := ko.ObjectMeta.GetNamespace()
-			if arr.Namespace != nil && *arr.Namespace != "" {
-				namespace = *arr.Namespace
+			namespace, err := ackrt.ResolveCrossNamespaceReference(
+				ctx,
+				rm.cfg.EnableCrossNamespace,
+				&ko.Status.Conditions,
+				ackrt.CrossNamespaceRefKindResource,
+				ko.ObjectMeta.GetNamespace(),
+				arr.Namespace,
+				*arr.Name,
+			)
+			if err != nil {
+				return hasReferences, err
 			}
 			obj := &s3apitypes.Bucket{}
 			if err := getReferencedResourceState_Bucket(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
@@ -269,9 +278,17 @@ func (rm *resourceManager) resolveReferenceForKMSKeyARN(
 		if arr.Name == nil || *arr.Name == "" {
 			return hasReferences, fmt.Errorf("provided resource reference is nil or empty: KMSKeyRef")
 		}
-		namespace := ko.ObjectMeta.GetNamespace()
-		if arr.Namespace != nil && *arr.Namespace != "" {
-			namespace = *arr.Namespace
+		namespace, err := ackrt.ResolveCrossNamespaceReference(
+			ctx,
+			rm.cfg.EnableCrossNamespace,
+			&ko.Status.Conditions,
+			ackrt.CrossNamespaceRefKindResource,
+			ko.ObjectMeta.GetNamespace(),
+			arr.Namespace,
+			*arr.Name,
+		)
+		if err != nil {
+			return hasReferences, err
 		}
 		obj := &kmsapitypes.Key{}
 		if err := getReferencedResourceState_Key(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
@@ -352,9 +369,17 @@ func (rm *resourceManager) resolveReferenceForRole(
 		if arr.Name == nil || *arr.Name == "" {
 			return hasReferences, fmt.Errorf("provided resource reference is nil or empty: RoleRef")
 		}
-		namespace := ko.ObjectMeta.GetNamespace()
-		if arr.Namespace != nil && *arr.Namespace != "" {
-			namespace = *arr.Namespace
+		namespace, err := ackrt.ResolveCrossNamespaceReference(
+			ctx,
+			rm.cfg.EnableCrossNamespace,
+			&ko.Status.Conditions,
+			ackrt.CrossNamespaceRefKindResource,
+			ko.ObjectMeta.GetNamespace(),
+			arr.Namespace,
+			*arr.Name,
+		)
+		if err != nil {
+			return hasReferences, err
 		}
 		obj := &iamapitypes.Role{}
 		if err := getReferencedResourceState_Role(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
@@ -437,9 +462,17 @@ func (rm *resourceManager) resolveReferenceForVPCConfig_SecurityGroupIDs(
 				if arr.Name == nil || *arr.Name == "" {
 					return hasReferences, fmt.Errorf("provided resource reference is nil or empty: VPCConfig.SecurityGroupRefs")
 				}
-				namespace := ko.ObjectMeta.GetNamespace()
-				if arr.Namespace != nil && *arr.Namespace != "" {
-					namespace = *arr.Namespace
+				namespace, err := ackrt.ResolveCrossNamespaceReference(
+					ctx,
+					rm.cfg.EnableCrossNamespace,
+					&ko.Status.Conditions,
+					ackrt.CrossNamespaceRefKindResource,
+					ko.ObjectMeta.GetNamespace(),
+					arr.Namespace,
+					*arr.Name,
+				)
+				if err != nil {
+					return hasReferences, err
 				}
 				obj := &ec2apitypes.SecurityGroup{}
 				if err := getReferencedResourceState_SecurityGroup(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
@@ -527,9 +560,17 @@ func (rm *resourceManager) resolveReferenceForVPCConfig_SubnetIDs(
 				if arr.Name == nil || *arr.Name == "" {
 					return hasReferences, fmt.Errorf("provided resource reference is nil or empty: VPCConfig.SubnetRefs")
 				}
-				namespace := ko.ObjectMeta.GetNamespace()
-				if arr.Namespace != nil && *arr.Namespace != "" {
-					namespace = *arr.Namespace
+				namespace, err := ackrt.ResolveCrossNamespaceReference(
+					ctx,
+					rm.cfg.EnableCrossNamespace,
+					&ko.Status.Conditions,
+					ackrt.CrossNamespaceRefKindResource,
+					ko.ObjectMeta.GetNamespace(),
+					arr.Namespace,
+					*arr.Name,
+				)
+				if err != nil {
+					return hasReferences, err
 				}
 				obj := &ec2apitypes.Subnet{}
 				if err := getReferencedResourceState_Subnet(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
