@@ -92,6 +92,9 @@ func newResourceDelta(
 			delta.Add("Spec.CodeSigningConfigARN", a.ko.Spec.CodeSigningConfigARN, b.ko.Spec.CodeSigningConfigARN)
 		}
 	}
+	if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.CodeSigningConfigRef, b.ko.Spec.CodeSigningConfigRef) {
+		delta.Add("Spec.CodeSigningConfigRef", a.ko.Spec.CodeSigningConfigRef, b.ko.Spec.CodeSigningConfigRef)
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.DeadLetterConfig, b.ko.Spec.DeadLetterConfig) {
 		delta.Add("Spec.DeadLetterConfig", a.ko.Spec.DeadLetterConfig, b.ko.Spec.DeadLetterConfig)
 	} else if a.ko.Spec.DeadLetterConfig != nil && b.ko.Spec.DeadLetterConfig != nil {

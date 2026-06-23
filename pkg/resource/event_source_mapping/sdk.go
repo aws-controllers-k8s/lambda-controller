@@ -221,6 +221,15 @@ func (rm *resourceManager) sdkFind(
 	} else {
 		ko.Status.LastProcessingResult = nil
 	}
+	if resp.LoggingConfig != nil {
+		f14 := &svcapitypes.EventSourceMappingLoggingConfig{}
+		if resp.LoggingConfig.SystemLogLevel != "" {
+			f14.SystemLogLevel = aws.String(string(resp.LoggingConfig.SystemLogLevel))
+		}
+		ko.Spec.LoggingConfig = f14
+	} else {
+		ko.Spec.LoggingConfig = nil
+	}
 	if resp.MaximumBatchingWindowInSeconds != nil {
 		maximumBatchingWindowInSecondsCopy := int64(*resp.MaximumBatchingWindowInSeconds)
 		ko.Spec.MaximumBatchingWindowInSeconds = &maximumBatchingWindowInSecondsCopy
@@ -251,85 +260,85 @@ func (rm *resourceManager) sdkFind(
 		ko.Spec.Queues = nil
 	}
 	if resp.ScalingConfig != nil {
-		f21 := &svcapitypes.ScalingConfig{}
+		f22 := &svcapitypes.ScalingConfig{}
 		if resp.ScalingConfig.MaximumConcurrency != nil {
 			maximumConcurrencyCopy := int64(*resp.ScalingConfig.MaximumConcurrency)
-			f21.MaximumConcurrency = &maximumConcurrencyCopy
+			f22.MaximumConcurrency = &maximumConcurrencyCopy
 		}
-		ko.Spec.ScalingConfig = f21
+		ko.Spec.ScalingConfig = f22
 	} else {
 		ko.Spec.ScalingConfig = nil
 	}
 	if resp.SelfManagedEventSource != nil {
-		f22 := &svcapitypes.SelfManagedEventSource{}
+		f23 := &svcapitypes.SelfManagedEventSource{}
 		if resp.SelfManagedEventSource.Endpoints != nil {
-			f22f0 := map[string][]*string{}
-			for f22f0key, f22f0valiter := range resp.SelfManagedEventSource.Endpoints {
-				f22f0[f22f0key] = aws.StringSlice(f22f0valiter)
+			f23f0 := map[string][]*string{}
+			for f23f0key, f23f0valiter := range resp.SelfManagedEventSource.Endpoints {
+				f23f0[f23f0key] = aws.StringSlice(f23f0valiter)
 			}
-			f22.Endpoints = f22f0
+			f23.Endpoints = f23f0
 		}
-		ko.Spec.SelfManagedEventSource = f22
+		ko.Spec.SelfManagedEventSource = f23
 	} else {
 		ko.Spec.SelfManagedEventSource = nil
 	}
 	if resp.SelfManagedKafkaEventSourceConfig != nil {
-		f23 := &svcapitypes.SelfManagedKafkaEventSourceConfig{}
+		f24 := &svcapitypes.SelfManagedKafkaEventSourceConfig{}
 		if resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId != nil {
-			f23.ConsumerGroupID = resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId
+			f24.ConsumerGroupID = resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId
 		}
 		if resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig != nil {
-			f23f1 := &svcapitypes.KafkaSchemaRegistryConfig{}
+			f24f1 := &svcapitypes.KafkaSchemaRegistryConfig{}
 			if resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs != nil {
-				f23f1f0 := []*svcapitypes.KafkaSchemaRegistryAccessConfig{}
-				for _, f23f1f0iter := range resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs {
-					f23f1f0elem := &svcapitypes.KafkaSchemaRegistryAccessConfig{}
-					if f23f1f0iter.Type != "" {
-						f23f1f0elem.Type = aws.String(string(f23f1f0iter.Type))
+				f24f1f0 := []*svcapitypes.KafkaSchemaRegistryAccessConfig{}
+				for _, f24f1f0iter := range resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs {
+					f24f1f0elem := &svcapitypes.KafkaSchemaRegistryAccessConfig{}
+					if f24f1f0iter.Type != "" {
+						f24f1f0elem.Type = aws.String(string(f24f1f0iter.Type))
 					}
-					if f23f1f0iter.URI != nil {
-						f23f1f0elem.URI = f23f1f0iter.URI
+					if f24f1f0iter.URI != nil {
+						f24f1f0elem.URI = f24f1f0iter.URI
 					}
-					f23f1f0 = append(f23f1f0, f23f1f0elem)
+					f24f1f0 = append(f24f1f0, f24f1f0elem)
 				}
-				f23f1.AccessConfigs = f23f1f0
+				f24f1.AccessConfigs = f24f1f0
 			}
 			if resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat != "" {
-				f23f1.EventRecordFormat = aws.String(string(resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat))
+				f24f1.EventRecordFormat = aws.String(string(resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat))
 			}
 			if resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI != nil {
-				f23f1.SchemaRegistryURI = resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI
+				f24f1.SchemaRegistryURI = resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI
 			}
 			if resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs != nil {
-				f23f1f3 := []*svcapitypes.KafkaSchemaValidationConfig{}
-				for _, f23f1f3iter := range resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs {
-					f23f1f3elem := &svcapitypes.KafkaSchemaValidationConfig{}
-					if f23f1f3iter.Attribute != "" {
-						f23f1f3elem.Attribute = aws.String(string(f23f1f3iter.Attribute))
+				f24f1f3 := []*svcapitypes.KafkaSchemaValidationConfig{}
+				for _, f24f1f3iter := range resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs {
+					f24f1f3elem := &svcapitypes.KafkaSchemaValidationConfig{}
+					if f24f1f3iter.Attribute != "" {
+						f24f1f3elem.Attribute = aws.String(string(f24f1f3iter.Attribute))
 					}
-					f23f1f3 = append(f23f1f3, f23f1f3elem)
+					f24f1f3 = append(f24f1f3, f24f1f3elem)
 				}
-				f23f1.SchemaValidationConfigs = f23f1f3
+				f24f1.SchemaValidationConfigs = f24f1f3
 			}
-			f23.SchemaRegistryConfig = f23f1
+			f24.SchemaRegistryConfig = f24f1
 		}
-		ko.Spec.SelfManagedKafkaEventSourceConfig = f23
+		ko.Spec.SelfManagedKafkaEventSourceConfig = f24
 	} else {
 		ko.Spec.SelfManagedKafkaEventSourceConfig = nil
 	}
 	if resp.SourceAccessConfigurations != nil {
-		f24 := []*svcapitypes.SourceAccessConfiguration{}
-		for _, f24iter := range resp.SourceAccessConfigurations {
-			f24elem := &svcapitypes.SourceAccessConfiguration{}
-			if f24iter.Type != "" {
-				f24elem.Type = aws.String(string(f24iter.Type))
+		f25 := []*svcapitypes.SourceAccessConfiguration{}
+		for _, f25iter := range resp.SourceAccessConfigurations {
+			f25elem := &svcapitypes.SourceAccessConfiguration{}
+			if f25iter.Type != "" {
+				f25elem.Type = aws.String(string(f25iter.Type))
 			}
-			if f24iter.URI != nil {
-				f24elem.URI = f24iter.URI
+			if f25iter.URI != nil {
+				f25elem.URI = f25iter.URI
 			}
-			f24 = append(f24, f24elem)
+			f25 = append(f25, f25elem)
 		}
-		ko.Spec.SourceAccessConfigurations = f24
+		ko.Spec.SourceAccessConfigurations = f25
 	} else {
 		ko.Spec.SourceAccessConfigurations = nil
 	}
@@ -556,6 +565,15 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Status.LastProcessingResult = nil
 	}
+	if resp.LoggingConfig != nil {
+		f11 := &svcapitypes.EventSourceMappingLoggingConfig{}
+		if resp.LoggingConfig.SystemLogLevel != "" {
+			f11.SystemLogLevel = aws.String(string(resp.LoggingConfig.SystemLogLevel))
+		}
+		ko.Spec.LoggingConfig = f11
+	} else {
+		ko.Spec.LoggingConfig = nil
+	}
 	if resp.MaximumBatchingWindowInSeconds != nil {
 		maximumBatchingWindowInSecondsCopy := int64(*resp.MaximumBatchingWindowInSeconds)
 		ko.Spec.MaximumBatchingWindowInSeconds = &maximumBatchingWindowInSecondsCopy
@@ -586,85 +604,85 @@ func (rm *resourceManager) sdkCreate(
 		ko.Spec.Queues = nil
 	}
 	if resp.ScalingConfig != nil {
-		f16 := &svcapitypes.ScalingConfig{}
+		f17 := &svcapitypes.ScalingConfig{}
 		if resp.ScalingConfig.MaximumConcurrency != nil {
 			maximumConcurrencyCopy := int64(*resp.ScalingConfig.MaximumConcurrency)
-			f16.MaximumConcurrency = &maximumConcurrencyCopy
+			f17.MaximumConcurrency = &maximumConcurrencyCopy
 		}
-		ko.Spec.ScalingConfig = f16
+		ko.Spec.ScalingConfig = f17
 	} else {
 		ko.Spec.ScalingConfig = nil
 	}
 	if resp.SelfManagedEventSource != nil {
-		f17 := &svcapitypes.SelfManagedEventSource{}
+		f18 := &svcapitypes.SelfManagedEventSource{}
 		if resp.SelfManagedEventSource.Endpoints != nil {
-			f17f0 := map[string][]*string{}
-			for f17f0key, f17f0valiter := range resp.SelfManagedEventSource.Endpoints {
-				f17f0[f17f0key] = aws.StringSlice(f17f0valiter)
+			f18f0 := map[string][]*string{}
+			for f18f0key, f18f0valiter := range resp.SelfManagedEventSource.Endpoints {
+				f18f0[f18f0key] = aws.StringSlice(f18f0valiter)
 			}
-			f17.Endpoints = f17f0
+			f18.Endpoints = f18f0
 		}
-		ko.Spec.SelfManagedEventSource = f17
+		ko.Spec.SelfManagedEventSource = f18
 	} else {
 		ko.Spec.SelfManagedEventSource = nil
 	}
 	if resp.SelfManagedKafkaEventSourceConfig != nil {
-		f18 := &svcapitypes.SelfManagedKafkaEventSourceConfig{}
+		f19 := &svcapitypes.SelfManagedKafkaEventSourceConfig{}
 		if resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId != nil {
-			f18.ConsumerGroupID = resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId
+			f19.ConsumerGroupID = resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId
 		}
 		if resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig != nil {
-			f18f1 := &svcapitypes.KafkaSchemaRegistryConfig{}
+			f19f1 := &svcapitypes.KafkaSchemaRegistryConfig{}
 			if resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs != nil {
-				f18f1f0 := []*svcapitypes.KafkaSchemaRegistryAccessConfig{}
-				for _, f18f1f0iter := range resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs {
-					f18f1f0elem := &svcapitypes.KafkaSchemaRegistryAccessConfig{}
-					if f18f1f0iter.Type != "" {
-						f18f1f0elem.Type = aws.String(string(f18f1f0iter.Type))
+				f19f1f0 := []*svcapitypes.KafkaSchemaRegistryAccessConfig{}
+				for _, f19f1f0iter := range resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs {
+					f19f1f0elem := &svcapitypes.KafkaSchemaRegistryAccessConfig{}
+					if f19f1f0iter.Type != "" {
+						f19f1f0elem.Type = aws.String(string(f19f1f0iter.Type))
 					}
-					if f18f1f0iter.URI != nil {
-						f18f1f0elem.URI = f18f1f0iter.URI
+					if f19f1f0iter.URI != nil {
+						f19f1f0elem.URI = f19f1f0iter.URI
 					}
-					f18f1f0 = append(f18f1f0, f18f1f0elem)
+					f19f1f0 = append(f19f1f0, f19f1f0elem)
 				}
-				f18f1.AccessConfigs = f18f1f0
+				f19f1.AccessConfigs = f19f1f0
 			}
 			if resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat != "" {
-				f18f1.EventRecordFormat = aws.String(string(resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat))
+				f19f1.EventRecordFormat = aws.String(string(resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat))
 			}
 			if resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI != nil {
-				f18f1.SchemaRegistryURI = resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI
+				f19f1.SchemaRegistryURI = resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI
 			}
 			if resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs != nil {
-				f18f1f3 := []*svcapitypes.KafkaSchemaValidationConfig{}
-				for _, f18f1f3iter := range resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs {
-					f18f1f3elem := &svcapitypes.KafkaSchemaValidationConfig{}
-					if f18f1f3iter.Attribute != "" {
-						f18f1f3elem.Attribute = aws.String(string(f18f1f3iter.Attribute))
+				f19f1f3 := []*svcapitypes.KafkaSchemaValidationConfig{}
+				for _, f19f1f3iter := range resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs {
+					f19f1f3elem := &svcapitypes.KafkaSchemaValidationConfig{}
+					if f19f1f3iter.Attribute != "" {
+						f19f1f3elem.Attribute = aws.String(string(f19f1f3iter.Attribute))
 					}
-					f18f1f3 = append(f18f1f3, f18f1f3elem)
+					f19f1f3 = append(f19f1f3, f19f1f3elem)
 				}
-				f18f1.SchemaValidationConfigs = f18f1f3
+				f19f1.SchemaValidationConfigs = f19f1f3
 			}
-			f18.SchemaRegistryConfig = f18f1
+			f19.SchemaRegistryConfig = f19f1
 		}
-		ko.Spec.SelfManagedKafkaEventSourceConfig = f18
+		ko.Spec.SelfManagedKafkaEventSourceConfig = f19
 	} else {
 		ko.Spec.SelfManagedKafkaEventSourceConfig = nil
 	}
 	if resp.SourceAccessConfigurations != nil {
-		f19 := []*svcapitypes.SourceAccessConfiguration{}
-		for _, f19iter := range resp.SourceAccessConfigurations {
-			f19elem := &svcapitypes.SourceAccessConfiguration{}
-			if f19iter.Type != "" {
-				f19elem.Type = aws.String(string(f19iter.Type))
+		f20 := []*svcapitypes.SourceAccessConfiguration{}
+		for _, f20iter := range resp.SourceAccessConfigurations {
+			f20elem := &svcapitypes.SourceAccessConfiguration{}
+			if f20iter.Type != "" {
+				f20elem.Type = aws.String(string(f20iter.Type))
 			}
-			if f19iter.URI != nil {
-				f19elem.URI = f19iter.URI
+			if f20iter.URI != nil {
+				f20elem.URI = f20iter.URI
 			}
-			f19 = append(f19, f19elem)
+			f20 = append(f20, f20elem)
 		}
-		ko.Spec.SourceAccessConfigurations = f19
+		ko.Spec.SourceAccessConfigurations = f20
 	} else {
 		ko.Spec.SourceAccessConfigurations = nil
 	}
@@ -821,6 +839,13 @@ func (rm *resourceManager) newCreateRequestPayload(
 		}
 		res.FunctionResponseTypes = f8
 	}
+	if r.ko.Spec.LoggingConfig != nil {
+		f9 := &svcsdktypes.EventSourceMappingLoggingConfig{}
+		if r.ko.Spec.LoggingConfig.SystemLogLevel != nil {
+			f9.SystemLogLevel = svcsdktypes.EventSourceMappingSystemLogLevel(*r.ko.Spec.LoggingConfig.SystemLogLevel)
+		}
+		res.LoggingConfig = f9
+	}
 	if r.ko.Spec.MaximumBatchingWindowInSeconds != nil {
 		maximumBatchingWindowInSecondsCopy0 := *r.ko.Spec.MaximumBatchingWindowInSeconds
 		if maximumBatchingWindowInSecondsCopy0 > math.MaxInt32 || maximumBatchingWindowInSecondsCopy0 < math.MinInt32 {
@@ -857,83 +882,83 @@ func (rm *resourceManager) newCreateRequestPayload(
 		res.Queues = aws.ToStringSlice(r.ko.Spec.Queues)
 	}
 	if r.ko.Spec.ScalingConfig != nil {
-		f14 := &svcsdktypes.ScalingConfig{}
+		f15 := &svcsdktypes.ScalingConfig{}
 		if r.ko.Spec.ScalingConfig.MaximumConcurrency != nil {
 			maximumConcurrencyCopy0 := *r.ko.Spec.ScalingConfig.MaximumConcurrency
 			if maximumConcurrencyCopy0 > math.MaxInt32 || maximumConcurrencyCopy0 < math.MinInt32 {
 				return nil, fmt.Errorf("error: field MaximumConcurrency is of type int32")
 			}
 			maximumConcurrencyCopy := int32(maximumConcurrencyCopy0)
-			f14.MaximumConcurrency = &maximumConcurrencyCopy
+			f15.MaximumConcurrency = &maximumConcurrencyCopy
 		}
-		res.ScalingConfig = f14
+		res.ScalingConfig = f15
 	}
 	if r.ko.Spec.SelfManagedEventSource != nil {
-		f15 := &svcsdktypes.SelfManagedEventSource{}
+		f16 := &svcsdktypes.SelfManagedEventSource{}
 		if r.ko.Spec.SelfManagedEventSource.Endpoints != nil {
-			f15f0 := map[string][]string{}
-			for f15f0key, f15f0valiter := range r.ko.Spec.SelfManagedEventSource.Endpoints {
-				f15f0[f15f0key] = aws.ToStringSlice(f15f0valiter)
+			f16f0 := map[string][]string{}
+			for f16f0key, f16f0valiter := range r.ko.Spec.SelfManagedEventSource.Endpoints {
+				f16f0[f16f0key] = aws.ToStringSlice(f16f0valiter)
 			}
-			f15.Endpoints = f15f0
+			f16.Endpoints = f16f0
 		}
-		res.SelfManagedEventSource = f15
+		res.SelfManagedEventSource = f16
 	}
 	if r.ko.Spec.SelfManagedKafkaEventSourceConfig != nil {
-		f16 := &svcsdktypes.SelfManagedKafkaEventSourceConfig{}
+		f17 := &svcsdktypes.SelfManagedKafkaEventSourceConfig{}
 		if r.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID != nil {
-			f16.ConsumerGroupId = r.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID
+			f17.ConsumerGroupId = r.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID
 		}
 		if r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig != nil {
-			f16f1 := &svcsdktypes.KafkaSchemaRegistryConfig{}
+			f17f1 := &svcsdktypes.KafkaSchemaRegistryConfig{}
 			if r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs != nil {
-				f16f1f0 := []svcsdktypes.KafkaSchemaRegistryAccessConfig{}
-				for _, f16f1f0iter := range r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs {
-					f16f1f0elem := &svcsdktypes.KafkaSchemaRegistryAccessConfig{}
-					if f16f1f0iter.Type != nil {
-						f16f1f0elem.Type = svcsdktypes.KafkaSchemaRegistryAuthType(*f16f1f0iter.Type)
+				f17f1f0 := []svcsdktypes.KafkaSchemaRegistryAccessConfig{}
+				for _, f17f1f0iter := range r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs {
+					f17f1f0elem := &svcsdktypes.KafkaSchemaRegistryAccessConfig{}
+					if f17f1f0iter.Type != nil {
+						f17f1f0elem.Type = svcsdktypes.KafkaSchemaRegistryAuthType(*f17f1f0iter.Type)
 					}
-					if f16f1f0iter.URI != nil {
-						f16f1f0elem.URI = f16f1f0iter.URI
+					if f17f1f0iter.URI != nil {
+						f17f1f0elem.URI = f17f1f0iter.URI
 					}
-					f16f1f0 = append(f16f1f0, *f16f1f0elem)
+					f17f1f0 = append(f17f1f0, *f17f1f0elem)
 				}
-				f16f1.AccessConfigs = f16f1f0
+				f17f1.AccessConfigs = f17f1f0
 			}
 			if r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat != nil {
-				f16f1.EventRecordFormat = svcsdktypes.SchemaRegistryEventRecordFormat(*r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat)
+				f17f1.EventRecordFormat = svcsdktypes.SchemaRegistryEventRecordFormat(*r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat)
 			}
 			if r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI != nil {
-				f16f1.SchemaRegistryURI = r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI
+				f17f1.SchemaRegistryURI = r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI
 			}
 			if r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs != nil {
-				f16f1f3 := []svcsdktypes.KafkaSchemaValidationConfig{}
-				for _, f16f1f3iter := range r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs {
-					f16f1f3elem := &svcsdktypes.KafkaSchemaValidationConfig{}
-					if f16f1f3iter.Attribute != nil {
-						f16f1f3elem.Attribute = svcsdktypes.KafkaSchemaValidationAttribute(*f16f1f3iter.Attribute)
+				f17f1f3 := []svcsdktypes.KafkaSchemaValidationConfig{}
+				for _, f17f1f3iter := range r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs {
+					f17f1f3elem := &svcsdktypes.KafkaSchemaValidationConfig{}
+					if f17f1f3iter.Attribute != nil {
+						f17f1f3elem.Attribute = svcsdktypes.KafkaSchemaValidationAttribute(*f17f1f3iter.Attribute)
 					}
-					f16f1f3 = append(f16f1f3, *f16f1f3elem)
+					f17f1f3 = append(f17f1f3, *f17f1f3elem)
 				}
-				f16f1.SchemaValidationConfigs = f16f1f3
+				f17f1.SchemaValidationConfigs = f17f1f3
 			}
-			f16.SchemaRegistryConfig = f16f1
+			f17.SchemaRegistryConfig = f17f1
 		}
-		res.SelfManagedKafkaEventSourceConfig = f16
+		res.SelfManagedKafkaEventSourceConfig = f17
 	}
 	if r.ko.Spec.SourceAccessConfigurations != nil {
-		f17 := []svcsdktypes.SourceAccessConfiguration{}
-		for _, f17iter := range r.ko.Spec.SourceAccessConfigurations {
-			f17elem := &svcsdktypes.SourceAccessConfiguration{}
-			if f17iter.Type != nil {
-				f17elem.Type = svcsdktypes.SourceAccessType(*f17iter.Type)
+		f18 := []svcsdktypes.SourceAccessConfiguration{}
+		for _, f18iter := range r.ko.Spec.SourceAccessConfigurations {
+			f18elem := &svcsdktypes.SourceAccessConfiguration{}
+			if f18iter.Type != nil {
+				f18elem.Type = svcsdktypes.SourceAccessType(*f18iter.Type)
 			}
-			if f17iter.URI != nil {
-				f17elem.URI = f17iter.URI
+			if f18iter.URI != nil {
+				f18elem.URI = f18iter.URI
 			}
-			f17 = append(f17, *f17elem)
+			f18 = append(f18, *f18elem)
 		}
-		res.SourceAccessConfigurations = f17
+		res.SourceAccessConfigurations = f18
 	}
 	if r.ko.Spec.StartingPosition != nil {
 		res.StartingPosition = svcsdktypes.EventSourcePosition(*r.ko.Spec.StartingPosition)
@@ -1124,6 +1149,15 @@ func (rm *resourceManager) sdkUpdate(
 	} else {
 		ko.Status.LastProcessingResult = nil
 	}
+	if resp.LoggingConfig != nil {
+		f14 := &svcapitypes.EventSourceMappingLoggingConfig{}
+		if resp.LoggingConfig.SystemLogLevel != "" {
+			f14.SystemLogLevel = aws.String(string(resp.LoggingConfig.SystemLogLevel))
+		}
+		ko.Spec.LoggingConfig = f14
+	} else {
+		ko.Spec.LoggingConfig = nil
+	}
 	if resp.MaximumBatchingWindowInSeconds != nil {
 		maximumBatchingWindowInSecondsCopy := int64(*resp.MaximumBatchingWindowInSeconds)
 		ko.Spec.MaximumBatchingWindowInSeconds = &maximumBatchingWindowInSecondsCopy
@@ -1154,85 +1188,85 @@ func (rm *resourceManager) sdkUpdate(
 		ko.Spec.Queues = nil
 	}
 	if resp.ScalingConfig != nil {
-		f21 := &svcapitypes.ScalingConfig{}
+		f22 := &svcapitypes.ScalingConfig{}
 		if resp.ScalingConfig.MaximumConcurrency != nil {
 			maximumConcurrencyCopy := int64(*resp.ScalingConfig.MaximumConcurrency)
-			f21.MaximumConcurrency = &maximumConcurrencyCopy
+			f22.MaximumConcurrency = &maximumConcurrencyCopy
 		}
-		ko.Spec.ScalingConfig = f21
+		ko.Spec.ScalingConfig = f22
 	} else {
 		ko.Spec.ScalingConfig = nil
 	}
 	if resp.SelfManagedEventSource != nil {
-		f22 := &svcapitypes.SelfManagedEventSource{}
+		f23 := &svcapitypes.SelfManagedEventSource{}
 		if resp.SelfManagedEventSource.Endpoints != nil {
-			f22f0 := map[string][]*string{}
-			for f22f0key, f22f0valiter := range resp.SelfManagedEventSource.Endpoints {
-				f22f0[f22f0key] = aws.StringSlice(f22f0valiter)
+			f23f0 := map[string][]*string{}
+			for f23f0key, f23f0valiter := range resp.SelfManagedEventSource.Endpoints {
+				f23f0[f23f0key] = aws.StringSlice(f23f0valiter)
 			}
-			f22.Endpoints = f22f0
+			f23.Endpoints = f23f0
 		}
-		ko.Spec.SelfManagedEventSource = f22
+		ko.Spec.SelfManagedEventSource = f23
 	} else {
 		ko.Spec.SelfManagedEventSource = nil
 	}
 	if resp.SelfManagedKafkaEventSourceConfig != nil {
-		f23 := &svcapitypes.SelfManagedKafkaEventSourceConfig{}
+		f24 := &svcapitypes.SelfManagedKafkaEventSourceConfig{}
 		if resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId != nil {
-			f23.ConsumerGroupID = resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId
+			f24.ConsumerGroupID = resp.SelfManagedKafkaEventSourceConfig.ConsumerGroupId
 		}
 		if resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig != nil {
-			f23f1 := &svcapitypes.KafkaSchemaRegistryConfig{}
+			f24f1 := &svcapitypes.KafkaSchemaRegistryConfig{}
 			if resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs != nil {
-				f23f1f0 := []*svcapitypes.KafkaSchemaRegistryAccessConfig{}
-				for _, f23f1f0iter := range resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs {
-					f23f1f0elem := &svcapitypes.KafkaSchemaRegistryAccessConfig{}
-					if f23f1f0iter.Type != "" {
-						f23f1f0elem.Type = aws.String(string(f23f1f0iter.Type))
+				f24f1f0 := []*svcapitypes.KafkaSchemaRegistryAccessConfig{}
+				for _, f24f1f0iter := range resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs {
+					f24f1f0elem := &svcapitypes.KafkaSchemaRegistryAccessConfig{}
+					if f24f1f0iter.Type != "" {
+						f24f1f0elem.Type = aws.String(string(f24f1f0iter.Type))
 					}
-					if f23f1f0iter.URI != nil {
-						f23f1f0elem.URI = f23f1f0iter.URI
+					if f24f1f0iter.URI != nil {
+						f24f1f0elem.URI = f24f1f0iter.URI
 					}
-					f23f1f0 = append(f23f1f0, f23f1f0elem)
+					f24f1f0 = append(f24f1f0, f24f1f0elem)
 				}
-				f23f1.AccessConfigs = f23f1f0
+				f24f1.AccessConfigs = f24f1f0
 			}
 			if resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat != "" {
-				f23f1.EventRecordFormat = aws.String(string(resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat))
+				f24f1.EventRecordFormat = aws.String(string(resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat))
 			}
 			if resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI != nil {
-				f23f1.SchemaRegistryURI = resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI
+				f24f1.SchemaRegistryURI = resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI
 			}
 			if resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs != nil {
-				f23f1f3 := []*svcapitypes.KafkaSchemaValidationConfig{}
-				for _, f23f1f3iter := range resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs {
-					f23f1f3elem := &svcapitypes.KafkaSchemaValidationConfig{}
-					if f23f1f3iter.Attribute != "" {
-						f23f1f3elem.Attribute = aws.String(string(f23f1f3iter.Attribute))
+				f24f1f3 := []*svcapitypes.KafkaSchemaValidationConfig{}
+				for _, f24f1f3iter := range resp.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs {
+					f24f1f3elem := &svcapitypes.KafkaSchemaValidationConfig{}
+					if f24f1f3iter.Attribute != "" {
+						f24f1f3elem.Attribute = aws.String(string(f24f1f3iter.Attribute))
 					}
-					f23f1f3 = append(f23f1f3, f23f1f3elem)
+					f24f1f3 = append(f24f1f3, f24f1f3elem)
 				}
-				f23f1.SchemaValidationConfigs = f23f1f3
+				f24f1.SchemaValidationConfigs = f24f1f3
 			}
-			f23.SchemaRegistryConfig = f23f1
+			f24.SchemaRegistryConfig = f24f1
 		}
-		ko.Spec.SelfManagedKafkaEventSourceConfig = f23
+		ko.Spec.SelfManagedKafkaEventSourceConfig = f24
 	} else {
 		ko.Spec.SelfManagedKafkaEventSourceConfig = nil
 	}
 	if resp.SourceAccessConfigurations != nil {
-		f24 := []*svcapitypes.SourceAccessConfiguration{}
-		for _, f24iter := range resp.SourceAccessConfigurations {
-			f24elem := &svcapitypes.SourceAccessConfiguration{}
-			if f24iter.Type != "" {
-				f24elem.Type = aws.String(string(f24iter.Type))
+		f25 := []*svcapitypes.SourceAccessConfiguration{}
+		for _, f25iter := range resp.SourceAccessConfigurations {
+			f25elem := &svcapitypes.SourceAccessConfiguration{}
+			if f25iter.Type != "" {
+				f25elem.Type = aws.String(string(f25iter.Type))
 			}
-			if f24iter.URI != nil {
-				f24elem.URI = f24iter.URI
+			if f25iter.URI != nil {
+				f25elem.URI = f25iter.URI
 			}
-			f24 = append(f24, f24elem)
+			f25 = append(f25, f25elem)
 		}
-		ko.Spec.SourceAccessConfigurations = f24
+		ko.Spec.SourceAccessConfigurations = f25
 	} else {
 		ko.Spec.SourceAccessConfigurations = nil
 	}
@@ -1387,6 +1421,13 @@ func (rm *resourceManager) newUpdateRequestPayload(
 		}
 		res.FunctionResponseTypes = f8
 	}
+	if r.ko.Spec.LoggingConfig != nil {
+		f10 := &svcsdktypes.EventSourceMappingLoggingConfig{}
+		if r.ko.Spec.LoggingConfig.SystemLogLevel != nil {
+			f10.SystemLogLevel = svcsdktypes.EventSourceMappingSystemLogLevel(*r.ko.Spec.LoggingConfig.SystemLogLevel)
+		}
+		res.LoggingConfig = f10
+	}
 	if r.ko.Spec.MaximumBatchingWindowInSeconds != nil {
 		maximumBatchingWindowInSecondsCopy0 := *r.ko.Spec.MaximumBatchingWindowInSeconds
 		if maximumBatchingWindowInSecondsCopy0 > math.MaxInt32 || maximumBatchingWindowInSecondsCopy0 < math.MinInt32 {
@@ -1420,72 +1461,72 @@ func (rm *resourceManager) newUpdateRequestPayload(
 		res.ParallelizationFactor = &parallelizationFactorCopy
 	}
 	if r.ko.Spec.ScalingConfig != nil {
-		f16 := &svcsdktypes.ScalingConfig{}
+		f17 := &svcsdktypes.ScalingConfig{}
 		if r.ko.Spec.ScalingConfig.MaximumConcurrency != nil {
 			maximumConcurrencyCopy0 := *r.ko.Spec.ScalingConfig.MaximumConcurrency
 			if maximumConcurrencyCopy0 > math.MaxInt32 || maximumConcurrencyCopy0 < math.MinInt32 {
 				return nil, fmt.Errorf("error: field MaximumConcurrency is of type int32")
 			}
 			maximumConcurrencyCopy := int32(maximumConcurrencyCopy0)
-			f16.MaximumConcurrency = &maximumConcurrencyCopy
+			f17.MaximumConcurrency = &maximumConcurrencyCopy
 		}
-		res.ScalingConfig = f16
+		res.ScalingConfig = f17
 	}
 	if r.ko.Spec.SelfManagedKafkaEventSourceConfig != nil {
-		f17 := &svcsdktypes.SelfManagedKafkaEventSourceConfig{}
+		f18 := &svcsdktypes.SelfManagedKafkaEventSourceConfig{}
 		if r.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID != nil {
-			f17.ConsumerGroupId = r.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID
+			f18.ConsumerGroupId = r.ko.Spec.SelfManagedKafkaEventSourceConfig.ConsumerGroupID
 		}
 		if r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig != nil {
-			f17f1 := &svcsdktypes.KafkaSchemaRegistryConfig{}
+			f18f1 := &svcsdktypes.KafkaSchemaRegistryConfig{}
 			if r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs != nil {
-				f17f1f0 := []svcsdktypes.KafkaSchemaRegistryAccessConfig{}
-				for _, f17f1f0iter := range r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs {
-					f17f1f0elem := &svcsdktypes.KafkaSchemaRegistryAccessConfig{}
-					if f17f1f0iter.Type != nil {
-						f17f1f0elem.Type = svcsdktypes.KafkaSchemaRegistryAuthType(*f17f1f0iter.Type)
+				f18f1f0 := []svcsdktypes.KafkaSchemaRegistryAccessConfig{}
+				for _, f18f1f0iter := range r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs {
+					f18f1f0elem := &svcsdktypes.KafkaSchemaRegistryAccessConfig{}
+					if f18f1f0iter.Type != nil {
+						f18f1f0elem.Type = svcsdktypes.KafkaSchemaRegistryAuthType(*f18f1f0iter.Type)
 					}
-					if f17f1f0iter.URI != nil {
-						f17f1f0elem.URI = f17f1f0iter.URI
+					if f18f1f0iter.URI != nil {
+						f18f1f0elem.URI = f18f1f0iter.URI
 					}
-					f17f1f0 = append(f17f1f0, *f17f1f0elem)
+					f18f1f0 = append(f18f1f0, *f18f1f0elem)
 				}
-				f17f1.AccessConfigs = f17f1f0
+				f18f1.AccessConfigs = f18f1f0
 			}
 			if r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat != nil {
-				f17f1.EventRecordFormat = svcsdktypes.SchemaRegistryEventRecordFormat(*r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat)
+				f18f1.EventRecordFormat = svcsdktypes.SchemaRegistryEventRecordFormat(*r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.EventRecordFormat)
 			}
 			if r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI != nil {
-				f17f1.SchemaRegistryURI = r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI
+				f18f1.SchemaRegistryURI = r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaRegistryURI
 			}
 			if r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs != nil {
-				f17f1f3 := []svcsdktypes.KafkaSchemaValidationConfig{}
-				for _, f17f1f3iter := range r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs {
-					f17f1f3elem := &svcsdktypes.KafkaSchemaValidationConfig{}
-					if f17f1f3iter.Attribute != nil {
-						f17f1f3elem.Attribute = svcsdktypes.KafkaSchemaValidationAttribute(*f17f1f3iter.Attribute)
+				f18f1f3 := []svcsdktypes.KafkaSchemaValidationConfig{}
+				for _, f18f1f3iter := range r.ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.SchemaValidationConfigs {
+					f18f1f3elem := &svcsdktypes.KafkaSchemaValidationConfig{}
+					if f18f1f3iter.Attribute != nil {
+						f18f1f3elem.Attribute = svcsdktypes.KafkaSchemaValidationAttribute(*f18f1f3iter.Attribute)
 					}
-					f17f1f3 = append(f17f1f3, *f17f1f3elem)
+					f18f1f3 = append(f18f1f3, *f18f1f3elem)
 				}
-				f17f1.SchemaValidationConfigs = f17f1f3
+				f18f1.SchemaValidationConfigs = f18f1f3
 			}
-			f17.SchemaRegistryConfig = f17f1
+			f18.SchemaRegistryConfig = f18f1
 		}
-		res.SelfManagedKafkaEventSourceConfig = f17
+		res.SelfManagedKafkaEventSourceConfig = f18
 	}
 	if r.ko.Spec.SourceAccessConfigurations != nil {
-		f18 := []svcsdktypes.SourceAccessConfiguration{}
-		for _, f18iter := range r.ko.Spec.SourceAccessConfigurations {
-			f18elem := &svcsdktypes.SourceAccessConfiguration{}
-			if f18iter.Type != nil {
-				f18elem.Type = svcsdktypes.SourceAccessType(*f18iter.Type)
+		f19 := []svcsdktypes.SourceAccessConfiguration{}
+		for _, f19iter := range r.ko.Spec.SourceAccessConfigurations {
+			f19elem := &svcsdktypes.SourceAccessConfiguration{}
+			if f19iter.Type != nil {
+				f19elem.Type = svcsdktypes.SourceAccessType(*f19iter.Type)
 			}
-			if f18iter.URI != nil {
-				f18elem.URI = f18iter.URI
+			if f19iter.URI != nil {
+				f19elem.URI = f19iter.URI
 			}
-			f18 = append(f18, *f18elem)
+			f19 = append(f19, *f19elem)
 		}
-		res.SourceAccessConfigurations = f18
+		res.SourceAccessConfigurations = f19
 	}
 	if r.ko.Spec.TumblingWindowInSeconds != nil {
 		tumblingWindowInSecondsCopy0 := *r.ko.Spec.TumblingWindowInSeconds

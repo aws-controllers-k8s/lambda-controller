@@ -63,6 +63,10 @@ func (rm *resourceManager) ClearResolvedReferences(res acktypes.AWSResource) ack
 		}
 	}
 
+	if ko.Spec.CodeSigningConfigRef != nil {
+		ko.Spec.CodeSigningConfigARN = nil
+	}
+
 	if ko.Spec.KMSKeyRef != nil {
 		ko.Spec.KMSKeyARN = nil
 	}
@@ -108,6 +112,12 @@ func (rm *resourceManager) ResolveReferences(
 		resourceHasReferences = resourceHasReferences || fieldHasReferences
 	}
 
+	if fieldHasReferences, err := rm.resolveReferenceForCodeSigningConfigARN(ctx, apiReader, ko); err != nil {
+		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
+	} else {
+		resourceHasReferences = resourceHasReferences || fieldHasReferences
+	}
+
 	if fieldHasReferences, err := rm.resolveReferenceForKMSKeyARN(ctx, apiReader, ko); err != nil {
 		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
 	} else {
@@ -143,6 +153,10 @@ func validateReferenceFields(ko *svcapitypes.Function) error {
 		if ko.Spec.Code.S3BucketRef != nil && ko.Spec.Code.S3Bucket != nil {
 			return ackerr.ResourceReferenceAndIDNotSupportedFor("Code.S3Bucket", "Code.S3BucketRef")
 		}
+	}
+
+	if ko.Spec.CodeSigningConfigRef != nil && ko.Spec.CodeSigningConfigARN != nil {
+		return ackerr.ResourceReferenceAndIDNotSupportedFor("CodeSigningConfigARN", "CodeSigningConfigRef")
 	}
 
 	if ko.Spec.KMSKeyRef != nil && ko.Spec.KMSKeyARN != nil {
@@ -259,6 +273,97 @@ func getReferencedResourceState_Bucket(
 			"Bucket",
 			namespace, name,
 			"Spec.Name")
+	}
+	return nil
+}
+
+// resolveReferenceForCodeSigningConfigARN reads the resource referenced
+// from CodeSigningConfigRef field and sets the CodeSigningConfigARN
+// from referenced resource. Returns a boolean indicating whether a reference
+// contains references, or an error
+func (rm *resourceManager) resolveReferenceForCodeSigningConfigARN(
+	ctx context.Context,
+	apiReader client.Reader,
+	ko *svcapitypes.Function,
+) (hasReferences bool, err error) {
+	if ko.Spec.CodeSigningConfigRef != nil && ko.Spec.CodeSigningConfigRef.From != nil {
+		hasReferences = true
+		arr := ko.Spec.CodeSigningConfigRef.From
+		if arr.Name == nil || *arr.Name == "" {
+			return hasReferences, fmt.Errorf("provided resource reference is nil or empty: CodeSigningConfigRef")
+		}
+		namespace, err := ackrt.ResolveCrossNamespaceReference(
+			ctx,
+			rm.cfg.EnableCrossNamespace,
+			&ko.Status.Conditions,
+			ackrt.CrossNamespaceRefKindResource,
+			ko.ObjectMeta.GetNamespace(),
+			arr.Namespace,
+			*arr.Name,
+		)
+		if err != nil {
+			return hasReferences, err
+		}
+		obj := &svcapitypes.CodeSigningConfig{}
+		if err := getReferencedResourceState_CodeSigningConfig(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
+			return hasReferences, err
+		}
+		ko.Spec.CodeSigningConfigARN = (*string)(obj.Status.ACKResourceMetadata.ARN)
+	}
+
+	return hasReferences, nil
+}
+
+// getReferencedResourceState_CodeSigningConfig looks up whether a referenced resource
+// exists and is in a ACK.ResourceSynced=True state. If the referenced resource does exist and is
+// in a Synced state, returns nil, otherwise returns `ackerr.ResourceReferenceTerminalFor` or
+// `ResourceReferenceNotSyncedFor` depending on if the resource is in a Terminal state.
+func getReferencedResourceState_CodeSigningConfig(
+	ctx context.Context,
+	apiReader client.Reader,
+	obj *svcapitypes.CodeSigningConfig,
+	name string, // the Kubernetes name of the referenced resource
+	namespace string, // the Kubernetes namespace of the referenced resource
+) error {
+	namespacedName := types.NamespacedName{
+		Namespace: namespace,
+		Name:      name,
+	}
+	err := apiReader.Get(ctx, namespacedName, obj)
+	if err != nil {
+		return err
+	}
+	var refResourceTerminal bool
+	for _, cond := range obj.Status.Conditions {
+		if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
+			cond.Status == corev1.ConditionTrue {
+			return ackerr.ResourceReferenceTerminalFor(
+				"CodeSigningConfig",
+				namespace, name)
+		}
+	}
+	if refResourceTerminal {
+		return ackerr.ResourceReferenceTerminalFor(
+			"CodeSigningConfig",
+			namespace, name)
+	}
+	var refResourceSynced bool
+	for _, cond := range obj.Status.Conditions {
+		if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+			cond.Status == corev1.ConditionTrue {
+			refResourceSynced = true
+		}
+	}
+	if !refResourceSynced {
+		return ackerr.ResourceReferenceNotSyncedFor(
+			"CodeSigningConfig",
+			namespace, name)
+	}
+	if obj.Status.ACKResourceMetadata == nil || obj.Status.ACKResourceMetadata.ARN == nil {
+		return ackerr.ResourceReferenceMissingTargetFieldFor(
+			"CodeSigningConfig",
+			namespace, name,
+			"Status.ACKResourceMetadata.ARN")
 	}
 	return nil
 }

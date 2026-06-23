@@ -262,6 +262,15 @@ spec:
                 items:
                   type: string
                 type: array
+              loggingConfig:
+                description: |-
+                  (Amazon MSK, and self-managed Apache Kafka only) The logging configuration
+                  for your event source. For more information, see Event source mapping logging
+                  (https://docs.aws.amazon.com/lambda/latest/dg/esm-logging.html).
+                properties:
+                  systemLogLevel:
+                    type: string
+                type: object
               maximumBatchingWindowInSeconds:
                 description: |-
                   The maximum amount of time, in seconds, that Lambda spends gathering records

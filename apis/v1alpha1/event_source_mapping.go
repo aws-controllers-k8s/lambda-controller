@@ -102,6 +102,10 @@ type EventSourceMappingSpec struct {
 	// (Kinesis, DynamoDB Streams, Amazon MSK, self-managed Apache Kafka, and Amazon
 	// SQS) A list of current response type enums applied to the event source mapping.
 	FunctionResponseTypes []*string `json:"functionResponseTypes,omitempty"`
+	// (Amazon MSK, and self-managed Apache Kafka only) The logging configuration
+	// for your event source. For more information, see Event source mapping logging
+	// (https://docs.aws.amazon.com/lambda/latest/dg/esm-logging.html).
+	LoggingConfig *EventSourceMappingLoggingConfig `json:"loggingConfig,omitempty"`
 	// The maximum amount of time, in seconds, that Lambda spends gathering records
 	// before invoking the function. You can configure MaximumBatchingWindowInSeconds
 	// to any value from 0 seconds to 300 seconds in increments of seconds.
