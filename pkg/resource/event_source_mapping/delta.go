@@ -160,6 +160,17 @@ func newResourceDelta(
 			delta.Add("Spec.FunctionResponseTypes", a.ko.Spec.FunctionResponseTypes, b.ko.Spec.FunctionResponseTypes)
 		}
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.LoggingConfig, b.ko.Spec.LoggingConfig) {
+		delta.Add("Spec.LoggingConfig", a.ko.Spec.LoggingConfig, b.ko.Spec.LoggingConfig)
+	} else if a.ko.Spec.LoggingConfig != nil && b.ko.Spec.LoggingConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.LoggingConfig.SystemLogLevel, b.ko.Spec.LoggingConfig.SystemLogLevel) {
+			delta.Add("Spec.LoggingConfig.SystemLogLevel", a.ko.Spec.LoggingConfig.SystemLogLevel, b.ko.Spec.LoggingConfig.SystemLogLevel)
+		} else if a.ko.Spec.LoggingConfig.SystemLogLevel != nil && b.ko.Spec.LoggingConfig.SystemLogLevel != nil {
+			if *a.ko.Spec.LoggingConfig.SystemLogLevel != *b.ko.Spec.LoggingConfig.SystemLogLevel {
+				delta.Add("Spec.LoggingConfig.SystemLogLevel", a.ko.Spec.LoggingConfig.SystemLogLevel, b.ko.Spec.LoggingConfig.SystemLogLevel)
+			}
+		}
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.MaximumBatchingWindowInSeconds, b.ko.Spec.MaximumBatchingWindowInSeconds) {
 		delta.Add("Spec.MaximumBatchingWindowInSeconds", a.ko.Spec.MaximumBatchingWindowInSeconds, b.ko.Spec.MaximumBatchingWindowInSeconds)
 	} else if a.ko.Spec.MaximumBatchingWindowInSeconds != nil && b.ko.Spec.MaximumBatchingWindowInSeconds != nil {

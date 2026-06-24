@@ -243,15 +243,19 @@ type EventSourceMappingConfiguration struct {
 	FilterCriteria *FilterCriteria `json:"filterCriteria,omitempty"`
 	// An object that contains details about an error related to filter criteria
 	// encryption.
-	FilterCriteriaError            *FilterCriteriaError `json:"filterCriteriaError,omitempty"`
-	FunctionARN                    *string              `json:"functionARN,omitempty"`
-	FunctionResponseTypes          []*string            `json:"functionResponseTypes,omitempty"`
-	KMSKeyARN                      *string              `json:"kmsKeyARN,omitempty"`
-	LastModified                   *metav1.Time         `json:"lastModified,omitempty"`
-	LastProcessingResult           *string              `json:"lastProcessingResult,omitempty"`
-	MaximumBatchingWindowInSeconds *int64               `json:"maximumBatchingWindowInSeconds,omitempty"`
-	MaximumRecordAgeInSeconds      *int64               `json:"maximumRecordAgeInSeconds,omitempty"`
-	MaximumRetryAttempts           *int64               `json:"maximumRetryAttempts,omitempty"`
+	FilterCriteriaError   *FilterCriteriaError `json:"filterCriteriaError,omitempty"`
+	FunctionARN           *string              `json:"functionARN,omitempty"`
+	FunctionResponseTypes []*string            `json:"functionResponseTypes,omitempty"`
+	KMSKeyARN             *string              `json:"kmsKeyARN,omitempty"`
+	LastModified          *metav1.Time         `json:"lastModified,omitempty"`
+	LastProcessingResult  *string              `json:"lastProcessingResult,omitempty"`
+	// (Amazon MSK, and self-managed Apache Kafka only) The logging configuration
+	// for your event source. Use this configuration object to define the level
+	// of logs for your event source mapping.
+	LoggingConfig                  *EventSourceMappingLoggingConfig `json:"loggingConfig,omitempty"`
+	MaximumBatchingWindowInSeconds *int64                           `json:"maximumBatchingWindowInSeconds,omitempty"`
+	MaximumRecordAgeInSeconds      *int64                           `json:"maximumRecordAgeInSeconds,omitempty"`
+	MaximumRetryAttempts           *int64                           `json:"maximumRetryAttempts,omitempty"`
 	// The metrics configuration for your event source. Use this configuration object
 	// to define which metrics you want your event source mapping to produce.
 	MetricsConfig         *EventSourceMappingMetricsConfig `json:"metricsConfig,omitempty"`
@@ -276,6 +280,13 @@ type EventSourceMappingConfiguration struct {
 	Topics                            []*string                          `json:"topics,omitempty"`
 	TumblingWindowInSeconds           *int64                             `json:"tumblingWindowInSeconds,omitempty"`
 	UUID                              *string                            `json:"uuid,omitempty"`
+}
+
+// (Amazon MSK, and self-managed Apache Kafka only) The logging configuration
+// for your event source. Use this configuration object to define the level
+// of logs for your event source mapping.
+type EventSourceMappingLoggingConfig struct {
+	SystemLogLevel *string `json:"systemLogLevel,omitempty"`
 }
 
 // The metrics configuration for your event source. Use this configuration object

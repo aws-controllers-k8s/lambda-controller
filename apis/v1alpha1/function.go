@@ -35,7 +35,8 @@ type FunctionSpec struct {
 	// which define the trusted publishers for this function.
 	//
 	// Regex Pattern: `^arn:(aws[a-zA-Z-]*)?:lambda:[a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1}:\d{12}:code-signing-config:csc-[a-z0-9]{17}$`
-	CodeSigningConfigARN *string `json:"codeSigningConfigARN,omitempty"`
+	CodeSigningConfigARN *string                                  `json:"codeSigningConfigARN,omitempty"`
+	CodeSigningConfigRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"codeSigningConfigRef,omitempty"`
 	// A dead-letter queue configuration that specifies the queue or topic where
 	// Lambda sends asynchronous events when they fail processing. For more information,
 	// see Dead-letter queues (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#invocation-dlq).

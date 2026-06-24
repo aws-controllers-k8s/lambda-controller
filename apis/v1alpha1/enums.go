@@ -71,7 +71,17 @@ const (
 type EventSourceMappingMetric string
 
 const (
-	EventSourceMappingMetric_EventCount EventSourceMappingMetric = "EventCount"
+	EventSourceMappingMetric_ErrorCount   EventSourceMappingMetric = "ErrorCount"
+	EventSourceMappingMetric_EventCount   EventSourceMappingMetric = "EventCount"
+	EventSourceMappingMetric_KafkaMetrics EventSourceMappingMetric = "KafkaMetrics"
+)
+
+type EventSourceMappingSystemLogLevel string
+
+const (
+	EventSourceMappingSystemLogLevel_DEBUG EventSourceMappingSystemLogLevel = "DEBUG"
+	EventSourceMappingSystemLogLevel_INFO  EventSourceMappingSystemLogLevel = "INFO"
+	EventSourceMappingSystemLogLevel_WARN  EventSourceMappingSystemLogLevel = "WARN"
 )
 
 type EventSourcePosition string
@@ -310,6 +320,7 @@ const (
 type Runtime string
 
 const (
+	Runtime_dotnet10        Runtime = "dotnet10"
 	Runtime_dotnet6         Runtime = "dotnet6"
 	Runtime_dotnet8         Runtime = "dotnet8"
 	Runtime_dotnetcore1_0   Runtime = "dotnetcore1.0"
