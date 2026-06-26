@@ -78,17 +78,30 @@ class TestCodeSigningConfig:
         # Check Lambda code signing config exists
         assert lambda_validator.code_signing_config_exists(codeSigningConfigARN)
 
+        # Check tags were applied on create
+        aws_tags = lambda_validator.list_tags(codeSigningConfigARN)
+        assert aws_tags is not None
+        assert aws_tags.get("environment") == "test"
+        assert aws_tags.get("owner") == "ack-e2e"
+
         # Update cr
         cr["spec"]["description"] = "new description"
+        cr["spec"]["tags"] = {"environment": "prod", "team": "platform", "owner": None}
 
         # Patch k8s resource
         k8s.patch_custom_resource(ref, cr)
         time.sleep(UPDATE_WAIT_AFTER_SECONDS)
 
-        # Check code signing config  description
+        # Check code signing config description
         csc = lambda_validator.get_code_signing_config(codeSigningConfigARN)
         assert csc is not None
         assert csc["Description"] == "new description"
+
+        # Check tags were updated (added "team", changed "environment", removed "owner")
+        aws_tags = lambda_validator.list_tags(codeSigningConfigARN)
+        assert aws_tags.get("environment") == "prod"
+        assert aws_tags.get("team") == "platform"
+        assert "owner" not in aws_tags
 
         # Delete k8s resource
         _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)

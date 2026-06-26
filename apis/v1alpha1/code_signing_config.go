@@ -33,6 +33,8 @@ type CodeSigningConfigSpec struct {
 	CodeSigningPolicies *CodeSigningPolicies `json:"codeSigningPolicies,omitempty"`
 	// Descriptive name for this code signing configuration.
 	Description *string `json:"description,omitempty"`
+	// A list of tags to add to the code signing configuration.
+	Tags map[string]*string `json:"tags,omitempty"`
 }
 
 // CodeSigningConfigStatus defines the observed state of CodeSigningConfig

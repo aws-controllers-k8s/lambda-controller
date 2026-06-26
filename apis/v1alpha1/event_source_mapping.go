@@ -155,6 +155,8 @@ type EventSourceMappingSpec struct {
 	// With StartingPosition set to AT_TIMESTAMP, the time from which to start reading.
 	// StartingPositionTimestamp cannot be in the future.
 	StartingPositionTimestamp *metav1.Time `json:"startingPositionTimestamp,omitempty"`
+	// A list of tags to apply to the event source mapping.
+	Tags map[string]*string `json:"tags,omitempty"`
 	// The name of the Kafka topic.
 	Topics []*string `json:"topics,omitempty"`
 	// (Kinesis and DynamoDB Streams only) The duration in seconds of a processing

@@ -9,3 +9,6 @@ spec:
     signingProfileVersionARNs:
     - $SIGNING_PROFILE_VERSION_ARN
   description: code signing config created by ACK lambda-controller e2e tests
+  tags:
+    environment: test
+    owner: ack-e2e

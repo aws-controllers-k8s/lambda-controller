@@ -380,6 +380,11 @@ func (rm *resourceManager) sdkFind(
 	}
 
 	rm.setStatusDefaults(ko)
+	ko.Spec.Tags, err = rm.getTags(ctx, string(*ko.Status.ACKResourceMetadata.ARN))
+	if err != nil {
+		return nil, err
+	}
+
 	return &resource{ko}, nil
 }
 
@@ -966,6 +971,9 @@ func (rm *resourceManager) newCreateRequestPayload(
 	if r.ko.Spec.StartingPositionTimestamp != nil {
 		res.StartingPositionTimestamp = &r.ko.Spec.StartingPositionTimestamp.Time
 	}
+	if r.ko.Spec.Tags != nil {
+		res.Tags = aws.ToStringMap(r.ko.Spec.Tags)
+	}
 	if r.ko.Spec.Topics != nil {
 		res.Topics = aws.ToStringSlice(r.ko.Spec.Topics)
 	}
@@ -994,6 +1002,16 @@ func (rm *resourceManager) sdkUpdate(
 	defer func() {
 		exit(err)
 	}()
+	if delta.DifferentAt("Spec.Tags") {
+		err := rm.syncTags(ctx, desired, latest)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if !delta.DifferentExcept("Spec.Tags") {
+		return desired, nil
+	}
+
 	input, err := rm.newUpdateRequestPayload(ctx, desired, delta)
 	if err != nil {
 		return nil, err
