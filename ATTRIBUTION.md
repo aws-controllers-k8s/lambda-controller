@@ -2383,6 +2383,7 @@ Subdependencies:
 * `k8s.io/klog/v2`
 * `k8s.io/utils`
 * `sigs.k8s.io/controller-runtime`
+* `sigs.k8s.io/yaml`
 * `github.com/aws/aws-sdk-go-v2/feature/ec2/imds`
 * `github.com/aws/aws-sdk-go-v2/internal/configsources`
 * `github.com/aws/aws-sdk-go-v2/internal/endpoints/v2`
@@ -2438,7 +2439,6 @@ Subdependencies:
 * `sigs.k8s.io/json`
 * `sigs.k8s.io/randfill`
 * `sigs.k8s.io/structured-merge-diff/v6`
-* `sigs.k8s.io/yaml`
 
 #### github.com/aws/aws-sdk-go-v2
 
@@ -2564,6 +2564,8 @@ License Identifier: Apache-2.0
 #### sigs.k8s.io/controller-runtime
 
 License Identifier: Apache-2.0
+
+
 
 
 
