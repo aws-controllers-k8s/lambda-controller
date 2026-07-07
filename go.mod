@@ -8,7 +8,7 @@ require (
 	github.com/aws-controllers-k8s/kafka-controller v0.0.0-20230615185632-102279061de1
 	github.com/aws-controllers-k8s/kms-controller v1.0.30
 	github.com/aws-controllers-k8s/mq-controller v0.0.22
-	github.com/aws-controllers-k8s/runtime v0.60.0
+	github.com/aws-controllers-k8s/runtime v0.61.0
 	github.com/aws-controllers-k8s/s3-controller v0.1.5
 	github.com/aws-controllers-k8s/secretsmanager-controller v1.1.0
 	github.com/aws/aws-sdk-go v1.49.0
@@ -73,12 +73,12 @@ require (
 	go.uber.org/zap v1.27.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/net v0.47.0 // indirect
+	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
-	golang.org/x/sync v0.18.0 // indirect
-	golang.org/x/sys v0.38.0 // indirect
-	golang.org/x/term v0.37.0 // indirect
-	golang.org/x/text v0.31.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/term v0.43.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 	golang.org/x/time v0.9.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	google.golang.org/protobuf v1.36.8 // indirect
