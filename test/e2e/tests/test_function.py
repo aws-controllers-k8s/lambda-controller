@@ -874,7 +874,102 @@ class TestFunction:
 
         # Check Lambda function doesn't exist
         assert not lambda_validator.function_exists(resource_name)
-    
+
+    def test_function_event_invoke_config_partial(self, lambda_client):
+        # A FunctionEventInvokeConfig that only sets `maximumRetryAttempts`
+        # (no `maximumEventAgeInSeconds`, no destinations) previously caused
+        # every subsequent reconcile to panic with a nil pointer dereference
+        # in setFunctionEventInvokeConfigFromResponse, because
+        # GetFunctionEventInvokeConfig legitimately omits
+        # MaximumEventAgeInSeconds and DestinationConfig when they were never
+        # set. This test ensures the controller reads back a partial
+        # configuration without panicking and that the resource converges to
+        # ACK.ResourceSynced=True.
+        resource_name = random_suffix_name("lambda-function", 24)
+
+        resources = get_bootstrap_resources()
+        logging.debug(resources)
+
+        replacements = REPLACEMENT_VALUES.copy()
+        replacements["FUNCTION_NAME"] = resource_name
+        replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
+        replacements["LAMBDA_ROLE"] = resources.EICRole.arn
+        replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
+        replacements["AWS_REGION"] = get_region()
+        replacements["MAXIMUM_RETRY_ATTEMPTS"] = "0"
+
+        # Load Lambda CR with only `maximumRetryAttempts` set on
+        # functionEventInvokeConfig
+        resource_data = load_lambda_resource(
+            "function_event_invoke_config_partial",
+            additional_replacements=replacements,
+        )
+        logging.debug(resource_data)
+
+        # Create k8s resource
+        ref = k8s.CustomResourceReference(
+            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            resource_name, namespace="default",
+        )
+        k8s.create_custom_resource(ref, resource_data)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
+
+        assert cr is not None
+        assert k8s.get_resource_exists(ref)
+
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+        lambda_validator = LambdaValidator(lambda_client)
+
+        # Check Lambda function exists
+        assert lambda_validator.function_exists(resource_name)
+
+        # Check FunctionEventInvokeConfig was created with the partial config
+        function_event_invoke_config = lambda_validator.get_function_event_invoke_config(resource_name)
+        assert function_event_invoke_config is not None
+        assert function_event_invoke_config["MaximumRetryAttempts"] == 0
+
+        # Force at least one more reconcile after creation. Before the fix,
+        # sdkFind panicked on this very next reconcile because the `Get`
+        # response has MaximumEventAgeInSeconds and DestinationConfig unset.
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
+        assert cr is not None
+
+        # Resource must converge to ACK.ResourceSynced=True instead of being
+        # permanently stuck at the create-time snapshot
+        assert k8s.wait_on_condition(
+            ref,
+            "ACK.ResourceSynced",
+            "True",
+            wait_periods=CONTROLLER_WAIT_PERIODS,
+            period_length=CONTROLLER_PERIOD_LENGTH,
+        )
+
+        # Confirm the spec's optional fields were read back as absent/None
+        # rather than the reconcile crashing before ever reaching this point
+        cr = k8s.get_resource(ref)
+        assert cr["spec"]["functionEventInvokeConfig"]["maximumRetryAttempts"] == 0
+        assert cr["spec"]["functionEventInvokeConfig"].get("maximumEventAgeInSeconds") is None
+        assert cr["spec"]["functionEventInvokeConfig"].get("destinationConfig") is None
+
+        # A subsequent spec update must also be applied successfully, proving
+        # reconciliation is not stuck
+        cr["spec"]["functionEventInvokeConfig"]["maximumRetryAttempts"] = 1
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        function_event_invoke_config = lambda_validator.get_function_event_invoke_config(resource_name)
+        assert function_event_invoke_config["MaximumRetryAttempts"] == 1
+
+        # Delete k8s resource
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
+        assert deleted is True
+
+        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+
+        # Check Lambda function doesn't exist
+        assert not lambda_validator.function_exists(resource_name)
+
     def test_function_code_s3(self, lambda_client):
         resource_name = random_suffix_name("functioncodes3", 24)
 
