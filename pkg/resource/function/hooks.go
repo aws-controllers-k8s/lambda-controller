@@ -800,13 +800,38 @@ func (rm *resourceManager) setFunctionEventInvokeConfigFromResponse(
 ) {
 	// creating FunctionEventInvokeConfig object to store the values returned from `Get` call
 	cloudFunctionEventInvokeConfig := &svcapitypes.PutFunctionEventInvokeConfigInput{}
-	cloudFunctionEventInvokeConfig.DestinationConfig = &svcapitypes.DestinationConfig{}
-	cloudFunctionEventInvokeConfig.DestinationConfig.OnFailure = &svcapitypes.OnFailure{}
-	cloudFunctionEventInvokeConfig.DestinationConfig.OnSuccess = &svcapitypes.OnSuccess{}
-	cloudFunctionEventInvokeConfig.DestinationConfig.OnFailure.Destination = getFunctionEventInvokeConfigOutput.DestinationConfig.OnFailure.Destination
-	cloudFunctionEventInvokeConfig.DestinationConfig.OnSuccess.Destination = getFunctionEventInvokeConfigOutput.DestinationConfig.OnSuccess.Destination
-	cloudFunctionEventInvokeConfig.MaximumEventAgeInSeconds = aws.Int64(int64(*getFunctionEventInvokeConfigOutput.MaximumEventAgeInSeconds))
-	cloudFunctionEventInvokeConfig.MaximumRetryAttempts = aws.Int64(int64(*getFunctionEventInvokeConfigOutput.MaximumRetryAttempts))
+	if destinationConfig := getFunctionEventInvokeConfigOutput.DestinationConfig; destinationConfig != nil {
+		// `GetFunctionEventInvokeConfig` always returns a non-nil
+		// DestinationConfig with non-nil OnSuccess/OnFailure structs, even
+		// when no destinations were ever configured (in which case their
+		// Destination field is nil). Only surface the destination in the
+		// spec when it was actually set, otherwise leave DestinationConfig
+		// absent to match what the user configured.
+		var onFailure *svcapitypes.OnFailure
+		if destinationConfig.OnFailure != nil && destinationConfig.OnFailure.Destination != nil {
+			onFailure = &svcapitypes.OnFailure{
+				Destination: destinationConfig.OnFailure.Destination,
+			}
+		}
+		var onSuccess *svcapitypes.OnSuccess
+		if destinationConfig.OnSuccess != nil && destinationConfig.OnSuccess.Destination != nil {
+			onSuccess = &svcapitypes.OnSuccess{
+				Destination: destinationConfig.OnSuccess.Destination,
+			}
+		}
+		if onFailure != nil || onSuccess != nil {
+			cloudFunctionEventInvokeConfig.DestinationConfig = &svcapitypes.DestinationConfig{
+				OnFailure: onFailure,
+				OnSuccess: onSuccess,
+			}
+		}
+	}
+	if getFunctionEventInvokeConfigOutput.MaximumEventAgeInSeconds != nil {
+		cloudFunctionEventInvokeConfig.MaximumEventAgeInSeconds = aws.Int64(int64(*getFunctionEventInvokeConfigOutput.MaximumEventAgeInSeconds))
+	}
+	if getFunctionEventInvokeConfigOutput.MaximumRetryAttempts != nil {
+		cloudFunctionEventInvokeConfig.MaximumRetryAttempts = aws.Int64(int64(*getFunctionEventInvokeConfigOutput.MaximumRetryAttempts))
+	}
 	ko.Spec.FunctionEventInvokeConfig = cloudFunctionEventInvokeConfig
 
 }
