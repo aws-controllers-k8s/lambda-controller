@@ -19,6 +19,8 @@ import time
 import logging
 import hashlib
 import base64
+import io
+from zipfile import ZipFile
 
 from acktest import tags
 from acktest.resources import random_suffix_name
@@ -1274,3 +1276,90 @@ class TestFunction:
 
         # Check Lambda function doesn't exist
         assert not lambda_validator.function_exists(resource_name)
+
+    def test_function_code_signing_in_unsupported_region(self, lambda_client):
+        """In regions where AWS Signer is unavailable (e.g. eu-central-2):
+        1. A function without codeSigningConfigARN should sync successfully
+        2. Adding codeSigningConfigARN should produce a terminal condition
+        """
+        resource_name = random_suffix_name("lambda-csc-region", 24)
+
+        resources = get_bootstrap_resources()
+        logging.debug(resources)
+
+        # Build a minimal inline zip to avoid cross-region S3 issues
+        buf = io.BytesIO()
+        with ZipFile(buf, 'w') as zf:
+            zf.writestr("main.py", "def handler(event, context):\n    return 'hello'\n")
+        zip_file_b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+
+        replacements = REPLACEMENT_VALUES.copy()
+        replacements["FUNCTION_NAME"] = resource_name
+        replacements["LAMBDA_ROLE"] = resources.BasicRole.arn
+        replacements["ZIP_FILE"] = zip_file_b64
+        replacements["FUNCTION_REGION"] = "eu-central-2"
+
+        resource_data = load_lambda_resource(
+            "function_no_code_signing",
+            additional_replacements=replacements,
+        )
+        logging.debug(resource_data)
+
+        ref = k8s.CustomResourceReference(
+            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            resource_name, namespace="default",
+        )
+        k8s.create_custom_resource(ref, resource_data)
+        cr = k8s.wait_resource_consumed_by_controller(
+            ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH
+        )
+
+        assert cr is not None
+        assert k8s.get_resource_exists(ref)
+
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+        # Without the fix, sdkFind returns the AccessDeniedException from
+        # GetFunctionCodeSigningConfig and the resource stays stuck with
+        # ACK.Recoverable=True permanently.
+        assert k8s.wait_on_condition(
+            ref,
+            "ACK.ResourceSynced",
+            "True",
+            wait_periods=CONTROLLER_WAIT_PERIODS,
+            period_length=CONTROLLER_PERIOD_LENGTH,
+        )
+
+        # Now patch the function to add a code signing config ARN.
+        # PutFunctionCodeSigningConfig will fail with AccessDeniedException
+        # because Signer is not available in this region.
+        cr = k8s.get_resource(ref)
+        cr["spec"]["codeSigningConfigARN"] = "arn:aws:lambda:eu-central-2:123456789012:code-signing-config:csc-does-not-exist"
+        k8s.patch_custom_resource(ref, cr)
+
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        cr = k8s.wait_resource_consumed_by_controller(
+            ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH
+        )
+
+        # Should get a terminal condition with the AWS AccessDeniedException
+        condition = k8s.get_resource_condition(ref, "ACK.Terminal")
+        assert condition is not None
+        assert condition.get("status") == "True"
+        assert "AccessDeniedException" in condition.get("message", "")
+
+        # Remove the code signing config to allow cleanup
+        cr = k8s.get_resource(ref)
+        cr["spec"]["codeSigningConfigARN"] = ""
+        k8s.patch_custom_resource(ref, cr)
+
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        # Cleanup
+        _, deleted = k8s.delete_custom_resource(
+            ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH
+        )
+        assert deleted is True
+
+        time.sleep(DELETE_WAIT_AFTER_SECONDS)

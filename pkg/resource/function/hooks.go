@@ -784,6 +784,13 @@ func (rm *resourceManager) setFunctionCodeSigningConfig(
 	)
 	rm.metrics.RecordAPICall("GET", "GetFunctionCodeSigningConfig", err)
 	if err != nil {
+		if awsErr, ok := ackerr.AWSError(err); ok && awsErr.ErrorCode() == "AccessDeniedException" &&
+			strings.Contains(awsErr.ErrorMessage(), "Unable to determine service/operation name to be authorized") {
+			if ko.Spec.CodeSigningConfigARN != nil && *ko.Spec.CodeSigningConfigARN != "" {
+				return ackerr.NewTerminalError(err)
+			}
+			return nil
+		}
 		return err
 	}
 
