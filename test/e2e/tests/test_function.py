@@ -1339,15 +1339,15 @@ class TestFunction:
 
         time.sleep(UPDATE_WAIT_AFTER_SECONDS)
 
-        cr = k8s.wait_resource_consumed_by_controller(
-            ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
+        
+        # Should get a terminal condition indicating code signing is not available
+        assert k8s.assert_condition_state_message(
+            ref,
+            "ACK.Terminal",
+            "True",
+            "code signing is not available in this region",
         )
-
-        # Should get a terminal condition with the AWS AccessDeniedException
-        condition = k8s.get_resource_condition(ref, "ACK.Terminal")
-        assert condition is not None
-        assert condition.get("status") == "True"
-        assert "AccessDeniedException" in condition.get("message", "")
 
         # Remove the code signing config to allow cleanup
         cr = k8s.get_resource(ref)
