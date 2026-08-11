@@ -139,6 +139,23 @@ spec:
 
                   Regex Pattern: `^(\$LATEST(\.PUBLISHED)?|[0-9]+)$`
                 type: string
+              functionVersionRef:
+                description: "AWSResourceReferenceWrapper provides a wrapper around
+                  *AWSResourceReference\ntype to provide more user friendly syntax
+                  for references using 'from' field\nEx:\nAPIIDRef:\n\n\tfrom:\n\t
+                  \ name: my-api"
+                properties:
+                  from:
+                    description: |-
+                      AWSResourceReference provides all the values necessary to reference another
+                      k8s resource for finding the identifier(Id/ARN/Name)
+                    properties:
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                    type: object
+                type: object
               name:
                 description: |-
                   The name of the alias.
@@ -200,7 +217,6 @@ spec:
                     type: object
                 type: object
             required:
-            - functionVersion
             - name
             type: object
           status:

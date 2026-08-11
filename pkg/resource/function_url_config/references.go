@@ -42,6 +42,10 @@ func (rm *resourceManager) ClearResolvedReferences(res acktypes.AWSResource) ack
 		ko.Spec.FunctionName = nil
 	}
 
+	if ko.Spec.QualifierRef != nil {
+		ko.Spec.Qualifier = nil
+	}
+
 	return &resource{ko}
 }
 
@@ -67,6 +71,12 @@ func (rm *resourceManager) ResolveReferences(
 		resourceHasReferences = resourceHasReferences || fieldHasReferences
 	}
 
+	if fieldHasReferences, err := rm.resolveReferenceForQualifier(ctx, apiReader, ko); err != nil {
+		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
+	} else {
+		resourceHasReferences = resourceHasReferences || fieldHasReferences
+	}
+
 	return &resource{ko}, resourceHasReferences, err
 }
 
@@ -79,6 +89,10 @@ func validateReferenceFields(ko *svcapitypes.FunctionURLConfig) error {
 	}
 	if ko.Spec.FunctionRef == nil && ko.Spec.FunctionName == nil {
 		return ackerr.ResourceReferenceOrIDRequiredFor("FunctionName", "FunctionRef")
+	}
+
+	if ko.Spec.QualifierRef != nil && ko.Spec.Qualifier != nil {
+		return ackerr.ResourceReferenceAndIDNotSupportedFor("Qualifier", "QualifierRef")
 	}
 	return nil
 }
@@ -168,6 +182,97 @@ func getReferencedResourceState_Function(
 	if obj.Spec.Name == nil {
 		return ackerr.ResourceReferenceMissingTargetFieldFor(
 			"Function",
+			namespace, name,
+			"Spec.Name")
+	}
+	return nil
+}
+
+// resolveReferenceForQualifier reads the resource referenced
+// from QualifierRef field and sets the Qualifier
+// from referenced resource. Returns a boolean indicating whether a reference
+// contains references, or an error
+func (rm *resourceManager) resolveReferenceForQualifier(
+	ctx context.Context,
+	apiReader client.Reader,
+	ko *svcapitypes.FunctionURLConfig,
+) (hasReferences bool, err error) {
+	if ko.Spec.QualifierRef != nil && ko.Spec.QualifierRef.From != nil {
+		hasReferences = true
+		arr := ko.Spec.QualifierRef.From
+		if arr.Name == nil || *arr.Name == "" {
+			return hasReferences, fmt.Errorf("provided resource reference is nil or empty: QualifierRef")
+		}
+		namespace, err := ackrt.ResolveCrossNamespaceReference(
+			ctx,
+			rm.cfg.EnableCrossNamespace,
+			&ko.Status.Conditions,
+			ackrt.CrossNamespaceRefKindResource,
+			ko.ObjectMeta.GetNamespace(),
+			arr.Namespace,
+			*arr.Name,
+		)
+		if err != nil {
+			return hasReferences, err
+		}
+		obj := &svcapitypes.Alias{}
+		if err := getReferencedResourceState_Alias(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
+			return hasReferences, err
+		}
+		ko.Spec.Qualifier = (*string)(obj.Spec.Name)
+	}
+
+	return hasReferences, nil
+}
+
+// getReferencedResourceState_Alias looks up whether a referenced resource
+// exists and is in a ACK.ResourceSynced=True state. If the referenced resource does exist and is
+// in a Synced state, returns nil, otherwise returns `ackerr.ResourceReferenceTerminalFor` or
+// `ResourceReferenceNotSyncedFor` depending on if the resource is in a Terminal state.
+func getReferencedResourceState_Alias(
+	ctx context.Context,
+	apiReader client.Reader,
+	obj *svcapitypes.Alias,
+	name string, // the Kubernetes name of the referenced resource
+	namespace string, // the Kubernetes namespace of the referenced resource
+) error {
+	namespacedName := types.NamespacedName{
+		Namespace: namespace,
+		Name:      name,
+	}
+	err := apiReader.Get(ctx, namespacedName, obj)
+	if err != nil {
+		return err
+	}
+	var refResourceTerminal bool
+	for _, cond := range obj.Status.Conditions {
+		if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
+			cond.Status == corev1.ConditionTrue {
+			return ackerr.ResourceReferenceTerminalFor(
+				"Alias",
+				namespace, name)
+		}
+	}
+	if refResourceTerminal {
+		return ackerr.ResourceReferenceTerminalFor(
+			"Alias",
+			namespace, name)
+	}
+	var refResourceSynced bool
+	for _, cond := range obj.Status.Conditions {
+		if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+			cond.Status == corev1.ConditionTrue {
+			refResourceSynced = true
+		}
+	}
+	if !refResourceSynced {
+		return ackerr.ResourceReferenceNotSyncedFor(
+			"Alias",
+			namespace, name)
+	}
+	if obj.Spec.Name == nil {
+		return ackerr.ResourceReferenceMissingTargetFieldFor(
+			"Alias",
 			namespace, name,
 			"Spec.Name")
 	}

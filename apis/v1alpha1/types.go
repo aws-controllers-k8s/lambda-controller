@@ -542,10 +542,12 @@ type Layer struct {
 // A ZIP archive that contains the contents of an Lambda layer (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html).
 // You can specify either an Amazon S3 location, or upload a layer archive directly.
 type LayerVersionContentInput struct {
-	S3Bucket        *string `json:"s3Bucket,omitempty"`
-	S3Key           *string `json:"s3Key,omitempty"`
-	S3ObjectVersion *string `json:"s3ObjectVersion,omitempty"`
-	ZipFile         []byte  `json:"zipFile,omitempty"`
+	S3Bucket *string `json:"s3Bucket,omitempty"`
+	// Reference field for S3Bucket
+	S3BucketRef     *ackv1alpha1.AWSResourceReferenceWrapper `json:"s3BucketRef,omitempty"`
+	S3Key           *string                                  `json:"s3Key,omitempty"`
+	S3ObjectVersion *string                                  `json:"s3ObjectVersion,omitempty"`
+	ZipFile         []byte                                   `json:"zipFile,omitempty"`
 }
 
 // Details about a version of an Lambda layer (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html).

@@ -126,6 +126,9 @@ resources:
           - ignore: true
             method: ReadOne
       Layers:
+        references:
+          resource: LayerVersion
+          path: Status.ACKResourceMetadata.ARN
         set:
           - method: Create
             ignore: true
@@ -179,6 +182,9 @@ resources:
           path: Spec.Name
       FunctionVersion:
         is_required: true
+        references:
+          resource: Version
+          path: Status.Version
       FunctionEventInvokeConfig:
         from:
           operation: PutFunctionEventInvokeConfig
@@ -266,6 +272,10 @@ resources:
           resource: Function
           path: Spec.Name
         is_primary_key: true
+      Qualifier:
+        references:
+          resource: Alias
+          path: Spec.Name
   LayerVersion:
     fields:
       LayerName:
@@ -275,9 +285,23 @@ resources:
         is_required: true
         compare:
           is_ignored: true
+        # PublishLayerVersion returns a LayerVersionContentOutput, which shares no
+        # members with the LayerVersionContentInput held in the spec, so the
+        # generated write-back replaces Spec.Content with an empty struct. That
+        # would drop the s3BucketRef companion below, so ignore Content on the
+        # response-consuming methods and keep the user's desired value.
         set:
           - ignore: true
             method: ReadOne
+          - ignore: true
+            method: Create
+          - ignore: true
+            method: Update
+      Content.S3Bucket:
+        references:
+          resource: Bucket
+          service_name: s3
+          path: Spec.Name
     tags:
       ignore: true
     hooks:

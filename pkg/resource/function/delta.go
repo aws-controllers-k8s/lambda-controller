@@ -260,6 +260,9 @@ func newResourceDelta(
 	if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.KMSKeyRef, b.ko.Spec.KMSKeyRef) {
 		delta.Add("Spec.KMSKeyRef", a.ko.Spec.KMSKeyRef, b.ko.Spec.KMSKeyRef)
 	}
+	if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.LayerRefs, b.ko.Spec.LayerRefs) {
+		delta.Add("Spec.LayerRefs", a.ko.Spec.LayerRefs, b.ko.Spec.LayerRefs)
+	}
 	if len(a.ko.Spec.Layers) != len(b.ko.Spec.Layers) {
 		delta.Add("Spec.Layers", a.ko.Spec.Layers, b.ko.Spec.Layers)
 	} else if len(a.ko.Spec.Layers) > 0 {

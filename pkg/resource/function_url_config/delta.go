@@ -112,6 +112,9 @@ func newResourceDelta(
 			delta.Add("Spec.Qualifier", a.ko.Spec.Qualifier, b.ko.Spec.Qualifier)
 		}
 	}
+	if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.QualifierRef, b.ko.Spec.QualifierRef) {
+		delta.Add("Spec.QualifierRef", a.ko.Spec.QualifierRef, b.ko.Spec.QualifierRef)
+	}
 
 	return delta
 }

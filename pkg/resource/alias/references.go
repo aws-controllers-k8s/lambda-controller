@@ -42,6 +42,10 @@ func (rm *resourceManager) ClearResolvedReferences(res acktypes.AWSResource) ack
 		ko.Spec.FunctionName = nil
 	}
 
+	if ko.Spec.FunctionVersionRef != nil {
+		ko.Spec.FunctionVersion = nil
+	}
+
 	return &resource{ko}
 }
 
@@ -67,6 +71,12 @@ func (rm *resourceManager) ResolveReferences(
 		resourceHasReferences = resourceHasReferences || fieldHasReferences
 	}
 
+	if fieldHasReferences, err := rm.resolveReferenceForFunctionVersion(ctx, apiReader, ko); err != nil {
+		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
+	} else {
+		resourceHasReferences = resourceHasReferences || fieldHasReferences
+	}
+
 	return &resource{ko}, resourceHasReferences, err
 }
 
@@ -79,6 +89,13 @@ func validateReferenceFields(ko *svcapitypes.Alias) error {
 	}
 	if ko.Spec.FunctionRef == nil && ko.Spec.FunctionName == nil {
 		return ackerr.ResourceReferenceOrIDRequiredFor("FunctionName", "FunctionRef")
+	}
+
+	if ko.Spec.FunctionVersionRef != nil && ko.Spec.FunctionVersion != nil {
+		return ackerr.ResourceReferenceAndIDNotSupportedFor("FunctionVersion", "FunctionVersionRef")
+	}
+	if ko.Spec.FunctionVersionRef == nil && ko.Spec.FunctionVersion == nil {
+		return ackerr.ResourceReferenceOrIDRequiredFor("FunctionVersion", "FunctionVersionRef")
 	}
 	return nil
 }
@@ -170,6 +187,97 @@ func getReferencedResourceState_Function(
 			"Function",
 			namespace, name,
 			"Spec.Name")
+	}
+	return nil
+}
+
+// resolveReferenceForFunctionVersion reads the resource referenced
+// from FunctionVersionRef field and sets the FunctionVersion
+// from referenced resource. Returns a boolean indicating whether a reference
+// contains references, or an error
+func (rm *resourceManager) resolveReferenceForFunctionVersion(
+	ctx context.Context,
+	apiReader client.Reader,
+	ko *svcapitypes.Alias,
+) (hasReferences bool, err error) {
+	if ko.Spec.FunctionVersionRef != nil && ko.Spec.FunctionVersionRef.From != nil {
+		hasReferences = true
+		arr := ko.Spec.FunctionVersionRef.From
+		if arr.Name == nil || *arr.Name == "" {
+			return hasReferences, fmt.Errorf("provided resource reference is nil or empty: FunctionVersionRef")
+		}
+		namespace, err := ackrt.ResolveCrossNamespaceReference(
+			ctx,
+			rm.cfg.EnableCrossNamespace,
+			&ko.Status.Conditions,
+			ackrt.CrossNamespaceRefKindResource,
+			ko.ObjectMeta.GetNamespace(),
+			arr.Namespace,
+			*arr.Name,
+		)
+		if err != nil {
+			return hasReferences, err
+		}
+		obj := &svcapitypes.Version{}
+		if err := getReferencedResourceState_Version(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
+			return hasReferences, err
+		}
+		ko.Spec.FunctionVersion = (*string)(obj.Status.Version)
+	}
+
+	return hasReferences, nil
+}
+
+// getReferencedResourceState_Version looks up whether a referenced resource
+// exists and is in a ACK.ResourceSynced=True state. If the referenced resource does exist and is
+// in a Synced state, returns nil, otherwise returns `ackerr.ResourceReferenceTerminalFor` or
+// `ResourceReferenceNotSyncedFor` depending on if the resource is in a Terminal state.
+func getReferencedResourceState_Version(
+	ctx context.Context,
+	apiReader client.Reader,
+	obj *svcapitypes.Version,
+	name string, // the Kubernetes name of the referenced resource
+	namespace string, // the Kubernetes namespace of the referenced resource
+) error {
+	namespacedName := types.NamespacedName{
+		Namespace: namespace,
+		Name:      name,
+	}
+	err := apiReader.Get(ctx, namespacedName, obj)
+	if err != nil {
+		return err
+	}
+	var refResourceTerminal bool
+	for _, cond := range obj.Status.Conditions {
+		if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
+			cond.Status == corev1.ConditionTrue {
+			return ackerr.ResourceReferenceTerminalFor(
+				"Version",
+				namespace, name)
+		}
+	}
+	if refResourceTerminal {
+		return ackerr.ResourceReferenceTerminalFor(
+			"Version",
+			namespace, name)
+	}
+	var refResourceSynced bool
+	for _, cond := range obj.Status.Conditions {
+		if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+			cond.Status == corev1.ConditionTrue {
+			refResourceSynced = true
+		}
+	}
+	if !refResourceSynced {
+		return ackerr.ResourceReferenceNotSyncedFor(
+			"Version",
+			namespace, name)
+	}
+	if obj.Status.Version == nil {
+		return ackerr.ResourceReferenceMissingTargetFieldFor(
+			"Version",
+			namespace, name,
+			"Status.Version")
 	}
 	return nil
 }
