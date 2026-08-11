@@ -63,8 +63,8 @@ type AliasSpec struct {
 	// The function version that the alias invokes.
 	//
 	// Regex Pattern: `^(\$LATEST(\.PUBLISHED)?|[0-9]+)$`
-	// +kubebuilder:validation:Required
-	FunctionVersion *string `json:"functionVersion"`
+	FunctionVersion    *string                                  `json:"functionVersion,omitempty"`
+	FunctionVersionRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"functionVersionRef,omitempty"`
 	// The name of the alias.
 	//
 	// Regex Pattern: `^(?!^[0-9]+$)([a-zA-Z0-9-_]+)$`

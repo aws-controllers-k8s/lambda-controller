@@ -71,6 +71,10 @@ func (rm *resourceManager) ClearResolvedReferences(res acktypes.AWSResource) ack
 		ko.Spec.KMSKeyARN = nil
 	}
 
+	if len(ko.Spec.LayerRefs) > 0 {
+		ko.Spec.Layers = nil
+	}
+
 	if ko.Spec.RoleRef != nil {
 		ko.Spec.Role = nil
 	}
@@ -124,6 +128,12 @@ func (rm *resourceManager) ResolveReferences(
 		resourceHasReferences = resourceHasReferences || fieldHasReferences
 	}
 
+	if fieldHasReferences, err := rm.resolveReferenceForLayers(ctx, apiReader, ko); err != nil {
+		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
+	} else {
+		resourceHasReferences = resourceHasReferences || fieldHasReferences
+	}
+
 	if fieldHasReferences, err := rm.resolveReferenceForRole(ctx, apiReader, ko); err != nil {
 		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
 	} else {
@@ -161,6 +171,10 @@ func validateReferenceFields(ko *svcapitypes.Function) error {
 
 	if ko.Spec.KMSKeyRef != nil && ko.Spec.KMSKeyARN != nil {
 		return ackerr.ResourceReferenceAndIDNotSupportedFor("KMSKeyARN", "KMSKeyRef")
+	}
+
+	if len(ko.Spec.LayerRefs) > 0 && len(ko.Spec.Layers) > 0 {
+		return ackerr.ResourceReferenceAndIDNotSupportedFor("Layers", "LayerRefs")
 	}
 
 	if ko.Spec.RoleRef != nil && ko.Spec.Role != nil {
@@ -453,6 +467,102 @@ func getReferencedResourceState_Key(
 	if obj.Status.ACKResourceMetadata == nil || obj.Status.ACKResourceMetadata.ARN == nil {
 		return ackerr.ResourceReferenceMissingTargetFieldFor(
 			"Key",
+			namespace, name,
+			"Status.ACKResourceMetadata.ARN")
+	}
+	return nil
+}
+
+// resolveReferenceForLayers reads the resource referenced
+// from LayerRefs field and sets the Layers
+// from referenced resource. Returns a boolean indicating whether a reference
+// contains references, or an error
+func (rm *resourceManager) resolveReferenceForLayers(
+	ctx context.Context,
+	apiReader client.Reader,
+	ko *svcapitypes.Function,
+) (hasReferences bool, err error) {
+	for _, f0iter := range ko.Spec.LayerRefs {
+		if f0iter != nil && f0iter.From != nil {
+			hasReferences = true
+			arr := f0iter.From
+			if arr.Name == nil || *arr.Name == "" {
+				return hasReferences, fmt.Errorf("provided resource reference is nil or empty: LayerRefs")
+			}
+			namespace, err := ackrt.ResolveCrossNamespaceReference(
+				ctx,
+				rm.cfg.EnableCrossNamespace,
+				&ko.Status.Conditions,
+				ackrt.CrossNamespaceRefKindResource,
+				ko.ObjectMeta.GetNamespace(),
+				arr.Namespace,
+				*arr.Name,
+			)
+			if err != nil {
+				return hasReferences, err
+			}
+			obj := &svcapitypes.LayerVersion{}
+			if err := getReferencedResourceState_LayerVersion(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
+				return hasReferences, err
+			}
+			if ko.Spec.Layers == nil {
+				ko.Spec.Layers = make([]*string, 0, 1)
+			}
+			ko.Spec.Layers = append(ko.Spec.Layers, (*string)(obj.Status.ACKResourceMetadata.ARN))
+		}
+	}
+
+	return hasReferences, nil
+}
+
+// getReferencedResourceState_LayerVersion looks up whether a referenced resource
+// exists and is in a ACK.ResourceSynced=True state. If the referenced resource does exist and is
+// in a Synced state, returns nil, otherwise returns `ackerr.ResourceReferenceTerminalFor` or
+// `ResourceReferenceNotSyncedFor` depending on if the resource is in a Terminal state.
+func getReferencedResourceState_LayerVersion(
+	ctx context.Context,
+	apiReader client.Reader,
+	obj *svcapitypes.LayerVersion,
+	name string, // the Kubernetes name of the referenced resource
+	namespace string, // the Kubernetes namespace of the referenced resource
+) error {
+	namespacedName := types.NamespacedName{
+		Namespace: namespace,
+		Name:      name,
+	}
+	err := apiReader.Get(ctx, namespacedName, obj)
+	if err != nil {
+		return err
+	}
+	var refResourceTerminal bool
+	for _, cond := range obj.Status.Conditions {
+		if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
+			cond.Status == corev1.ConditionTrue {
+			return ackerr.ResourceReferenceTerminalFor(
+				"LayerVersion",
+				namespace, name)
+		}
+	}
+	if refResourceTerminal {
+		return ackerr.ResourceReferenceTerminalFor(
+			"LayerVersion",
+			namespace, name)
+	}
+	var refResourceSynced bool
+	for _, cond := range obj.Status.Conditions {
+		if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+			cond.Status == corev1.ConditionTrue {
+			refResourceSynced = true
+		}
+	}
+	if !refResourceSynced {
+		return ackerr.ResourceReferenceNotSyncedFor(
+			"LayerVersion",
+			namespace, name)
+	}
+	if obj.Status.ACKResourceMetadata == nil || obj.Status.ACKResourceMetadata.ARN == nil {
+		return ackerr.ResourceReferenceMissingTargetFieldFor(
+			"LayerVersion",
 			namespace, name,
 			"Status.ACKResourceMetadata.ARN")
 	}

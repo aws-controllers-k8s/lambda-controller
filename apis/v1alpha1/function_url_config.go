@@ -53,7 +53,8 @@ type FunctionURLConfigSpec struct {
 	// The alias name.
 	//
 	// Regex Pattern: `^((?!^\d+$)^[0-9a-zA-Z-_]+$)$`
-	Qualifier *string `json:"qualifier,omitempty"`
+	Qualifier    *string                                  `json:"qualifier,omitempty"`
+	QualifierRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"qualifierRef,omitempty"`
 }
 
 // FunctionURLConfigStatus defines the observed state of FunctionURLConfig

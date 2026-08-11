@@ -307,6 +307,11 @@ func (in *AliasSpec) DeepCopyInto(out *AliasSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.FunctionVersionRef != nil {
+		in, out := &in.FunctionVersionRef, &out.FunctionVersionRef
+		*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Name != nil {
 		in, out := &in.Name, &out.Name
 		*out = new(string)
@@ -2243,6 +2248,17 @@ func (in *FunctionSpec) DeepCopyInto(out *FunctionSpec) {
 		*out = new(corev1alpha1.AWSResourceReferenceWrapper)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.LayerRefs != nil {
+		in, out := &in.LayerRefs, &out.LayerRefs
+		*out = make([]*corev1alpha1.AWSResourceReferenceWrapper, len(*in))
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+				(*in).DeepCopyInto(*out)
+			}
+		}
+	}
 	if in.Layers != nil {
 		in, out := &in.Layers, &out.Layers
 		*out = make([]*string, len(*in))
@@ -2555,6 +2571,11 @@ func (in *FunctionURLConfigSpec) DeepCopyInto(out *FunctionURLConfigSpec) {
 		in, out := &in.Qualifier, &out.Qualifier
 		*out = new(string)
 		**out = **in
+	}
+	if in.QualifierRef != nil {
+		in, out := &in.QualifierRef, &out.QualifierRef
+		*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+		(*in).DeepCopyInto(*out)
 	}
 }
 
@@ -3073,6 +3094,11 @@ func (in *LayerVersionContentInput) DeepCopyInto(out *LayerVersionContentInput) 
 		in, out := &in.S3Bucket, &out.S3Bucket
 		*out = new(string)
 		**out = **in
+	}
+	if in.S3BucketRef != nil {
+		in, out := &in.S3BucketRef, &out.S3BucketRef
+		*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.S3Key != nil {
 		in, out := &in.S3Key, &out.S3Key

@@ -125,6 +125,9 @@ func newResourceDelta(
 			delta.Add("Spec.FunctionVersion", a.ko.Spec.FunctionVersion, b.ko.Spec.FunctionVersion)
 		}
 	}
+	if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.FunctionVersionRef, b.ko.Spec.FunctionVersionRef) {
+		delta.Add("Spec.FunctionVersionRef", a.ko.Spec.FunctionVersionRef, b.ko.Spec.FunctionVersionRef)
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.Name, b.ko.Spec.Name) {
 		delta.Add("Spec.Name", a.ko.Spec.Name, b.ko.Spec.Name)
 	} else if a.ko.Spec.Name != nil && b.ko.Spec.Name != nil {

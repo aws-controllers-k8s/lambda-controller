@@ -222,12 +222,6 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Spec.CompatibleRuntimes = nil
 	}
-	if resp.Content != nil {
-		f2 := &svcapitypes.LayerVersionContentInput{}
-		ko.Spec.Content = f2
-	} else {
-		ko.Spec.Content = nil
-	}
 	if resp.CreatedDate != nil {
 		ko.Status.CreatedDate = resp.CreatedDate
 	} else {
@@ -366,12 +360,6 @@ func (rm *resourceManager) sdkUpdate(
 		ko.Spec.CompatibleRuntimes = f1
 	} else {
 		ko.Spec.CompatibleRuntimes = nil
-	}
-	if resp.Content != nil {
-		f2 := &svcapitypes.LayerVersionContentInput{}
-		ko.Spec.Content = f2
-	} else {
-		ko.Spec.Content = nil
 	}
 	if resp.CreatedDate != nil {
 		ko.Status.CreatedDate = resp.CreatedDate

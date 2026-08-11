@@ -105,8 +105,9 @@ type FunctionSpec struct {
 	// or an Amazon Web Services managed key (https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-managed-cmk).
 	//
 	// Regex Pattern: `^(arn:(aws[a-zA-Z-]*)?:[a-z0-9-.]+:.*)|()$`
-	KMSKeyARN *string                                  `json:"kmsKeyARN,omitempty"`
-	KMSKeyRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"kmsKeyRef,omitempty"`
+	KMSKeyARN *string                                    `json:"kmsKeyARN,omitempty"`
+	KMSKeyRef *ackv1alpha1.AWSResourceReferenceWrapper   `json:"kmsKeyRef,omitempty"`
+	LayerRefs []*ackv1alpha1.AWSResourceReferenceWrapper `json:"layerRefs,omitempty"`
 	// A list of function layers (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html)
 	// to add to the function's execution environment. Specify each layer by its
 	// ARN, including the version.
