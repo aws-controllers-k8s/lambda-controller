@@ -43,9 +43,6 @@ import (
 // +kubebuilder:rbac:groups=mq.services.k8s.aws,resources=brokers,verbs=get;list
 // +kubebuilder:rbac:groups=mq.services.k8s.aws,resources=brokers/status,verbs=get;list
 
-// +kubebuilder:rbac:groups=secretsmanager.services.k8s.aws,resources=secrets,verbs=get;list
-// +kubebuilder:rbac:groups=secretsmanager.services.k8s.aws,resources=secrets/status,verbs=get;list
-
 // ClearResolvedReferences removes any reference values that were made
 // concrete in the spec. It returns a copy of the input AWSResource which
 // contains the original *Ref values, but none of their respective concrete
@@ -73,16 +70,6 @@ func (rm *resourceManager) ClearResolvedReferences(res acktypes.AWSResource) ack
 
 	if len(ko.Spec.QueueRefs) > 0 {
 		ko.Spec.Queues = nil
-	}
-
-	if ko.Spec.SelfManagedKafkaEventSourceConfig != nil {
-		if ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig != nil {
-			for f0idx, f0iter := range ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs {
-				if f0iter.URIRef != nil {
-					ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs[f0idx].URI = nil
-				}
-			}
-		}
 	}
 
 	return &resource{ko}
@@ -128,12 +115,6 @@ func (rm *resourceManager) ResolveReferences(
 		resourceHasReferences = resourceHasReferences || fieldHasReferences
 	}
 
-	if fieldHasReferences, err := rm.resolveReferenceForSelfManagedKafkaEventSourceConfig_SchemaRegistryConfig_AccessConfigs_URI(ctx, apiReader, ko); err != nil {
-		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
-	} else {
-		resourceHasReferences = resourceHasReferences || fieldHasReferences
-	}
-
 	return &resource{ko}, resourceHasReferences, err
 }
 
@@ -164,16 +145,6 @@ func validateReferenceFields(ko *svcapitypes.EventSourceMapping) error {
 
 	if len(ko.Spec.QueueRefs) > 0 && len(ko.Spec.Queues) > 0 {
 		return ackerr.ResourceReferenceAndIDNotSupportedFor("Queues", "QueueRefs")
-	}
-
-	if ko.Spec.SelfManagedKafkaEventSourceConfig != nil {
-		if ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig != nil {
-			for _, f0iter := range ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs {
-				if f0iter.URIRef != nil && f0iter.URI != nil {
-					return ackerr.ResourceReferenceAndIDNotSupportedFor("SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs.URI", "SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs.URIRef")
-				}
-			}
-		}
 	}
 	return nil
 }
@@ -551,47 +522,4 @@ func getReferencedResourceState_Broker(
 			"Status.BrokerID")
 	}
 	return nil
-}
-
-// resolveReferenceForSelfManagedKafkaEventSourceConfig_SchemaRegistryConfig_AccessConfigs_URI reads the resource referenced
-// from SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs.URIRef field and sets the SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs.URI
-// from referenced resource. Returns a boolean indicating whether a reference
-// contains references, or an error
-func (rm *resourceManager) resolveReferenceForSelfManagedKafkaEventSourceConfig_SchemaRegistryConfig_AccessConfigs_URI(
-	ctx context.Context,
-	apiReader client.Reader,
-	ko *svcapitypes.EventSourceMapping,
-) (hasReferences bool, err error) {
-	if ko.Spec.SelfManagedKafkaEventSourceConfig != nil {
-		if ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig != nil {
-			for f0idx, f0iter := range ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs {
-				if f0iter.URIRef != nil && f0iter.URIRef.From != nil {
-					hasReferences = true
-					arr := f0iter.URIRef.From
-					if arr.Name == nil || *arr.Name == "" {
-						return hasReferences, fmt.Errorf("provided resource reference is nil or empty: SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs.URIRef")
-					}
-					namespace, err := ackrt.ResolveCrossNamespaceReference(
-						ctx,
-						rm.cfg.EnableCrossNamespace,
-						&ko.Status.Conditions,
-						ackrt.CrossNamespaceRefKindResource,
-						ko.ObjectMeta.GetNamespace(),
-						arr.Namespace,
-						*arr.Name,
-					)
-					if err != nil {
-						return hasReferences, err
-					}
-					obj := &secretsmanagerapitypes.Secret{}
-					if err := getReferencedResourceState_Secret(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
-						return hasReferences, err
-					}
-					ko.Spec.SelfManagedKafkaEventSourceConfig.SchemaRegistryConfig.AccessConfigs[f0idx].URI = (*string)(obj.Status.ACKResourceMetadata.ARN)
-				}
-			}
-		}
-	}
-
-	return hasReferences, nil
 }
