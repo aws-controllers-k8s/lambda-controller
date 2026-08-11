@@ -36,6 +36,7 @@ var (
 	ErrFunctionDeleting          = errors.New("function in 'Deleting' state, cannot be modified or deleted")
 	ErrSourceImageDoesNotExist   = errors.New("source image does not exist")
 	ErrCannotSetFunctionCSC      = errors.New("cannot set function code signing config when package type is Image")
+	ErrCodeSigningNotAvailable   = errors.New("code signing is not available in this region")
 	ErrCannotModifyTenancyConfig = errors.New("tenancy config cannot be modified after function creation")
 )
 
@@ -784,6 +785,13 @@ func (rm *resourceManager) setFunctionCodeSigningConfig(
 	)
 	rm.metrics.RecordAPICall("GET", "GetFunctionCodeSigningConfig", err)
 	if err != nil {
+		if awsErr, ok := ackerr.AWSError(err); ok && awsErr.ErrorCode() == "AccessDeniedException" &&
+			strings.Contains(awsErr.ErrorMessage(), "Unable to determine service/operation name to be authorized") {
+			if ko.Spec.CodeSigningConfigARN != nil && *ko.Spec.CodeSigningConfigARN != "" {
+				return ackerr.NewTerminalError(ErrCodeSigningNotAvailable)
+			}
+			return nil
+		}
 		return err
 	}
 
