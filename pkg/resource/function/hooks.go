@@ -38,6 +38,7 @@ var (
 	ErrCannotSetFunctionCSC      = errors.New("cannot set function code signing config when package type is Image")
 	ErrCodeSigningNotAvailable   = errors.New("code signing is not available in this region")
 	ErrCannotModifyTenancyConfig = errors.New("tenancy config cannot be modified after function creation")
+	ErrFunctionDeferredUpdate    = errors.New("function code updated; configuration update deferred to the next reconcile")
 )
 
 var (
@@ -52,6 +53,10 @@ var (
 	requeueWaitWhileSourceImageDoesNotExist = ackrequeue.NeededAfter(
 		ErrSourceImageDoesNotExist,
 		1*time.Minute,
+	)
+	requeueWaitForDeferredUpdate = ackrequeue.NeededAfter(
+		ErrFunctionDeferredUpdate,
+		30*time.Second,
 	)
 )
 
@@ -127,12 +132,26 @@ func (rm *resourceManager) customUpdateFunction(
 		return updatedStatusResource, ackerr.NewTerminalError(ErrCannotModifyTenancyConfig)
 	}
 
+	codeUpdate := delta.DifferentAt("Spec.Code.ImageURI") ||
+		delta.DifferentAt("Spec.Code.SHA256") ||
+		delta.DifferentAt("Spec.Architectures")
+
+	configUpdate := delta.DifferentExcept(
+		"Spec.Code",
+		"Spec.Architectures",
+		"Spec.Tags",
+		"Spec.ReservedConcurrentExecutions",
+		"Spec.FunctionEventInvokeConfig",
+		"Spec.CodeSigningConfigARN",
+		"Spec.TenancyConfig",
+	)
+
 	// Only try to update Spec.Code or Spec.Configuration at once. It is
 	// not correct to sequentially call UpdateFunctionConfiguration and
 	// UpdateFunctionCode because both of them can put the function in a
 	// Pending state.
 	switch {
-	case delta.DifferentAt("Spec.Code.ImageURI") || delta.DifferentAt("Spec.Code.SHA256") || delta.DifferentAt("Spec.Architectures"):
+	case codeUpdate:
 		err = rm.updateFunctionCode(ctx, desired, delta, latest)
 		if err != nil {
 			if strings.Contains(err.Error(), "Provide a valid source image.") {
@@ -141,13 +160,7 @@ func (rm *resourceManager) customUpdateFunction(
 				return updatedStatusResource, err
 			}
 		}
-	case delta.DifferentExcept(
-		"Spec.Code",
-		"Spec.Tags",
-		"Spec.ReservedConcurrentExecutions",
-		"Spec.FunctionEventInvokeConfig",
-		"Spec.CodeSigningConfigARN",
-		"Spec.TenancyConfig"):
+	case configUpdate:
 		err = rm.updateFunctionConfiguration(ctx, desired, delta)
 		if err != nil {
 			return updatedStatusResource, err
@@ -158,7 +171,18 @@ func (rm *resourceManager) customUpdateFunction(
 	if err != nil {
 		return updatedStatusResource, err
 	}
-	return rm.concreteResource(readOneLatest), nil
+	updated := rm.concreteResource(readOneLatest)
+
+	// When both a code and a configuration change are requested, only the code
+	// change was applied above: UpdateFunctionCode and UpdateFunctionConfiguration
+	// cannot be issued together because Lambda rejects an update while another is
+	// in progress. Requeue so the deferred configuration change is applied on the
+	// next reconcile instead of waiting for the default resync period. The delta
+	// tells us deterministically that work remains.
+	if codeUpdate && configUpdate {
+		return updated, requeueWaitForDeferredUpdate
+	}
+	return updated, nil
 }
 
 // updateFunctionConfiguration calls the UpdateFunctionConfiguration to edit a
