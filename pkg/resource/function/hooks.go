@@ -38,7 +38,7 @@ var (
 	ErrCannotSetFunctionCSC      = errors.New("cannot set function code signing config when package type is Image")
 	ErrCodeSigningNotAvailable   = errors.New("code signing is not available in this region")
 	ErrCannotModifyTenancyConfig = errors.New("tenancy config cannot be modified after function creation")
-	ErrFunctionDeferredUpdate    = errors.New("function code updated; configuration update deferred to the next reconcile")
+	ErrFunctionUpdating          = errors.New("function update issued; requeueing to refresh status and apply any deferred change")
 )
 
 var (
@@ -54,9 +54,9 @@ var (
 		ErrSourceImageDoesNotExist,
 		1*time.Minute,
 	)
-	requeueWaitForDeferredUpdate = ackrequeue.NeededAfter(
-		ErrFunctionDeferredUpdate,
-		30*time.Second,
+	requeueAfterFunctionUpdate = ackrequeue.NeededAfter(
+		ErrFunctionUpdating,
+		5*time.Second,
 	)
 )
 
@@ -167,22 +167,8 @@ func (rm *resourceManager) customUpdateFunction(
 		}
 	}
 
-	readOneLatest, err := rm.ReadOne(ctx, desired)
-	if err != nil {
-		return updatedStatusResource, err
-	}
-	updated := rm.concreteResource(readOneLatest)
-
-	// When both a code and a configuration change are requested, only the code
-	// change was applied above: UpdateFunctionCode and UpdateFunctionConfiguration
-	// cannot be issued together because Lambda rejects an update while another is
-	// in progress. Requeue so the deferred configuration change is applied on the
-	// next reconcile instead of waiting for the default resync period. The delta
-	// tells us deterministically that work remains.
-	if codeUpdate && configUpdate {
-		return updated, requeueWaitForDeferredUpdate
-	}
-	return updated, nil
+	// Force a requeue to both refresh Function status and apply any deferred field updates.
+	return updatedStatusResource, requeueAfterFunctionUpdate
 }
 
 // updateFunctionConfiguration calls the UpdateFunctionConfiguration to edit a
