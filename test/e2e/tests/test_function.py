@@ -1363,3 +1363,110 @@ class TestFunction:
         assert deleted is True
 
         time.sleep(DELETE_WAIT_AFTER_SECONDS)
+
+    def test_function_update_code_and_environment_variable(self, lambda_client):
+        # Regression test: a single update that changes both the code (sha256)
+        # and the configuration (environment variables) must apply BOTH changes.
+        # The controller can only issue UpdateFunctionCode or
+        # UpdateFunctionConfiguration in one reconcile, so it applies the code
+        # change first and must requeue to apply the deferred configuration
+        # change instead of prematurely reporting the resource as synced.
+        resource_name = random_suffix_name("functionupdatecodeenv", 24)
+
+        resources = get_bootstrap_resources()
+        logging.debug(resources)
+
+        archive_1 = open(LAMBDA_FUNCTION_FILE_PATH_ZIP, 'rb')
+        readFile_1 = archive_1.read()
+        hash_1 = hashlib.sha256(readFile_1)
+        binary_hash_1 = hash_1.digest()
+        base64_hash_1 = base64.b64encode(binary_hash_1).decode('utf-8')
+
+        archive_2 = open(LAMBDA_FUNCTION_UPDATED_FILE_PATH_ZIP, 'rb')
+        readFile_2 = archive_2.read()
+        hash_2 = hashlib.sha256(readFile_2)
+        binary_hash_2 = hash_2.digest()
+        base64_hash_2 = base64.b64encode(binary_hash_2).decode('utf-8')
+
+        replacements = REPLACEMENT_VALUES.copy()
+        replacements["FUNCTION_NAME"] = resource_name
+        replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
+        replacements["LAMBDA_ROLE"] = resources.BasicRole.arn
+        replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
+        replacements["RESERVED_CONCURRENT_EXECUTIONS"] = "0"
+        replacements["CODE_SIGNING_CONFIG_ARN"] = ""
+        replacements["AWS_REGION"] = get_region()
+        replacements["ARCHITECTURES"] = 'x86_64'
+        replacements["HASH"] = base64_hash_1
+
+        # Load Lambda CR
+        resource_data = load_lambda_resource(
+            "function_code_s3",
+            additional_replacements=replacements,
+        )
+        logging.debug(resource_data)
+
+        # Create k8s resource
+        ref = k8s.CustomResourceReference(
+            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            resource_name, namespace="default",
+        )
+        k8s.create_custom_resource(ref, resource_data)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
+
+        assert cr is not None
+        assert k8s.get_resource_exists(ref)
+
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
+
+        lambda_validator = LambdaValidator(lambda_client)
+
+        # Assert the original code and empty environment are in place
+        assert cr["spec"]["code"]["s3Bucket"] == resources.FunctionsBucket.name
+        assert cr["spec"]["code"]["s3Key"] == LAMBDA_FUNCTION_FILE_ZIP
+        assert cr["spec"].get("environment", {}).get("variables", {}) == {}
+
+        function = lambda_validator.get_function(resource_name)
+        assert function is not None
+        assert function["Configuration"]["CodeSha256"] == base64_hash_1
+        assert function["Configuration"].get("Environment", {}).get("Variables", {}) == {}
+
+        # Update both the code and the environment variables in a single patch
+        cr["spec"]["code"]["sha256"] = base64_hash_2
+        cr["spec"]["code"]["s3Key"] = LAMBDA_FUNCTION_UPDATED_FILE_ZIP
+        cr["spec"]["environment"] = {"variables": {"TEST_ENV_VAR": "test_value"}}
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        # The code change is applied first, then the environment change is
+        # applied on a requeued reconcile. Wait for the controller to converge
+        # (this must exceed the code-update requeue interval; a single
+        # UPDATE_WAIT_AFTER_SECONDS sleep is not enough to catch a regression).
+        assert k8s.wait_on_condition(
+            ref,
+            "ACK.ResourceSynced",
+            "True",
+            wait_periods=CONTROLLER_WAIT_PERIODS,
+            period_length=CONTROLLER_PERIOD_LENGTH,
+        )
+
+        # Both the code and the environment variables must be applied
+        function = lambda_validator.get_function(resource_name)
+        assert function is not None
+        assert function["Configuration"]["CodeSha256"] == base64_hash_2
+        assert function["Configuration"].get("Environment", {}).get("Variables", {}) == {
+            "TEST_ENV_VAR": "test_value"
+        }
+
+        # Delete k8s resource
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
+        assert deleted is True
+
+        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+
+        # Check Lambda function doesn't exist
+        assert not lambda_validator.function_exists(resource_name)

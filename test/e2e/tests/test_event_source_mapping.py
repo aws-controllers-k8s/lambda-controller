@@ -20,7 +20,7 @@ import logging
 
 from acktest.resources import random_suffix_name
 from acktest.aws.identity import get_region
-from acktest.k8s import resource as k8s
+from acktest.k8s import resource as k8s, condition
 
 from e2e import service_marker, CRD_GROUP, CRD_VERSION, load_lambda_resource
 from e2e.replacement_values import REPLACEMENT_VALUES
@@ -220,6 +220,7 @@ class TestEventSourceMapping:
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
+        assert k8s.wait_on_condition(ref, condition.CONDITION_TYPE_RESOURCE_SYNCED, "True", wait_periods=5)
 
         esm_uuid = cr['status']['uuid']
 
