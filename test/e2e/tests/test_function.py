@@ -800,6 +800,78 @@ class TestFunction:
         # Check Lambda function doesn't exist
         assert not lambda_validator.function_exists(resource_name)
 
+    def test_function_add_layers_to_function_without_layers(self, lambda_client):
+        resource_name = random_suffix_name("functionnolayers", 24)
+
+        resources = get_bootstrap_resources()
+        logging.debug(resources)
+
+        replacements = REPLACEMENT_VALUES.copy()
+        replacements["FUNCTION_NAME"] = resource_name
+        replacements["BUCKET_NAME"] = resources.FunctionsBucket.name
+        replacements["LAMBDA_ROLE"] = resources.EICRole.arn
+        replacements["LAMBDA_FILE_NAME"] = LAMBDA_FUNCTION_FILE_ZIP
+        replacements["AWS_REGION"] = get_region()
+
+        # Load Lambda CR that does not declare any layer
+        resource_data = load_lambda_resource(
+            "function_no_layers",
+            additional_replacements=replacements,
+        )
+        logging.debug(resource_data)
+
+        # Create k8s resource
+        ref = k8s.CustomResourceReference(
+            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            resource_name, namespace="default",
+        )
+        k8s.create_custom_resource(ref, resource_data)
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
+
+        assert cr is not None
+        assert k8s.get_resource_exists(ref)
+
+        time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+        cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=CONTROLLER_WAIT_PERIODS, period_length=CONTROLLER_PERIOD_LENGTH)
+
+        lambda_validator = LambdaValidator(lambda_client)
+
+        # Check Lambda function exists and has no layer attached
+        assert lambda_validator.function_exists(resource_name)
+        function = lambda_validator.get_function(resource_name)
+        assert "Layers" not in function["Configuration"]
+
+        # Add layers to a function that currently has none. GetFunction returns
+        # no layer for it, so the controller has to clear Spec.Layers on the
+        # latest resource for the delta against the desired spec to be computed.
+        layers_list = ["arn:aws:lambda:us-west-2:017000801446:layer:AWSLambdaPowertoolsPythonV2:68", "arn:aws:lambda:us-west-2:580247275435:layer:LambdaInsightsExtension:52"]
+        cr["spec"]["layers"] = layers_list
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+
+        # Check the layers were attached to the function in AWS
+        function = lambda_validator.get_function(resource_name)
+        assert len(function["Configuration"]["Layers"]) == len(layers_list)
+        for i in range(len(layers_list)):
+            assert function["Configuration"]["Layers"][i]["Arn"] == layers_list[i]
+
+        # Check the layers are also reported back in the CR status
+        cr = k8s.get_resource(ref)
+        assert cr["status"]["layerStatuses"] is not None
+        assert len(cr["status"]["layerStatuses"]) == len(layers_list)
+
+        # Delete k8s resource
+        _, deleted = k8s.delete_custom_resource(ref, wait_periods=DELETE_WAIT_PERIODS, period_length=DELETE_PERIOD_LENGTH)
+        assert deleted is True
+
+        time.sleep(DELETE_WAIT_AFTER_SECONDS)
+
+        # Check Lambda function doesn't exist
+        assert not lambda_validator.function_exists(resource_name)
+
     def test_function_event_invoke_config(self, lambda_client):
         resource_name = random_suffix_name("lambda-function", 24)
 
