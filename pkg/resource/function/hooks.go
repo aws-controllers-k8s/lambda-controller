@@ -296,14 +296,15 @@ func (rm *resourceManager) updateFunctionConfiguration(
 	}
 
 	if delta.DifferentAt("Spec.Layers") {
+		// Layers is always set, including when the desired spec has none left.
+		// UpdateFunctionConfiguration only detaches the existing layers when it
+		// receives an empty list; leaving the field nil makes Lambda keep them.
 		layers := []string{}
-		if len(dspec.Layers) > 0 {
-			for _, iter := range dspec.Layers {
-				var elem string = *iter
-				layers = append(layers, elem)
-			}
-			input.Layers = layers
+		for _, iter := range dspec.Layers {
+			var elem string = *iter
+			layers = append(layers, elem)
 		}
+		input.Layers = layers
 	}
 
 	if delta.DifferentAt("Spec.LoggingConfig") {
