@@ -51,6 +51,41 @@ func (rm *resourceManager) ClearResolvedReferences(res acktypes.AWSResource) ack
 	return &resource{ko}
 }
 
+// EnsureReferences restores, onto a copy of `latest`, the cross-resource
+// reference (*Ref) fields it is missing, taking them from `desired`. Only
+// reference fields are written, so every concrete value on `latest` stands.
+//
+// A *Ref is a sibling of the concrete field it resolves into, so rebuilding the
+// containing struct from an AWS API response drops it. That disables
+// ClearResolvedReferences, which suppresses a resolved value only while the
+// sibling *Ref is visible, so the spec patch deletes the declared *Ref and stores
+// the resolved value in its place.
+//
+// Only references reached through structs are restored. A top-level *Ref needs no
+// help, since every write path starts from a DeepCopy of the object it was handed.
+// A *Ref reached through a list is not restored and remains subject to the above:
+// it has no fixed address, and replacing the whole list instead would discard
+// whatever the service populated inside it.
+//
+// `desired` must be the declared resource with its references resolved, and must
+// not be an object that has been through a resource manager: managers may mutate
+// the resource they are handed, and some write API response values into it.
+func (rm *resourceManager) EnsureReferences(
+	desired acktypes.AWSResource,
+	latest acktypes.AWSResource,
+) acktypes.AWSResource {
+	// Deep copy the source as well, so a reference handed over below does not
+	// alias the caller's declared object.
+	desiredKO := rm.concreteResource(desired).ko.DeepCopy()
+	latestKO := rm.concreteResource(latest).ko.DeepCopy()
+
+	if desiredKO.Spec.Content != nil && latestKO.Spec.Content != nil && desiredKO.Spec.Content.S3BucketRef != nil && latestKO.Spec.Content.S3BucketRef == nil {
+		latestKO.Spec.Content.S3BucketRef = desiredKO.Spec.Content.S3BucketRef
+	}
+
+	return &resource{latestKO}
+}
+
 // ResolveReferences finds if there are any Reference field(s) present
 // inside AWSResource passed in the parameter and attempts to resolve those
 // reference field(s) into their respective target field(s). It returns a
