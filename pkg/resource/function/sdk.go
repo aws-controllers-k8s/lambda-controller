@@ -409,6 +409,11 @@ func (rm *resourceManager) sdkFind(
 		ko.Spec.Layers = layer
 		ko.Status.LayerStatuses = f16
 	} else {
+		// ko is a deep copy of the desired resource, so Spec.Layers has to be
+		// explicitly cleared when the function has no layers in AWS. Leaving the
+		// desired value in place makes desired and latest identical, no delta is
+		// computed for Spec.Layers and the layers are never attached.
+		ko.Spec.Layers = nil
 		ko.Status.LayerStatuses = nil
 	}
 	if resp.Tags != nil {
