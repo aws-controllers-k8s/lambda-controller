@@ -86,19 +86,19 @@ type FunctionSpec struct {
 	// The ARN of the Key Management Service (KMS) customer managed key that's used
 	// to encrypt the following resources:
 	//
-	//   - The function's environment variables (https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-encryption).
+	//    * The function's environment variables (https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-encryption).
 	//
-	//   - The function's Lambda SnapStart (https://docs.aws.amazon.com/lambda/latest/dg/snapstart-security.html)
-	//     snapshots.
+	//    * The function's Lambda SnapStart (https://docs.aws.amazon.com/lambda/latest/dg/snapstart-security.html)
+	//    snapshots.
 	//
-	//   - When used with SourceKMSKeyArn, the unzipped version of the .zip deployment
-	//     package that's used for function invocations. For more information, see
-	//     Specifying a customer managed key for Lambda (https://docs.aws.amazon.com/lambda/latest/dg/encrypt-zip-package.html#enable-zip-custom-encryption).
+	//    * When used with SourceKMSKeyArn, the unzipped version of the .zip deployment
+	//    package that's used for function invocations. For more information, see
+	//    Specifying a customer managed key for Lambda (https://docs.aws.amazon.com/lambda/latest/dg/encrypt-zip-package.html#enable-zip-custom-encryption).
 	//
-	//   - The optimized version of the container image that's used for function
-	//     invocations. Note that this is not the same key that's used to protect
-	//     your container image in the Amazon Elastic Container Registry (Amazon
-	//     ECR). For more information, see Function lifecycle (https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#images-lifecycle).
+	//    * The optimized version of the container image that's used for function
+	//    invocations. Note that this is not the same key that's used to protect
+	//    your container image in the Amazon Elastic Container Registry (Amazon
+	//    ECR). For more information, see Function lifecycle (https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#images-lifecycle).
 	//
 	// If you don't provide a customer managed key, Lambda uses an Amazon Web Services
 	// owned key (https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-owned-cmk)
@@ -122,11 +122,11 @@ type FunctionSpec struct {
 	//
 	// Name formats
 	//
-	//   - Function name – my-function.
+	//    * Function name – my-function.
 	//
-	//   - Function ARN – arn:aws:lambda:us-west-2:123456789012:function:my-function.
+	//    * Function ARN – arn:aws:lambda:us-west-2:123456789012:function:my-function.
 	//
-	//   - Partial ARN – 123456789012:function:my-function.
+	//    * Partial ARN – 123456789012:function:my-function.
 	//
 	// The length constraint applies only to the full ARN. If you specify only the
 	// function name, it is limited to 64 characters in length.
