@@ -141,8 +141,6 @@ func (rm *resourceManager) EnsureReferences(
 				latestKO.Spec.VPCConfig.SecurityGroupRefs = desiredKO.Spec.VPCConfig.SecurityGroupRefs
 			}
 		}
-	}
-	if desiredKO.Spec.VPCConfig != nil {
 		if len(desiredKO.Spec.VPCConfig.SubnetRefs) > 0 {
 			if latestKO.Spec.VPCConfig == nil {
 				latestKO.Spec.VPCConfig = &svcapitypes.VPCConfig{}
