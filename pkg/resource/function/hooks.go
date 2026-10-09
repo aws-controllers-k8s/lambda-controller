@@ -554,6 +554,16 @@ func compareMaps(
 	return
 }
 
+// keepDesiredOrder returns desired when it holds the same values as latest,
+// so that the order written in the spec is kept even when AWS returns the
+// values in a different order. Otherwise it returns latest.
+func keepDesiredOrder(desired []*string, latest []*string) []*string {
+	if ackcompare.SliceStringPEqual(desired, latest) {
+		return desired
+	}
+	return latest
+}
+
 func customPreCompare(
 	delta *ackcompare.Delta,
 	a *resource,
