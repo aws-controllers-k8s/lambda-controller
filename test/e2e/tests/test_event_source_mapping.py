@@ -222,6 +222,10 @@ class TestEventSourceMapping:
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
         assert k8s.wait_on_condition(ref, condition.CONDITION_TYPE_RESOURCE_SYNCED, "True", wait_periods=5)
 
+        # The first status can come from a reconcile that was still waiting on
+        # the Function reference, before the mapping was created, so it has no
+        # UUID yet. Read the CR again now that it is synced.
+        cr = k8s.get_resource(ref)
         esm_uuid = cr['status']['uuid']
 
         lambda_validator = LambdaValidator(lambda_client)
