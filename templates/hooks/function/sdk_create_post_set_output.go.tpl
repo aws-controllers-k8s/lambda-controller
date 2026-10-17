@@ -4,6 +4,8 @@
 		}
 		ko.Spec.VPCConfig.SecurityGroupRefs = desired.ko.Spec.VPCConfig.SecurityGroupRefs
 		ko.Spec.VPCConfig.SubnetRefs = desired.ko.Spec.VPCConfig.SubnetRefs
+		ko.Spec.VPCConfig.SecurityGroupIDs = keepDesiredOrder(desired.ko.Spec.VPCConfig.SecurityGroupIDs, ko.Spec.VPCConfig.SecurityGroupIDs)
+		ko.Spec.VPCConfig.SubnetIDs = keepDesiredOrder(desired.ko.Spec.VPCConfig.SubnetIDs, ko.Spec.VPCConfig.SubnetIDs)
 	}
 	
 	if resp.Layers != nil {

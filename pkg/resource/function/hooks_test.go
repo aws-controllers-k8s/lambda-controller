@@ -108,6 +108,60 @@ func Test_compareMaps(t *testing.T) {
 	}
 }
 
+func Test_keepDesiredOrder(t *testing.T) {
+	tests := []struct {
+		name    string
+		desired []*string
+		latest  []*string
+		want    []*string
+	}{
+		{
+			name:    "same values in a different order keeps desired order",
+			desired: aws.StringSlice([]string{"subnet-b", "subnet-a"}),
+			latest:  aws.StringSlice([]string{"subnet-a", "subnet-b"}),
+			want:    aws.StringSlice([]string{"subnet-b", "subnet-a"}),
+		},
+		{
+			name:    "same values in the same order",
+			desired: aws.StringSlice([]string{"subnet-a", "subnet-b"}),
+			latest:  aws.StringSlice([]string{"subnet-a", "subnet-b"}),
+			want:    aws.StringSlice([]string{"subnet-a", "subnet-b"}),
+		},
+		{
+			name:    "different values keeps latest",
+			desired: aws.StringSlice([]string{"subnet-b", "subnet-a"}),
+			latest:  aws.StringSlice([]string{"subnet-a", "subnet-c"}),
+			want:    aws.StringSlice([]string{"subnet-a", "subnet-c"}),
+		},
+		{
+			name:    "different lengths keeps latest",
+			desired: aws.StringSlice([]string{"subnet-a"}),
+			latest:  aws.StringSlice([]string{"subnet-a", "subnet-b"}),
+			want:    aws.StringSlice([]string{"subnet-a", "subnet-b"}),
+		},
+		{
+			name:    "nil desired keeps latest",
+			desired: nil,
+			latest:  aws.StringSlice([]string{"subnet-a"}),
+			want:    aws.StringSlice([]string{"subnet-a"}),
+		},
+		{
+			name:    "both nil",
+			desired: nil,
+			latest:  nil,
+			want:    nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := keepDesiredOrder(tt.desired, tt.latest)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("keepDesiredOrder() = %v, want %v", aws.ToStringSlice(got), aws.ToStringSlice(tt.want))
+			}
+		})
+	}
+}
+
 // fakeHTTPClient returns a canned HTTP response for every request, allowing us
 // to drive the real svcsdk.Client (and thus the real
 // setFunctionCodeSigningConfig code path) with a simulated AWS error response.
