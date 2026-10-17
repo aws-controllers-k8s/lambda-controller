@@ -21,6 +21,11 @@ You can also learn more about our [Governance](/GOVERNANCE.md) structure.
 
 [coc]: https://aws.github.io/code-of-conduct
 
+## Testing
+
+See our [testing documentation](/test/e2e/README.md) for details on how to
+set up lambda controller for testing
+
 ## License
 
 This project is [licensed](/LICENSE) under the Apache-2.0 License.
