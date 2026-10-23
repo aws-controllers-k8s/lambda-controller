@@ -8,7 +8,7 @@ require (
 	github.com/aws-controllers-k8s/kafka-controller v1.13.0
 	github.com/aws-controllers-k8s/kms-controller v1.6.0
 	github.com/aws-controllers-k8s/mq-controller v1.7.0
-	github.com/aws-controllers-k8s/runtime v0.66.0
+	github.com/aws-controllers-k8s/runtime v0.67.0
 	github.com/aws-controllers-k8s/s3-controller v1.13.0
 	github.com/aws-controllers-k8s/secretsmanager-controller v1.7.0
 	github.com/aws/aws-sdk-go-v2 v1.41.5
