@@ -64,6 +64,7 @@ def upload_function_to_bucket(file_path: str, bucket_name: str):
             file_path,
             bucket_name,
             object_name,
+            ExtraArgs={'ChecksumAlgorithm': 'SHA256'},
         )
     except ClientError as e:
         logging.error(e)
