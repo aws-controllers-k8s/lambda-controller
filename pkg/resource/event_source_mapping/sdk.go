@@ -384,17 +384,7 @@ func (rm *resourceManager) sdkFind(
 	if err != nil {
 		return nil, err
 	}
-	if ko.Spec.DestinationConfig != nil {
-		if ko.Spec.DestinationConfig.OnFailure != nil && ko.Spec.DestinationConfig.OnFailure.Destination == nil {
-			ko.Spec.DestinationConfig.OnFailure = nil
-		}
-		if ko.Spec.DestinationConfig.OnSuccess != nil && ko.Spec.DestinationConfig.OnSuccess.Destination == nil {
-			ko.Spec.DestinationConfig.OnSuccess = nil
-		}
-		if ko.Spec.DestinationConfig.OnFailure == nil && ko.Spec.DestinationConfig.OnSuccess == nil {
-			ko.Spec.DestinationConfig = nil
-		}
-	}
+	cleanEmptyDestinationConfig(ko)
 
 	return &resource{ko}, nil
 }
@@ -439,6 +429,7 @@ func (rm *resourceManager) sdkCreate(
 	if err != nil {
 		return nil, err
 	}
+	input.DestinationConfig = cleanEmptyDestinationConfigInput(input.DestinationConfig)
 
 	var resp *svcsdk.CreateEventSourceMappingOutput
 	_ = resp
@@ -753,18 +744,7 @@ func (rm *resourceManager) sdkCreate(
 			}
 		}
 	}()
-	if ko.Spec.DestinationConfig != nil {
-		if ko.Spec.DestinationConfig.OnFailure != nil && ko.Spec.DestinationConfig.OnFailure.Destination == nil {
-			ko.Spec.DestinationConfig.OnFailure = nil
-		}
-		if ko.Spec.DestinationConfig.OnSuccess != nil && ko.Spec.DestinationConfig.OnSuccess.Destination == nil {
-			ko.Spec.DestinationConfig.OnSuccess = nil
-		}
-		if ko.Spec.DestinationConfig.OnFailure == nil && ko.Spec.DestinationConfig.OnSuccess == nil {
-			ko.Spec.DestinationConfig = nil
-		}
-	}
-
+	cleanEmptyDestinationConfig(ko)
 	return &resource{ko}, nil
 }
 
@@ -1061,6 +1041,10 @@ func (rm *resourceManager) sdkUpdate(
 			Filters: []svcsdktypes.Filter{},
 		}
 	}
+	// Lambda rejects an OnFailure/OnSuccess entry without a Destination.
+	// Older controller versions persisted `onFailure: {}` into the spec, so
+	// strip empty entries from the request.
+	input.DestinationConfig = cleanEmptyDestinationConfigInput(input.DestinationConfig)
 
 	var resp *svcsdk.UpdateEventSourceMappingOutput
 	_ = resp
@@ -1362,18 +1346,7 @@ func (rm *resourceManager) sdkUpdate(
 	}
 
 	rm.setStatusDefaults(ko)
-	if ko.Spec.DestinationConfig != nil {
-		if ko.Spec.DestinationConfig.OnFailure != nil && ko.Spec.DestinationConfig.OnFailure.Destination == nil {
-			ko.Spec.DestinationConfig.OnFailure = nil
-		}
-		if ko.Spec.DestinationConfig.OnSuccess != nil && ko.Spec.DestinationConfig.OnSuccess.Destination == nil {
-			ko.Spec.DestinationConfig.OnSuccess = nil
-		}
-		if ko.Spec.DestinationConfig.OnFailure == nil && ko.Spec.DestinationConfig.OnSuccess == nil {
-			ko.Spec.DestinationConfig = nil
-		}
-	}
-
+	cleanEmptyDestinationConfig(ko)
 	return &resource{ko}, nil
 }
 

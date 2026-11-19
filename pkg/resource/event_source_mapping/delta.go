@@ -100,32 +100,6 @@ func newResourceDelta(
 			delta.Add("Spec.BisectBatchOnFunctionError", a.ko.Spec.BisectBatchOnFunctionError, b.ko.Spec.BisectBatchOnFunctionError)
 		}
 	}
-	if ackcompare.HasNilDifference(a.ko.Spec.DestinationConfig, b.ko.Spec.DestinationConfig) {
-		delta.Add("Spec.DestinationConfig", a.ko.Spec.DestinationConfig, b.ko.Spec.DestinationConfig)
-	} else if a.ko.Spec.DestinationConfig != nil && b.ko.Spec.DestinationConfig != nil {
-		if ackcompare.HasNilDifference(a.ko.Spec.DestinationConfig.OnFailure, b.ko.Spec.DestinationConfig.OnFailure) {
-			delta.Add("Spec.DestinationConfig.OnFailure", a.ko.Spec.DestinationConfig.OnFailure, b.ko.Spec.DestinationConfig.OnFailure)
-		} else if a.ko.Spec.DestinationConfig.OnFailure != nil && b.ko.Spec.DestinationConfig.OnFailure != nil {
-			if ackcompare.HasNilDifference(a.ko.Spec.DestinationConfig.OnFailure.Destination, b.ko.Spec.DestinationConfig.OnFailure.Destination) {
-				delta.Add("Spec.DestinationConfig.OnFailure.Destination", a.ko.Spec.DestinationConfig.OnFailure.Destination, b.ko.Spec.DestinationConfig.OnFailure.Destination)
-			} else if a.ko.Spec.DestinationConfig.OnFailure.Destination != nil && b.ko.Spec.DestinationConfig.OnFailure.Destination != nil {
-				if *a.ko.Spec.DestinationConfig.OnFailure.Destination != *b.ko.Spec.DestinationConfig.OnFailure.Destination {
-					delta.Add("Spec.DestinationConfig.OnFailure.Destination", a.ko.Spec.DestinationConfig.OnFailure.Destination, b.ko.Spec.DestinationConfig.OnFailure.Destination)
-				}
-			}
-		}
-		if ackcompare.HasNilDifference(a.ko.Spec.DestinationConfig.OnSuccess, b.ko.Spec.DestinationConfig.OnSuccess) {
-			delta.Add("Spec.DestinationConfig.OnSuccess", a.ko.Spec.DestinationConfig.OnSuccess, b.ko.Spec.DestinationConfig.OnSuccess)
-		} else if a.ko.Spec.DestinationConfig.OnSuccess != nil && b.ko.Spec.DestinationConfig.OnSuccess != nil {
-			if ackcompare.HasNilDifference(a.ko.Spec.DestinationConfig.OnSuccess.Destination, b.ko.Spec.DestinationConfig.OnSuccess.Destination) {
-				delta.Add("Spec.DestinationConfig.OnSuccess.Destination", a.ko.Spec.DestinationConfig.OnSuccess.Destination, b.ko.Spec.DestinationConfig.OnSuccess.Destination)
-			} else if a.ko.Spec.DestinationConfig.OnSuccess.Destination != nil && b.ko.Spec.DestinationConfig.OnSuccess.Destination != nil {
-				if *a.ko.Spec.DestinationConfig.OnSuccess.Destination != *b.ko.Spec.DestinationConfig.OnSuccess.Destination {
-					delta.Add("Spec.DestinationConfig.OnSuccess.Destination", a.ko.Spec.DestinationConfig.OnSuccess.Destination, b.ko.Spec.DestinationConfig.OnSuccess.Destination)
-				}
-			}
-		}
-	}
 	if ackcompare.HasNilDifference(a.ko.Spec.Enabled, b.ko.Spec.Enabled) {
 		delta.Add("Spec.Enabled", a.ko.Spec.Enabled, b.ko.Spec.Enabled)
 	} else if a.ko.Spec.Enabled != nil && b.ko.Spec.Enabled != nil {
