@@ -16,6 +16,19 @@
 
 import logging
 
+import boto3
+
+
+def get_s3_object_sha256(bucket: str, key: str) -> str:
+    s3_client = boto3.client('s3')
+    response = s3_client.head_object(
+        Bucket=bucket,
+        Key=key,
+        ChecksumMode='ENABLED',
+    )
+    return response['ChecksumSHA256']
+
+
 class LambdaValidator:
     def __init__(self, lambda_client):
         self.lambda_client = lambda_client
