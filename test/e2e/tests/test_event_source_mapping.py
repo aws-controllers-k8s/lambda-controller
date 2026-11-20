@@ -313,14 +313,36 @@ class TestEventSourceMapping:
         assert k8s.get_resource_exists(ref)
 
         time.sleep(CREATE_WAIT_AFTER_SECONDS)
+        assert k8s.wait_on_condition(ref, condition.CONDITION_TYPE_RESOURCE_SYNCED, "True", wait_periods=5)
 
+        cr = k8s.get_resource(ref)
         esm_uuid = cr['status']['uuid']
 
         lambda_validator = LambdaValidator(lambda_client)
         # Check ESM exists
         assert lambda_validator.event_source_mapping_exists(esm_uuid)
 
+        # Lambda returns an empty `DestinationConfig.OnFailure` for stream
+        # sources. It must not be written back into the spec, because Lambda
+        # rejects it on update.
+        assert 'destinationConfig' not in cr['spec']
+
+        # Update only batchSize
+        cr["spec"]["batchSize"] = 20
+
+        # Patch k8s resource
+        k8s.patch_custom_resource(ref, cr)
+        time.sleep(UPDATE_WAIT_AFTER_SECONDS)
+        assert k8s.wait_on_condition(ref, condition.CONDITION_TYPE_RESOURCE_SYNCED, "True", wait_periods=5)
+
+        # Check ESM batch size
+        esm = lambda_validator.get_event_source_mapping(esm_uuid)
+        assert esm is not None
+        assert esm["BatchSize"] == 20
+
         # Update cr
+        cr = k8s.get_resource(ref)
+        assert 'destinationConfig' not in cr['spec']
         cr["spec"]["maximumRetryAttempts"] = 3
         cr["spec"]["destinationConfig"] = {
             'onFailure': {

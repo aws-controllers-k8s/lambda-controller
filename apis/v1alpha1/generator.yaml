@@ -240,6 +240,11 @@ resources:
       FilterCriteria:
         compare:
           is_ignored: true
+      # Compared in customPreCompare, treating an empty
+      # `onFailure: {}` / `onSuccess: {}` as unset.
+      DestinationConfig:
+        compare:
+          is_ignored: true
       
       SourceAccessConfigurations.URI:
         # Need to force to "uRI" to avoid breaking change following "URI" -> "uri"
@@ -259,6 +264,12 @@ resources:
         code: customPreCompare(delta, a, b)
       sdk_read_one_post_set_output:
         template_path: hooks/eventsourcemapping/sdk_read_one_post_set_output.go.tpl
+      sdk_create_post_build_request:
+        code: input.DestinationConfig = cleanEmptyDestinationConfigInput(input.DestinationConfig)
+      sdk_create_post_set_output:
+        code: cleanEmptyDestinationConfig(ko)
+      sdk_update_post_set_output:
+        code: cleanEmptyDestinationConfig(ko)
       sdk_update_pre_build_request:
         template_path: hooks/eventsourcemapping/sdk_update_pre_build_request.go.tpl
       sdk_update_post_build_request:

@@ -384,6 +384,7 @@ func (rm *resourceManager) sdkFind(
 	if err != nil {
 		return nil, err
 	}
+	cleanEmptyDestinationConfig(ko)
 
 	return &resource{ko}, nil
 }
@@ -428,6 +429,7 @@ func (rm *resourceManager) sdkCreate(
 	if err != nil {
 		return nil, err
 	}
+	input.DestinationConfig = cleanEmptyDestinationConfigInput(input.DestinationConfig)
 
 	var resp *svcsdk.CreateEventSourceMappingOutput
 	_ = resp
@@ -742,6 +744,7 @@ func (rm *resourceManager) sdkCreate(
 			}
 		}
 	}()
+	cleanEmptyDestinationConfig(ko)
 	return &resource{ko}, nil
 }
 
@@ -1038,6 +1041,10 @@ func (rm *resourceManager) sdkUpdate(
 			Filters: []svcsdktypes.Filter{},
 		}
 	}
+	// Lambda rejects an OnFailure/OnSuccess entry without a Destination.
+	// Older controller versions persisted `onFailure: {}` into the spec, so
+	// strip empty entries from the request.
+	input.DestinationConfig = cleanEmptyDestinationConfigInput(input.DestinationConfig)
 
 	var resp *svcsdk.UpdateEventSourceMappingOutput
 	_ = resp
@@ -1339,6 +1346,7 @@ func (rm *resourceManager) sdkUpdate(
 	}
 
 	rm.setStatusDefaults(ko)
+	cleanEmptyDestinationConfig(ko)
 	return &resource{ko}, nil
 }
 

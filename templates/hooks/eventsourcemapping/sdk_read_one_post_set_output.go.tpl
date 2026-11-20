@@ -2,3 +2,4 @@
 	if err != nil {
 		return nil, err
 	}
+	cleanEmptyDestinationConfig(ko)
